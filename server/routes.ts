@@ -348,5 +348,62 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== BRAND DASHBOARD ROUTES ====================
+
+  // Get brand stats
+  app.get("/api/brands/stats", async (req, res) => {
+    try {
+      // Return demo stats for brand dashboard
+      res.json({
+        totalViews: 45230,
+        totalClicks: 3420,
+        totalConversions: 156,
+        totalRevenue: 12450,
+        activeCreators: 23,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get brand stats" });
+    }
+  });
+
+  // Invite creator (brand to creator invitation)
+  app.post("/api/brands/invite-creator", async (req, res) => {
+    try {
+      const { creatorName, creatorEmail, contentCategory, message } = req.body;
+      
+      if (!creatorName || !creatorEmail) {
+        return res.status(400).json({ error: "Creator name and email are required" });
+      }
+
+      // Simulate sending invitation email
+      const invitation = {
+        id: Date.now().toString(),
+        creatorName,
+        creatorEmail,
+        contentCategory: contentCategory || "General",
+        message: message || "",
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      res.status(201).json(invitation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send creator invitation" });
+    }
+  });
+
+  // Get creator invitations sent by brand
+  app.get("/api/brands/creator-invites", async (req, res) => {
+    try {
+      // Return demo invitations
+      res.json([
+        { id: "1", name: "Sarah Johnson", email: "sarah@example.com", status: "pending", category: "Fashion", sentAt: "2 hours ago" },
+        { id: "2", name: "Mike Chen", email: "mike@example.com", status: "accepted", category: "Tech", sentAt: "1 day ago" },
+      ]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get creator invitations" });
+    }
+  });
+
   return httpServer;
 }
