@@ -1,8 +1,28 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Table,
   TableBody,
@@ -19,13 +39,69 @@ import {
   Filter,
   UserPlus,
   ArrowUpDown,
+  Loader2,
+  Send,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Brand } from "@shared/schema";
 
+const referralFormSchema = z.object({
+  brandName: z.string().min(1, "Brand name is required"),
+  prContactName: z.string().min(1, "Contact name is required"),
+  prContactEmail: z.string().email("Valid email required"),
+  productCategory: z.string().optional(),
+  message: z.string().optional(),
+});
+
+type ReferralFormValues = z.infer<typeof referralFormSchema>;
+
 export default function CRMAnalytics() {
+  const { toast } = useToast();
+  const [isReferralOpen, setIsReferralOpen] = useState(false);
+
   const { data: brands = [], isLoading } = useQuery<Brand[]>({
     queryKey: ["/api/brands"],
   });
+
+  const form = useForm<ReferralFormValues>({
+    resolver: zodResolver(referralFormSchema),
+    defaultValues: {
+      brandName: "",
+      prContactName: "",
+      prContactEmail: "",
+      productCategory: "",
+      message: "",
+    },
+  });
+
+  const referralMutation = useMutation({
+    mutationFn: async (data: ReferralFormValues) => {
+      const res = await apiRequest("/api/referrals", "POST", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/referrals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/brands"] });
+      toast({
+        title: "Brand Referral Sent",
+        description: "An automated invitation email has been sent to the brand contact.",
+      });
+      setIsReferralOpen(false);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send brand referral. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmitReferral = (data: ReferralFormValues) => {
+    referralMutation.mutate(data);
+  };
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
@@ -36,7 +112,11 @@ export default function CRMAnalytics() {
             Manage brand relationships and track partnership performance
           </p>
         </div>
-        <Button className="rounded-full gap-2">
+        <Button 
+          className="rounded-full gap-2" 
+          onClick={() => setIsReferralOpen(true)}
+          data-testid="button-add-contact"
+        >
           <UserPlus className="h-4 w-4" />
           Add Contact
         </Button>
@@ -172,6 +252,118 @@ export default function CRMAnalytics() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isReferralOpen} onOpenChange={setIsReferralOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              Refer a Brand
+            </DialogTitle>
+            <DialogDescription>
+              Send an automated invitation email to a brand contact. They'll receive information about joining the video commerce platform.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitReferral)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="brandName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Nike, Apple" {...field} data-testid="input-brand-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="prContactName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="PR or Marketing contact" {...field} data-testid="input-contact-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="prContactEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="contact@brand.com" {...field} data-testid="input-contact-email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="productCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Category (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Fashion, Tech, Beauty" {...field} data-testid="input-product-category" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="message"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Personal Message (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Add a personal note to your referral..." 
+                        className="resize-none" 
+                        rows={3}
+                        {...field} 
+                        data-testid="input-referral-message"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-3 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsReferralOpen(false)}
+                  data-testid="button-cancel-referral"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={referralMutation.isPending}
+                  className="gap-2"
+                  data-testid="button-send-referral"
+                >
+                  {referralMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  Send Referral
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
