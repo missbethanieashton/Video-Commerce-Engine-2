@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 
 const announcements = [
   "CREATOR CHALLENGE OF THE WEEK",
-  "CONVERT YOUR VIDEOS INTO REVENUE",
-  "TAG PRODUCTS & EARN COMMISSIONS",
-  "JOIN THE TOP CREATORS COMPETITION",
-  "NEW BRANDS ADDED DAILY",
 ];
 
 export function AnnouncementBanner() {
@@ -48,7 +44,7 @@ export function AnnouncementBanner() {
           }
         }
         .animate-marquee {
-          animation: marquee 25s linear infinite;
+          animation: marquee 12s linear infinite;
         }
       `}</style>
     </div>
