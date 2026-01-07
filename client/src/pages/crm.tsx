@@ -34,6 +34,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -56,11 +63,13 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Brand } from "@shared/schema";
 
+const PRODUCT_CATEGORIES = ["Fashion", "Beauty", "Wellness", "Hotel", "Other"] as const;
+
 const referralFormSchema = z.object({
   brandName: z.string().min(1, "Brand name is required"),
   prContactName: z.string().min(1, "Contact name is required"),
   prContactEmail: z.string().email("Valid email required"),
-  productCategory: z.string().optional(),
+  productCategory: z.enum(PRODUCT_CATEGORIES, { required_error: "Product category is required" }),
   message: z.string().optional(),
 });
 
@@ -80,7 +89,7 @@ export default function CRMAnalytics() {
       brandName: "",
       prContactName: "",
       prContactEmail: "",
-      productCategory: "",
+      productCategory: undefined,
       message: DEFAULT_MESSAGE_TEMPLATE,
     },
   });
@@ -334,10 +343,21 @@ export default function CRMAnalytics() {
                 name="productCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Category (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Fashion, Tech, Beauty" {...field} data-testid="input-product-category" />
-                    </FormControl>
+                    <FormLabel>Product Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-product-category">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PRODUCT_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category} data-testid={`option-category-${category.toLowerCase()}`}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
