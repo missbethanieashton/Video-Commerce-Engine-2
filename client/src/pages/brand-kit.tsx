@@ -139,28 +139,120 @@ export default function BrandKitPage() {
     setIsAnalyzing(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setExtractedColors([
-        { name: "Primary", hex: "#677A67", cmyk: { c: 35, m: 15, y: 35, k: 30 } },
-        { name: "Secondary", hex: "#87A7AC", cmyk: { c: 40, m: 15, y: 20, k: 10 } },
-        { name: "Accent", hex: "#E7B97F", cmyk: { c: 5, m: 25, y: 50, k: 5 } },
-        { name: "Background", hex: "#EAE6D8", cmyk: { c: 5, m: 5, y: 15, k: 5 } },
-      ]);
-      
-      setExtractedFonts([
-        { name: "Montserrat", weight: "600" },
-        { name: "Open Sans", weight: "400" },
-      ]);
-
-      toast({
-        title: "PDF Analyzed",
-        description: "Brand colors and fonts extracted successfully.",
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result);
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
       });
+      reader.readAsDataURL(file);
+      
+      const fileData = await base64Promise;
+      const mimeType = file.type || "application/pdf";
+
+      const response = await fetch("/api/analyze-brand-guidelines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileData, mimeType }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to analyze brand guidelines");
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.analysis) {
+        const colors = result.analysis.colors || {};
+        const fonts = result.analysis.fonts || {};
+        
+        const safeHexToCmyk = (hex: string | undefined | null) => {
+          if (!hex || typeof hex !== "string" || !hex.startsWith("#") || hex.length < 7) {
+            return { c: 0, m: 0, y: 0, k: 0 };
+          }
+          return hexToCmyk(hex);
+        };
+
+        const newExtractedColors: ColorEntry[] = [];
+        if (colors.primary && typeof colors.primary === "string") {
+          newExtractedColors.push({ 
+            name: "Primary", 
+            hex: colors.primary, 
+            cmyk: safeHexToCmyk(colors.primary) 
+          });
+        }
+        if (colors.secondary && typeof colors.secondary === "string") {
+          newExtractedColors.push({ 
+            name: "Secondary", 
+            hex: colors.secondary, 
+            cmyk: safeHexToCmyk(colors.secondary) 
+          });
+        }
+        if (colors.accent && typeof colors.accent === "string") {
+          newExtractedColors.push({ 
+            name: "Accent", 
+            hex: colors.accent, 
+            cmyk: safeHexToCmyk(colors.accent) 
+          });
+        }
+        if (colors.background && typeof colors.background === "string") {
+          newExtractedColors.push({ 
+            name: "Background", 
+            hex: colors.background, 
+            cmyk: safeHexToCmyk(colors.background) 
+          });
+        }
+        if (colors.text && typeof colors.text === "string") {
+          newExtractedColors.push({ 
+            name: "Text", 
+            hex: colors.text, 
+            cmyk: safeHexToCmyk(colors.text) 
+          });
+        }
+        if (Array.isArray(colors.additionalColors)) {
+          colors.additionalColors.forEach((hex: string, index: number) => {
+            if (hex && typeof hex === "string") {
+              newExtractedColors.push({ 
+                name: `Additional ${index + 1}`, 
+                hex, 
+                cmyk: safeHexToCmyk(hex) 
+              });
+            }
+          });
+        }
+        setExtractedColors(newExtractedColors);
+
+        const newExtractedFonts: FontEntry[] = [];
+        if (fonts.headingFont && typeof fonts.headingFont === "string") {
+          newExtractedFonts.push({ name: fonts.headingFont, weight: "600" });
+        }
+        if (fonts.bodyFont && typeof fonts.bodyFont === "string") {
+          newExtractedFonts.push({ name: fonts.bodyFont, weight: "400" });
+        }
+        if (fonts.accentFont && typeof fonts.accentFont === "string") {
+          newExtractedFonts.push({ name: fonts.accentFont, weight: "500" });
+        }
+        if (Array.isArray(fonts.additionalFonts)) {
+          fonts.additionalFonts.forEach((fontName: string) => {
+            if (fontName && typeof fontName === "string") {
+              newExtractedFonts.push({ name: fontName, weight: "400" });
+            }
+          });
+        }
+        setExtractedFonts(newExtractedFonts);
+
+        toast({
+          title: "PDF Analyzed",
+          description: `Extracted ${newExtractedColors.length} colors and ${newExtractedFonts.length} fonts from your brand guidelines.`,
+        });
+      }
     } catch (error) {
+      console.error("Error analyzing PDF:", error);
       toast({
         title: "Analysis Failed",
-        description: "Could not extract brand elements from PDF.",
+        description: error instanceof Error ? error.message : "Could not extract brand elements from PDF.",
         variant: "destructive",
       });
     } finally {

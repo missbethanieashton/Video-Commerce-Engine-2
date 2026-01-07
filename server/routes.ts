@@ -3,12 +3,16 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertVideoSchema, insertBrandReferralSchema, insertBrandSchema, insertProductSchema, insertAnalyticsEventSchema } from "@shared/schema";
 import { z } from "zod";
+import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
+  // ==================== AI/PDF ANALYSIS ROUTES ====================
+  setupPdfAnalysisRoutes(app);
+
   // ==================== USER ROUTES ====================
   
   // Get current user (demo user for now)
