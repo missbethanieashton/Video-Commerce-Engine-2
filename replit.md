@@ -1,0 +1,82 @@
+# Video Commerce SaaS Platform
+
+## Overview
+
+This is a Video Commerce SaaS platform that enables content creators to upload videos, tag brand products, and earn affiliate commissions. The platform features AI-powered product detection, affiliate link management, brand referral systems, and comprehensive analytics. It's built as a mobile-first application with iOS-inspired design principles.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript, using Vite as the build tool
+- **Routing**: Wouter for lightweight client-side routing
+- **State Management**: TanStack React Query for server state management and caching
+- **UI Components**: Shadcn/ui component library built on Radix UI primitives
+- **Styling**: Tailwind CSS with custom design tokens for theming (light/dark mode support)
+- **Design System**: iOS-inspired mobile-first design with a responsive sidebar for desktop and bottom tab navigation for mobile
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js
+- **API Design**: RESTful API endpoints under `/api/*` prefix
+- **Database ORM**: Drizzle ORM with PostgreSQL
+- **File Uploads**: Uppy with AWS S3-compatible presigned URL upload flow via Google Cloud Storage
+- **AI Integration**: Google Gemini API (via Replit AI Integrations) for chat, image generation, and batch processing
+
+### Data Storage
+- **Primary Database**: PostgreSQL with Drizzle ORM
+- **Schema Location**: `shared/schema.ts` contains all table definitions
+- **Key Entities**: Users (with role-based access), Brands, Products, Videos, Video-Brand associations, Brand Referrals, Analytics Events, Affiliate Payouts
+- **Object Storage**: Google Cloud Storage for video and image uploads
+
+### Code Organization
+```
+├── client/           # React frontend application
+│   └── src/
+│       ├── components/   # Reusable UI components
+│       ├── pages/        # Route page components
+│       ├── hooks/        # Custom React hooks
+│       └── lib/          # Utilities and query client
+├── server/           # Express backend
+│   ├── routes.ts         # API route definitions
+│   ├── storage.ts        # Data access layer interface
+│   └── replit_integrations/  # AI and storage integrations
+├── shared/           # Shared code between client and server
+│   └── schema.ts         # Database schema definitions
+└── migrations/       # Database migration files
+```
+
+### Key Design Patterns
+- **Storage Interface Pattern**: `IStorage` interface in `server/storage.ts` abstracts data access, allowing for different implementations (in-memory or PostgreSQL)
+- **Schema-First Design**: Database schemas defined with Drizzle, with Zod schemas auto-generated for validation using `drizzle-zod`
+- **Path Aliases**: TypeScript path aliases (`@/` for client, `@shared/` for shared code) for clean imports
+
+## External Dependencies
+
+### Database
+- **PostgreSQL**: Primary relational database (configured via `DATABASE_URL` environment variable)
+- **Drizzle Kit**: Database migrations and schema pushing via `npm run db:push`
+
+### AI Services (Replit AI Integrations)
+- **Google Gemini API**: Powers chat functionality, image generation, and batch processing
+- **Environment Variables**: `AI_INTEGRATIONS_GEMINI_API_KEY` and `AI_INTEGRATIONS_GEMINI_BASE_URL`
+- **Models Used**: `gemini-2.5-flash` (fast), `gemini-2.5-pro` (advanced), `gemini-2.5-flash-image` (image generation)
+
+### Object Storage
+- **Google Cloud Storage**: File storage for video uploads
+- **Replit Sidecar**: Local proxy at `http://127.0.0.1:1106` for credential management
+- **Upload Flow**: Presigned URL pattern - client requests URL, then uploads directly to storage
+
+### Frontend Libraries
+- **Uppy**: File upload widget with S3-compatible multipart uploads
+- **Radix UI**: Headless UI primitives for accessible components
+- **TanStack Query**: Data fetching and caching
+- **date-fns**: Date formatting utilities
+- **Recharts**: Charting library for analytics visualizations
+
+### Development Tools
+- **Vite**: Frontend build tool with HMR
+- **esbuild**: Server bundling for production
+- **TypeScript**: Full type safety across the stack
