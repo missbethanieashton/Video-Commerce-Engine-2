@@ -1,8 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
+const DEFAULT_MESSAGE_TEMPLATE = `Hey [First_Name],
+
+I want to make my recent video for [Brand] shoppable using revolutionary video commerce, so my audience can shop your products instantly.
+
+Click this link to create an account for FREE and sync your inventory. My video will then be published as shoppable with direct links to your POS.
+
+I'm sure you'll love this!
+
+Sincerely,`;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,9 +81,23 @@ export default function CRMAnalytics() {
       prContactName: "",
       prContactEmail: "",
       productCategory: "",
-      message: "",
+      message: DEFAULT_MESSAGE_TEMPLATE,
     },
   });
+
+  const watchBrandName = form.watch("brandName");
+  const watchContactName = form.watch("prContactName");
+
+  useEffect(() => {
+    const firstName = watchContactName.split(" ")[0] || "[First_Name]";
+    const brandName = watchBrandName || "[Brand]";
+    
+    const updatedMessage = DEFAULT_MESSAGE_TEMPLATE
+      .replace("[First_Name]", firstName)
+      .replace("[Brand]", brandName);
+    
+    form.setValue("message", updatedMessage);
+  }, [watchBrandName, watchContactName, form]);
 
   const referralMutation = useMutation({
     mutationFn: async (data: ReferralFormValues) => {
