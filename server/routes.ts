@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertVideoSchema, insertBrandReferralSchema, insertBrandSchema, insertProductSchema, insertAnalyticsEventSchema } from "@shared/schema";
+import { insertVideoSchema, insertBrandReferralSchema, insertBrandSchema, insertProductSchema, insertAnalyticsEventSchema, insertCreatorInvitationSchema } from "@shared/schema";
 import { z } from "zod";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
@@ -377,39 +377,130 @@ export async function registerRoutes(
   // Invite creator (brand to creator invitation)
   app.post("/api/brands/invite-creator", async (req, res) => {
     try {
-      const { creatorName, creatorEmail, contentCategory, message } = req.body;
+      const { creatorName, creatorEmail, contentCategory, message, brandId } = req.body;
       
       if (!creatorName || !creatorEmail) {
         return res.status(400).json({ error: "Creator name and email are required" });
       }
 
-      // Simulate sending invitation email
-      const invitation = {
-        id: Date.now().toString(),
+      // Get a demo brand ID if not provided
+      const brands = await storage.getBrands();
+      const useBrandId = brandId || brands[0]?.id;
+      
+      if (!useBrandId) {
+        return res.status(400).json({ error: "No brand available" });
+      }
+
+      const invitation = await storage.createCreatorInvitation({
+        brandId: useBrandId,
         creatorName,
-        creatorEmail,
-        contentCategory: contentCategory || "General",
-        message: message || "",
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      };
+        email: creatorEmail,
+        category: contentCategory || null,
+        message: message || null,
+      });
 
       res.status(201).json(invitation);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
       res.status(500).json({ error: "Failed to send creator invitation" });
+    }
+  });
+
+  // Bulk invite creators (CSV import)
+  app.post("/api/brands/invite-creators/bulk", async (req, res) => {
+    try {
+      const { invitations, brandId } = req.body;
+      
+      if (!Array.isArray(invitations) || invitations.length === 0) {
+        return res.status(400).json({ error: "Invitations array is required" });
+      }
+
+      if (invitations.length > 200) {
+        return res.status(400).json({ error: "Maximum 200 invitations per bulk upload" });
+      }
+
+      // Get a demo brand ID if not provided
+      const brands = await storage.getBrands();
+      const useBrandId = brandId || brands[0]?.id;
+      
+      if (!useBrandId) {
+        return res.status(400).json({ error: "No brand available" });
+      }
+
+      // Validate and prepare invitations
+      const validInvitations: Array<{ brandId: string; creatorName: string; email: string; category: string | null; message: string | null }> = [];
+      const errors: Array<{ index: number; error: string }> = [];
+
+      invitations.forEach((inv: { creatorName?: string; email?: string; category?: string; message?: string }, index: number) => {
+        if (!inv.creatorName || !inv.email) {
+          errors.push({ index, error: "Name and email are required" });
+          return;
+        }
+        
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(inv.email)) {
+          errors.push({ index, error: "Invalid email format" });
+          return;
+        }
+
+        validInvitations.push({
+          brandId: useBrandId,
+          creatorName: inv.creatorName,
+          email: inv.email,
+          category: inv.category || null,
+          message: inv.message || null,
+        });
+      });
+
+      const created = await storage.createCreatorInvitationsBulk(validInvitations);
+
+      res.status(201).json({
+        success: true,
+        created: created.length,
+        errors: errors.length > 0 ? errors : undefined,
+        invitations: created,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process bulk invitations" });
     }
   });
 
   // Get creator invitations sent by brand
   app.get("/api/brands/creator-invites", async (req, res) => {
     try {
-      // Return demo invitations
-      res.json([
-        { id: "1", name: "Sarah Johnson", email: "sarah@example.com", status: "pending", category: "Fashion", sentAt: "2 hours ago" },
-        { id: "2", name: "Mike Chen", email: "mike@example.com", status: "accepted", category: "Tech", sentAt: "1 day ago" },
-      ]);
+      // Get a demo brand ID
+      const brands = await storage.getBrands();
+      const brandId = req.query.brandId as string || brands[0]?.id;
+      
+      if (!brandId) {
+        return res.json([]);
+      }
+
+      const invitations = await storage.getCreatorInvitations(brandId);
+      res.json(invitations);
     } catch (error) {
       res.status(500).json({ error: "Failed to get creator invitations" });
+    }
+  });
+
+  // Update invitation status
+  app.patch("/api/brands/creator-invites/:id", async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!["pending", "sent", "accepted", "declined"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const updated = await storage.updateCreatorInvitationStatus(req.params.id, status);
+      if (!updated) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update invitation" });
     }
   });
 
