@@ -9,6 +9,10 @@ import {
   type BrandReferral, type InsertBrandReferral,
   type AnalyticsEvent, type InsertAnalyticsEvent,
   type AffiliatePayout, type InsertAffiliatePayout,
+  type BrandKit, type InsertBrandKit,
+  type VideoCarouselOverride, type InsertVideoCarouselOverride,
+  type VideoDetectionJob, type InsertVideoDetectionJob,
+  type VideoDetectionResult, type InsertVideoDetectionResult,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -65,6 +69,27 @@ export interface IStorage {
   // Payouts
   getPayouts(userId: string): Promise<AffiliatePayout[]>;
   createPayout(payout: InsertAffiliatePayout): Promise<AffiliatePayout>;
+  
+  // Brand Kits
+  getBrandKit(userId: string): Promise<BrandKit | undefined>;
+  createBrandKit(kit: InsertBrandKit): Promise<BrandKit>;
+  updateBrandKit(id: string, data: Partial<InsertBrandKit>): Promise<BrandKit | undefined>;
+  
+  // Video Carousel Overrides
+  getVideoCarouselOverride(videoId: string): Promise<VideoCarouselOverride | undefined>;
+  createVideoCarouselOverride(override: InsertVideoCarouselOverride): Promise<VideoCarouselOverride>;
+  updateVideoCarouselOverride(videoId: string, data: Partial<InsertVideoCarouselOverride>): Promise<VideoCarouselOverride | undefined>;
+  
+  // Video Detection Jobs
+  getDetectionJob(id: string): Promise<VideoDetectionJob | undefined>;
+  getDetectionJobByVideoId(videoId: string): Promise<VideoDetectionJob | undefined>;
+  createDetectionJob(job: InsertVideoDetectionJob): Promise<VideoDetectionJob>;
+  updateDetectionJob(id: string, data: Partial<VideoDetectionJob>): Promise<VideoDetectionJob | undefined>;
+  
+  // Video Detection Results
+  getDetectionResults(jobId: string): Promise<VideoDetectionResult[]>;
+  getDetectionResultsByVideo(videoId: string): Promise<VideoDetectionResult[]>;
+  createDetectionResult(result: InsertVideoDetectionResult): Promise<VideoDetectionResult>;
 }
 
 export class MemStorage implements IStorage {
@@ -77,6 +102,10 @@ export class MemStorage implements IStorage {
   private referrals: Map<string, BrandReferral> = new Map();
   private analyticsEvents: Map<string, AnalyticsEvent> = new Map();
   private payouts: Map<string, AffiliatePayout> = new Map();
+  private brandKits: Map<string, BrandKit> = new Map();
+  private videoCarouselOverrides: Map<string, VideoCarouselOverride> = new Map();
+  private detectionJobs: Map<string, VideoDetectionJob> = new Map();
+  private detectionResults: Map<string, VideoDetectionResult> = new Map();
 
   constructor() {
     this.seedDemoData();
@@ -147,8 +176,12 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newUser: User = {
       id,
-      ...user,
+      username: user.username,
+      password: user.password,
+      email: user.email,
+      displayName: user.displayName,
       avatarUrl: user.avatarUrl ?? null,
+      role: user.role ?? "creator",
       affiliateTrackingId: randomUUID(),
       referralCode: `REF_${randomUUID().slice(0, 8).toUpperCase()}`,
       commissionRate: user.commissionRate ?? "15.00",
@@ -423,6 +456,151 @@ export class MemStorage implements IStorage {
     };
     this.payouts.set(id, newPayout);
     return newPayout;
+  }
+
+  // Brand Kits
+  async getBrandKit(userId: string): Promise<BrandKit | undefined> {
+    return Array.from(this.brandKits.values()).find((kit) => kit.userId === userId);
+  }
+
+  async createBrandKit(kit: InsertBrandKit): Promise<BrandKit> {
+    const id = randomUUID();
+    const newKit: BrandKit = {
+      id,
+      userId: kit.userId,
+      sourcePdfUrl: kit.sourcePdfUrl ?? null,
+      extractedFonts: kit.extractedFonts ?? null,
+      extractedColors: kit.extractedColors ?? null,
+      manualFonts: kit.manualFonts ?? null,
+      manualColors: kit.manualColors ?? null,
+      defaultButtonFont: kit.defaultButtonFont ?? null,
+      defaultButtonColor: kit.defaultButtonColor ?? null,
+      defaultButtonTextColor: kit.defaultButtonTextColor ?? null,
+      defaultCornerRadius: kit.defaultCornerRadius ?? 8,
+      defaultBackgroundOpacity: kit.defaultBackgroundOpacity ?? 80,
+      defaultShowThumbnail: kit.defaultShowThumbnail ?? true,
+      defaultShowButton: kit.defaultShowButton ?? true,
+      defaultShowPrice: kit.defaultShowPrice ?? true,
+      defaultShowTitle: kit.defaultShowTitle ?? true,
+      defaultButtonLabel: kit.defaultButtonLabel ?? "BUY NOW",
+      defaultPosition: kit.defaultPosition ?? "bottom",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.brandKits.set(id, newKit);
+    return newKit;
+  }
+
+  async updateBrandKit(id: string, data: Partial<InsertBrandKit>): Promise<BrandKit | undefined> {
+    const kit = this.brandKits.get(id);
+    if (!kit) return undefined;
+    const updated = { ...kit, ...data, updatedAt: new Date() } as BrandKit;
+    this.brandKits.set(id, updated);
+    return updated;
+  }
+
+  // Video Carousel Overrides
+  async getVideoCarouselOverride(videoId: string): Promise<VideoCarouselOverride | undefined> {
+    return Array.from(this.videoCarouselOverrides.values()).find((o) => o.videoId === videoId);
+  }
+
+  async createVideoCarouselOverride(override: InsertVideoCarouselOverride): Promise<VideoCarouselOverride> {
+    const id = randomUUID();
+    const newOverride: VideoCarouselOverride = {
+      id,
+      videoId: override.videoId,
+      position: override.position ?? null,
+      positionOffsetX: override.positionOffsetX ?? 0,
+      positionOffsetY: override.positionOffsetY ?? 0,
+      delayUntilEnd: override.delayUntilEnd ?? false,
+      cornerRadius: override.cornerRadius ?? null,
+      backgroundOpacity: override.backgroundOpacity ?? null,
+      showThumbnail: override.showThumbnail ?? null,
+      showButton: override.showButton ?? null,
+      showPrice: override.showPrice ?? null,
+      showTitle: override.showTitle ?? null,
+      buttonLabel: override.buttonLabel ?? null,
+      buttonFont: override.buttonFont ?? null,
+      buttonColor: override.buttonColor ?? null,
+      buttonTextColor: override.buttonTextColor ?? null,
+      createdAt: new Date(),
+    };
+    this.videoCarouselOverrides.set(id, newOverride);
+    return newOverride;
+  }
+
+  async updateVideoCarouselOverride(videoId: string, data: Partial<InsertVideoCarouselOverride>): Promise<VideoCarouselOverride | undefined> {
+    const override = await this.getVideoCarouselOverride(videoId);
+    if (!override) return undefined;
+    const updated = { ...override, ...data } as VideoCarouselOverride;
+    this.videoCarouselOverrides.set(override.id, updated);
+    return updated;
+  }
+
+  // Video Detection Jobs
+  async getDetectionJob(id: string): Promise<VideoDetectionJob | undefined> {
+    return this.detectionJobs.get(id);
+  }
+
+  async getDetectionJobByVideoId(videoId: string): Promise<VideoDetectionJob | undefined> {
+    return Array.from(this.detectionJobs.values()).find((job) => job.videoId === videoId);
+  }
+
+  async createDetectionJob(job: InsertVideoDetectionJob): Promise<VideoDetectionJob> {
+    const id = randomUUID();
+    const newJob: VideoDetectionJob = {
+      id,
+      videoId: job.videoId,
+      selectedBrandIds: job.selectedBrandIds ?? null,
+      status: "queued",
+      frameSamplingRate: job.frameSamplingRate ?? 1,
+      totalFrames: 0,
+      processedFrames: 0,
+      error: null,
+      startedAt: null,
+      completedAt: null,
+      createdAt: new Date(),
+    };
+    this.detectionJobs.set(id, newJob);
+    return newJob;
+  }
+
+  async updateDetectionJob(id: string, data: Partial<VideoDetectionJob>): Promise<VideoDetectionJob | undefined> {
+    const job = this.detectionJobs.get(id);
+    if (!job) return undefined;
+    const updated = { ...job, ...data } as VideoDetectionJob;
+    this.detectionJobs.set(id, updated);
+    return updated;
+  }
+
+  // Video Detection Results
+  async getDetectionResults(jobId: string): Promise<VideoDetectionResult[]> {
+    return Array.from(this.detectionResults.values()).filter((r) => r.jobId === jobId);
+  }
+
+  async getDetectionResultsByVideo(videoId: string): Promise<VideoDetectionResult[]> {
+    return Array.from(this.detectionResults.values())
+      .filter((r) => r.videoId === videoId)
+      .sort((a, b) => Number(a.startTime || 0) - Number(b.startTime || 0));
+  }
+
+  async createDetectionResult(result: InsertVideoDetectionResult): Promise<VideoDetectionResult> {
+    const id = randomUUID();
+    const newResult: VideoDetectionResult = {
+      id,
+      jobId: result.jobId,
+      videoId: result.videoId,
+      productId: result.productId,
+      brandId: result.brandId,
+      confidence: result.confidence,
+      frameTimestamp: result.frameTimestamp,
+      startTime: result.startTime ?? null,
+      endTime: result.endTime ?? null,
+      boundingBox: result.boundingBox ?? null,
+      createdAt: new Date(),
+    };
+    this.detectionResults.set(id, newResult);
+    return newResult;
   }
 }
 

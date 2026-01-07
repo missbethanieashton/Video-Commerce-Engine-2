@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Search,
   Send,
+  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,8 +40,12 @@ const analyticsItems = [
   { path: "/crm", label: "CRM Analytics", icon: Users },
 ];
 
-const otherItems = [
+const brandItems = [
+  { path: "/brand-kit", label: "Brand Kit", icon: Palette },
   { path: "/referrals", label: "Brand Referrals", icon: Send },
+];
+
+const otherItems = [
   { path: "/help", label: "Help Center", icon: HelpCircle },
 ];
 
@@ -147,7 +152,16 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Tools
+            Branding
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(brandItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Support
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(otherItems)}

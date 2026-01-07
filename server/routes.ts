@@ -405,5 +405,130 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== BRAND KIT ROUTES ====================
+
+  // Get brand kit for current user
+  app.get("/api/brand-kit", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const brandKit = await storage.getBrandKit(user.id);
+      res.json(brandKit || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get brand kit" });
+    }
+  });
+
+  // Create or update brand kit
+  app.post("/api/brand-kit", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const existingKit = await storage.getBrandKit(user.id);
+      
+      if (existingKit) {
+        const updated = await storage.updateBrandKit(existingKit.id, req.body);
+        return res.json(updated);
+      }
+
+      const newKit = await storage.createBrandKit({
+        userId: user.id,
+        ...req.body,
+      });
+      res.status(201).json(newKit);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save brand kit" });
+    }
+  });
+
+  // ==================== CAROUSEL OVERRIDE ROUTES ====================
+
+  // Get carousel override for a video
+  app.get("/api/videos/:id/carousel", async (req, res) => {
+    try {
+      const override = await storage.getVideoCarouselOverride(req.params.id);
+      res.json(override || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get carousel settings" });
+    }
+  });
+
+  // Create or update carousel override for a video
+  app.post("/api/videos/:id/carousel", async (req, res) => {
+    try {
+      const existingOverride = await storage.getVideoCarouselOverride(req.params.id);
+      
+      if (existingOverride) {
+        const updated = await storage.updateVideoCarouselOverride(req.params.id, req.body);
+        return res.json(updated);
+      }
+
+      const newOverride = await storage.createVideoCarouselOverride({
+        videoId: req.params.id,
+        ...req.body,
+      });
+      res.status(201).json(newOverride);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save carousel settings" });
+    }
+  });
+
+  // ==================== DETECTION JOB ROUTES ====================
+
+  // Get detection job for a video
+  app.get("/api/videos/:id/detections", async (req, res) => {
+    try {
+      const job = await storage.getDetectionJobByVideoId(req.params.id);
+      if (!job) {
+        return res.json({ status: "none", results: [] });
+      }
+      
+      const results = await storage.getDetectionResults(job.id);
+      res.json({ ...job, results });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get detection status" });
+    }
+  });
+
+  // Create detection job for a video
+  app.post("/api/videos/:id/detections", async (req, res) => {
+    try {
+      const { brandIds } = req.body;
+      
+      const job = await storage.createDetectionJob({
+        videoId: req.params.id,
+        selectedBrandIds: JSON.stringify(brandIds || []),
+        frameSamplingRate: 1,
+      });
+
+      // Simulate processing (in real implementation, this would be async worker)
+      setTimeout(async () => {
+        await storage.updateDetectionJob(job.id, { 
+          status: "processing",
+          startedAt: new Date(),
+        });
+        
+        // Simulate completion after 5 seconds
+        setTimeout(async () => {
+          await storage.updateDetectionJob(job.id, { 
+            status: "completed",
+            completedAt: new Date(),
+            totalFrames: 30,
+            processedFrames: 30,
+          });
+        }, 5000);
+      }, 1000);
+
+      res.status(201).json(job);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to start detection" });
+    }
+  });
+
   return httpServer;
 }

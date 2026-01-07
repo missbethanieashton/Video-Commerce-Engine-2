@@ -7,6 +7,15 @@ import { z } from "zod";
 export const userRoleEnum = pgEnum("user_role", ["creator", "brand", "affiliate"]);
 export const videoStatusEnum = pgEnum("video_status", ["draft", "processing", "published", "archived"]);
 export const referralStatusEnum = pgEnum("referral_status", ["pending", "sent", "accepted", "declined"]);
+export const buttonLabelEnum = pgEnum("button_label", [
+  "BUY NOW", "PRE ORDER", "RENT", "ENQUIRE", "APPLY NOW", "DONATE", "BOOK NOW", "BID NOW"
+]);
+export const detectionJobStatusEnum = pgEnum("detection_job_status", [
+  "queued", "processing", "completed", "failed"
+]);
+export const carouselPositionEnum = pgEnum("carousel_position", [
+  "bottom", "top", "left", "right", "bottom-left", "bottom-right", "top-left", "top-right"
+]);
 
 // Users table with role-based access
 export const users = pgTable("users", {
@@ -124,6 +133,81 @@ export const affiliatePayouts = pgTable("affiliate_payouts", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Brand Kits - stores brand styling defaults from PDF extraction or manual entry
+export const brandKits = pgTable("brand_kits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  sourcePdfUrl: text("source_pdf_url"),
+  extractedFonts: text("extracted_fonts"), // JSON array of font names
+  extractedColors: text("extracted_colors"), // JSON array of {name, cmyk, hex, rgb}
+  manualFonts: text("manual_fonts"), // JSON array of manually added fonts
+  manualColors: text("manual_colors"), // JSON array of manually added colors
+  defaultButtonFont: text("default_button_font"),
+  defaultButtonColor: text("default_button_color"), // hex color
+  defaultButtonTextColor: text("default_button_text_color"), // hex color
+  defaultCornerRadius: integer("default_corner_radius").default(8),
+  defaultBackgroundOpacity: integer("default_background_opacity").default(80),
+  defaultShowThumbnail: boolean("default_show_thumbnail").default(true),
+  defaultShowButton: boolean("default_show_button").default(true),
+  defaultShowPrice: boolean("default_show_price").default(true),
+  defaultShowTitle: boolean("default_show_title").default(true),
+  defaultButtonLabel: buttonLabelEnum("default_button_label").default("BUY NOW"),
+  defaultPosition: carouselPositionEnum("default_position").default("bottom"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Video Carousel Overrides - per-video customizations
+export const videoCarouselOverrides = pgTable("video_carousel_overrides", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  position: carouselPositionEnum("position"),
+  positionOffsetX: integer("position_offset_x").default(0),
+  positionOffsetY: integer("position_offset_y").default(0),
+  delayUntilEnd: boolean("delay_until_end").default(false),
+  cornerRadius: integer("corner_radius"),
+  backgroundOpacity: integer("background_opacity"),
+  showThumbnail: boolean("show_thumbnail"),
+  showButton: boolean("show_button"),
+  showPrice: boolean("show_price"),
+  showTitle: boolean("show_title"),
+  buttonLabel: buttonLabelEnum("button_label"),
+  buttonFont: text("button_font"),
+  buttonColor: text("button_color"),
+  buttonTextColor: text("button_text_color"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Video Detection Jobs - tracks AI product detection processing
+export const videoDetectionJobs = pgTable("video_detection_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  selectedBrandIds: text("selected_brand_ids"), // JSON array of brand IDs to scan
+  status: detectionJobStatusEnum("status").default("queued"),
+  frameSamplingRate: integer("frame_sampling_rate").default(1), // frames per second
+  totalFrames: integer("total_frames").default(0),
+  processedFrames: integer("processed_frames").default(0),
+  error: text("error"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Video Detection Results - individual product detections with timestamps
+export const videoDetectionResults = pgTable("video_detection_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull().references(() => videoDetectionJobs.id),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  productId: varchar("product_id").notNull().references(() => products.id),
+  brandId: varchar("brand_id").notNull().references(() => brands.id),
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(),
+  frameTimestamp: decimal("frame_timestamp", { precision: 10, scale: 2 }).notNull(), // seconds into video
+  startTime: decimal("start_time", { precision: 10, scale: 2 }), // when to show product
+  endTime: decimal("end_time", { precision: 10, scale: 2 }), // when to hide product
+  boundingBox: text("bounding_box"), // JSON {x, y, width, height}
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
@@ -173,6 +257,26 @@ export const affiliatePayoutsRelations = relations(affiliatePayouts, ({ one }) =
   user: one(users, { fields: [affiliatePayouts.userId], references: [users.id] }),
 }));
 
+export const brandKitsRelations = relations(brandKits, ({ one }) => ({
+  user: one(users, { fields: [brandKits.userId], references: [users.id] }),
+}));
+
+export const videoCarouselOverridesRelations = relations(videoCarouselOverrides, ({ one }) => ({
+  video: one(videos, { fields: [videoCarouselOverrides.videoId], references: [videos.id] }),
+}));
+
+export const videoDetectionJobsRelations = relations(videoDetectionJobs, ({ one, many }) => ({
+  video: one(videos, { fields: [videoDetectionJobs.videoId], references: [videos.id] }),
+  results: many(videoDetectionResults),
+}));
+
+export const videoDetectionResultsRelations = relations(videoDetectionResults, ({ one }) => ({
+  job: one(videoDetectionJobs, { fields: [videoDetectionResults.jobId], references: [videoDetectionJobs.id] }),
+  video: one(videos, { fields: [videoDetectionResults.videoId], references: [videos.id] }),
+  product: one(products, { fields: [videoDetectionResults.productId], references: [products.id] }),
+  brand: one(brands, { fields: [videoDetectionResults.brandId], references: [brands.id] }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, affiliateTrackingId: true, referralCode: true });
 export const insertBrandSchema = createInsertSchema(brands).omit({ id: true });
@@ -183,6 +287,10 @@ export const insertVideoProductSchema = createInsertSchema(videoProducts).omit({
 export const insertBrandReferralSchema = createInsertSchema(brandReferrals).omit({ id: true, status: true, signupToken: true, createdAt: true });
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true });
 export const insertAffiliatePayoutSchema = createInsertSchema(affiliatePayouts).omit({ id: true, createdAt: true });
+export const insertBrandKitSchema = createInsertSchema(brandKits).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertVideoCarouselOverrideSchema = createInsertSchema(videoCarouselOverrides).omit({ id: true, createdAt: true });
+export const insertVideoDetectionJobSchema = createInsertSchema(videoDetectionJobs).omit({ id: true, status: true, totalFrames: true, processedFrames: true, error: true, startedAt: true, completedAt: true, createdAt: true });
+export const insertVideoDetectionResultSchema = createInsertSchema(videoDetectionResults).omit({ id: true, createdAt: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -203,3 +311,21 @@ export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAffiliatePayout = z.infer<typeof insertAffiliatePayoutSchema>;
 export type AffiliatePayout = typeof affiliatePayouts.$inferSelect;
+export type InsertBrandKit = z.infer<typeof insertBrandKitSchema>;
+export type BrandKit = typeof brandKits.$inferSelect;
+export type InsertVideoCarouselOverride = z.infer<typeof insertVideoCarouselOverrideSchema>;
+export type VideoCarouselOverride = typeof videoCarouselOverrides.$inferSelect;
+export type InsertVideoDetectionJob = z.infer<typeof insertVideoDetectionJobSchema>;
+export type VideoDetectionJob = typeof videoDetectionJobs.$inferSelect;
+export type InsertVideoDetectionResult = z.infer<typeof insertVideoDetectionResultSchema>;
+export type VideoDetectionResult = typeof videoDetectionResults.$inferSelect;
+
+// Button label options for carousel
+export const BUTTON_LABEL_OPTIONS = [
+  "BUY NOW", "PRE ORDER", "RENT", "ENQUIRE", "APPLY NOW", "DONATE", "BOOK NOW", "BID NOW"
+] as const;
+
+// Carousel position options
+export const CAROUSEL_POSITION_OPTIONS = [
+  "bottom", "top", "left", "right", "bottom-left", "bottom-right", "top-left", "top-right"
+] as const;

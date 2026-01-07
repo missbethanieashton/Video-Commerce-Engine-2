@@ -22,6 +22,7 @@ import More from "@/pages/more";
 import BrandDashboard from "@/pages/brand-dashboard";
 import BrandInventory from "@/pages/brand-inventory";
 import BrandCreators from "@/pages/brand-creators";
+import BrandKit from "@/pages/brand-kit";
 
 function CreatorRouter() {
   return (
@@ -32,6 +33,7 @@ function CreatorRouter() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/crm" component={CRMAnalytics} />
       <Route path="/referrals" component={Referrals} />
+      <Route path="/brand-kit" component={BrandKit} />
       <Route path="/help" component={Help} />
       <Route path="/more" component={More} />
       <Route component={NotFound} />
