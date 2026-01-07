@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertVideoSchema, insertBrandReferralSchema, insertBrandSchema, insertProductSchema, insertAnalyticsEventSchema } from "@shared/schema";
 import { z } from "zod";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
+import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -12,6 +13,9 @@ export async function registerRoutes(
   
   // ==================== AI/PDF ANALYSIS ROUTES ====================
   setupPdfAnalysisRoutes(app);
+
+  // ==================== AI DETECTION ROUTES ====================
+  registerDetectionRoutes(app, storage);
 
   // ==================== USER ROUTES ====================
   
