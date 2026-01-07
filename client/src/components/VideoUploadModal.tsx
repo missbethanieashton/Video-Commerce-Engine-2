@@ -37,8 +37,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2 } from "lucide-react";
+import { Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2, Wand2, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useUpload } from "@/hooks/use-upload";
+import { ProductCarouselEditor, defaultCarouselSettings, type CarouselSettings } from "@/components/ProductCarouselEditor";
 import type { Brand } from "@shared/schema";
 
 const videoUploadSchema = z.object({
@@ -79,6 +82,9 @@ export function VideoUploadModal({
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [enableAiDetection, setEnableAiDetection] = useState(true);
+  const [showCarouselSettings, setShowCarouselSettings] = useState(false);
+  const [carouselSettings, setCarouselSettings] = useState<CarouselSettings>(defaultCarouselSettings);
 
   const { uploadFile, isUploading, progress } = useUpload({
     onSuccess: (response) => {
@@ -162,6 +168,9 @@ export function VideoUploadModal({
     setVideoFile(null);
     setVideoUrl("");
     setSelectedBrands([]);
+    setEnableAiDetection(true);
+    setShowCarouselSettings(false);
+    setCarouselSettings(defaultCarouselSettings);
     form.reset();
     referralForm.reset();
     onOpenChange(false);
@@ -388,6 +397,67 @@ export function VideoUploadModal({
                   Can't find a brand? Refer them to join
                 </Button>
               </div>
+
+              <Separator />
+
+              {selectedBrands.length > 0 && (
+                <div className="space-y-4">
+                  <Card className="bg-gradient-to-r from-primary/5 to-chart-2/5 border-primary/20">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Wand2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">AI Product Detection</p>
+                            <p className="text-sm text-muted-foreground">
+                              Automatically detect products from {selectedBrands.length} selected brand{selectedBrands.length > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={enableAiDetection}
+                          onCheckedChange={setEnableAiDetection}
+                          data-testid="switch-ai-detection"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              <Collapsible open={showCarouselSettings} onOpenChange={setShowCarouselSettings}>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full justify-between"
+                    data-testid="button-carousel-settings"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Customize Carousel Appearance
+                    </div>
+                    {showCarouselSettings ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4">
+                  <Card>
+                    <CardContent className="pt-4">
+                      <ProductCarouselEditor
+                        settings={carouselSettings}
+                        onChange={setCarouselSettings}
+                        compact
+                      />
+                    </CardContent>
+                  </Card>
+                </CollapsibleContent>
+              </Collapsible>
 
               <Separator />
 
