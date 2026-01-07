@@ -16,6 +16,9 @@ export const detectionJobStatusEnum = pgEnum("detection_job_status", [
 export const carouselPositionEnum = pgEnum("carousel_position", [
   "bottom", "top", "left", "right", "bottom-left", "bottom-right", "top-left", "top-right"
 ]);
+export const campaignStatusEnum = pgEnum("campaign_status", [
+  "draft", "active", "paused", "completed", "cancelled"
+]);
 
 // Users table with role-based access
 export const users = pgTable("users", {
@@ -133,6 +136,31 @@ export const affiliatePayouts = pgTable("affiliate_payouts", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Brand Campaigns - marketing campaigns with budgets and ROI tracking
+export const campaigns = pgTable("campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brandId: varchar("brand_id").notNull().references(() => brands.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: campaignStatusEnum("status").default("draft"),
+  budget: decimal("budget", { precision: 10, scale: 2 }).notNull(),
+  spentAmount: decimal("spent_amount", { precision: 10, scale: 2 }).default("0.00"),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  targetViews: integer("target_views"),
+  targetClicks: integer("target_clicks"),
+  targetConversions: integer("target_conversions"),
+  targetRevenue: decimal("target_revenue", { precision: 10, scale: 2 }),
+  actualViews: integer("actual_views").default(0),
+  actualClicks: integer("actual_clicks").default(0),
+  actualConversions: integer("actual_conversions").default(0),
+  actualRevenue: decimal("actual_revenue", { precision: 10, scale: 2 }).default("0.00"),
+  productIds: text("product_ids"), // JSON array of product IDs included in campaign
+  creatorIds: text("creator_ids"), // JSON array of creator IDs participating
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Brand Kits - stores brand styling defaults from PDF extraction or manual entry
 export const brandKits = pgTable("brand_kits", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -219,6 +247,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 export const brandsRelations = relations(brands, ({ many, one }) => ({
   products: many(products),
   videoBrands: many(videoBrands),
+  campaigns: many(campaigns),
   owner: one(users, { fields: [brands.ownerId], references: [users.id] }),
 }));
 
@@ -257,6 +286,10 @@ export const affiliatePayoutsRelations = relations(affiliatePayouts, ({ one }) =
   user: one(users, { fields: [affiliatePayouts.userId], references: [users.id] }),
 }));
 
+export const campaignsRelations = relations(campaigns, ({ one }) => ({
+  brand: one(brands, { fields: [campaigns.brandId], references: [brands.id] }),
+}));
+
 export const brandKitsRelations = relations(brandKits, ({ one }) => ({
   user: one(users, { fields: [brandKits.userId], references: [users.id] }),
 }));
@@ -287,6 +320,7 @@ export const insertVideoProductSchema = createInsertSchema(videoProducts).omit({
 export const insertBrandReferralSchema = createInsertSchema(brandReferrals).omit({ id: true, status: true, signupToken: true, createdAt: true });
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true });
 export const insertAffiliatePayoutSchema = createInsertSchema(affiliatePayouts).omit({ id: true, createdAt: true });
+export const insertCampaignSchema = createInsertSchema(campaigns).omit({ id: true, spentAmount: true, actualViews: true, actualClicks: true, actualConversions: true, actualRevenue: true, createdAt: true, updatedAt: true });
 export const insertBrandKitSchema = createInsertSchema(brandKits).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertVideoCarouselOverrideSchema = createInsertSchema(videoCarouselOverrides).omit({ id: true, createdAt: true });
 export const insertVideoDetectionJobSchema = createInsertSchema(videoDetectionJobs).omit({ id: true, status: true, totalFrames: true, processedFrames: true, error: true, startedAt: true, completedAt: true, createdAt: true });
@@ -311,6 +345,8 @@ export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAffiliatePayout = z.infer<typeof insertAffiliatePayoutSchema>;
 export type AffiliatePayout = typeof affiliatePayouts.$inferSelect;
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type Campaign = typeof campaigns.$inferSelect;
 export type InsertBrandKit = z.infer<typeof insertBrandKitSchema>;
 export type BrandKit = typeof brandKits.$inferSelect;
 export type InsertVideoCarouselOverride = z.infer<typeof insertVideoCarouselOverrideSchema>;

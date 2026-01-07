@@ -9,6 +9,7 @@ import {
   type BrandReferral, type InsertBrandReferral,
   type AnalyticsEvent, type InsertAnalyticsEvent,
   type AffiliatePayout, type InsertAffiliatePayout,
+  type Campaign, type InsertCampaign,
   type BrandKit, type InsertBrandKit,
   type VideoCarouselOverride, type InsertVideoCarouselOverride,
   type VideoDetectionJob, type InsertVideoDetectionJob,
@@ -70,6 +71,21 @@ export interface IStorage {
   getPayouts(userId: string): Promise<AffiliatePayout[]>;
   createPayout(payout: InsertAffiliatePayout): Promise<AffiliatePayout>;
   
+  // Campaigns
+  getCampaigns(brandId: string): Promise<Campaign[]>;
+  getCampaign(id: string): Promise<Campaign | undefined>;
+  createCampaign(campaign: InsertCampaign): Promise<Campaign>;
+  updateCampaign(id: string, data: Partial<Campaign>): Promise<Campaign | undefined>;
+  deleteCampaign(id: string): Promise<boolean>;
+  getCampaignStats(brandId: string): Promise<{
+    totalCampaigns: number;
+    activeCampaigns: number;
+    totalBudget: number;
+    totalSpent: number;
+    totalRevenue: number;
+    averageROI: number;
+  }>;
+  
   // Brand Kits
   getBrandKit(userId: string): Promise<BrandKit | undefined>;
   createBrandKit(kit: InsertBrandKit): Promise<BrandKit>;
@@ -103,6 +119,7 @@ export class MemStorage implements IStorage {
   private analyticsEvents: Map<string, AnalyticsEvent> = new Map();
   private payouts: Map<string, AffiliatePayout> = new Map();
   private brandKits: Map<string, BrandKit> = new Map();
+  private campaigns: Map<string, Campaign> = new Map();
   private videoCarouselOverrides: Map<string, VideoCarouselOverride> = new Map();
   private detectionJobs: Map<string, VideoDetectionJob> = new Map();
   private detectionResults: Map<string, VideoDetectionResult> = new Map();
@@ -456,6 +473,94 @@ export class MemStorage implements IStorage {
     };
     this.payouts.set(id, newPayout);
     return newPayout;
+  }
+
+  // Campaigns
+  async getCampaigns(brandId: string): Promise<Campaign[]> {
+    return Array.from(this.campaigns.values())
+      .filter((c) => c.brandId === brandId)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async getCampaign(id: string): Promise<Campaign | undefined> {
+    return this.campaigns.get(id);
+  }
+
+  async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
+    const id = randomUUID();
+    const newCampaign: Campaign = {
+      id,
+      brandId: campaign.brandId,
+      name: campaign.name,
+      description: campaign.description ?? null,
+      status: campaign.status ?? "draft",
+      budget: campaign.budget,
+      spentAmount: "0.00",
+      startDate: campaign.startDate ?? null,
+      endDate: campaign.endDate ?? null,
+      targetViews: campaign.targetViews ?? null,
+      targetClicks: campaign.targetClicks ?? null,
+      targetConversions: campaign.targetConversions ?? null,
+      targetRevenue: campaign.targetRevenue ?? null,
+      actualViews: 0,
+      actualClicks: 0,
+      actualConversions: 0,
+      actualRevenue: "0.00",
+      productIds: campaign.productIds ?? null,
+      creatorIds: campaign.creatorIds ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.campaigns.set(id, newCampaign);
+    return newCampaign;
+  }
+
+  async updateCampaign(id: string, data: Partial<Campaign>): Promise<Campaign | undefined> {
+    const campaign = this.campaigns.get(id);
+    if (!campaign) return undefined;
+    const updated = { ...campaign, ...data, updatedAt: new Date() } as Campaign;
+    this.campaigns.set(id, updated);
+    return updated;
+  }
+
+  async deleteCampaign(id: string): Promise<boolean> {
+    return this.campaigns.delete(id);
+  }
+
+  async getCampaignStats(brandId: string): Promise<{
+    totalCampaigns: number;
+    activeCampaigns: number;
+    totalBudget: number;
+    totalSpent: number;
+    totalRevenue: number;
+    averageROI: number;
+  }> {
+    const campaigns = await this.getCampaigns(brandId);
+    
+    let totalBudget = 0;
+    let totalSpent = 0;
+    let totalRevenue = 0;
+    let activeCampaigns = 0;
+    
+    for (const campaign of campaigns) {
+      totalBudget += Number(campaign.budget || 0);
+      totalSpent += Number(campaign.spentAmount || 0);
+      totalRevenue += Number(campaign.actualRevenue || 0);
+      if (campaign.status === "active") {
+        activeCampaigns++;
+      }
+    }
+    
+    const averageROI = totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent) * 100 : 0;
+    
+    return {
+      totalCampaigns: campaigns.length,
+      activeCampaigns,
+      totalBudget,
+      totalSpent,
+      totalRevenue,
+      averageROI,
+    };
   }
 
   // Brand Kits
