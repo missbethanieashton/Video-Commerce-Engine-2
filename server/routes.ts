@@ -328,6 +328,52 @@ export async function registerRoutes(
     }
   });
 
+  // Get affiliate publishers analytics with sorting
+  app.get("/api/analytics/affiliate-publishers", async (req, res) => {
+    try {
+      const { sortBy = "earnings", order = "desc" } = req.query;
+      const validSortFields = ["earnings", "clicks", "conversions", "revenue", "conversionRate"];
+      const sortField = validSortFields.includes(sortBy as string) ? sortBy as string : "earnings";
+      const sortOrder = order === "asc" ? "asc" : "desc";
+      
+      // Get all campaign affiliates with user info
+      const affiliatePublishers = await storage.getAffiliatePublishersAnalytics();
+      
+      // Sort based on the requested field
+      const sorted = [...affiliatePublishers].sort((a, b) => {
+        let aVal: number, bVal: number;
+        switch (sortField) {
+          case "clicks":
+            aVal = a.totalClicks;
+            bVal = b.totalClicks;
+            break;
+          case "conversions":
+            aVal = a.totalConversions;
+            bVal = b.totalConversions;
+            break;
+          case "revenue":
+            aVal = parseFloat(a.totalRevenue);
+            bVal = parseFloat(b.totalRevenue);
+            break;
+          case "conversionRate":
+            aVal = a.totalClicks > 0 ? (a.totalConversions / a.totalClicks) * 100 : 0;
+            bVal = b.totalClicks > 0 ? (b.totalConversions / b.totalClicks) * 100 : 0;
+            break;
+          case "earnings":
+          default:
+            aVal = parseFloat(a.totalEarnings);
+            bVal = parseFloat(b.totalEarnings);
+            break;
+        }
+        return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+      });
+      
+      res.json(sorted);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get affiliate publishers analytics" });
+    }
+  });
+
   // ==================== UPLOAD ROUTES ====================
   
   // Get signed upload URL

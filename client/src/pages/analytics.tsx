@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { AffiliateTable } from "@/components/AffiliateTable";
+import { AffiliatePublishersTable } from "@/components/AffiliatePublishersTable";
 import {
   Eye,
   MousePointer,
@@ -17,6 +18,7 @@ import {
   Globe,
   Smartphone,
   Monitor,
+  Users,
 } from "lucide-react";
 import type { Video } from "@shared/schema";
 
@@ -106,6 +108,7 @@ export default function Analytics() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="videos">By Video</TabsTrigger>
+          <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
           <TabsTrigger value="geography">Geography</TabsTrigger>
           <TabsTrigger value="devices">Devices</TabsTrigger>
         </TabsList>
@@ -134,6 +137,10 @@ export default function Analytics() {
 
         <TabsContent value="videos">
           <AffiliateTable videos={videos} isLoading={videosLoading} />
+        </TabsContent>
+
+        <TabsContent value="affiliates">
+          <AffiliatePublishersTable />
         </TabsContent>
 
         <TabsContent value="geography" className="space-y-6">

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
   type User, type InsertUser,
@@ -154,6 +154,17 @@ export interface IStorage {
   getCampaignAffiliatesByUser(affiliateId: string): Promise<CampaignAffiliate[]>;
   createCampaignAffiliate(assignment: InsertCampaignAffiliate): Promise<CampaignAffiliate>;
   updateCampaignAffiliateStats(id: string, stats: Partial<CampaignAffiliate>): Promise<CampaignAffiliate | undefined>;
+  getAffiliatePublishersAnalytics(): Promise<{
+    id: string;
+    affiliateId: string;
+    affiliateName: string;
+    affiliateEmail: string;
+    totalClicks: number;
+    totalConversions: number;
+    totalRevenue: string;
+    totalEarnings: string;
+    campaignCount: number;
+  }[]>;
   
   // Global Video Library
   getGlobalVideoListings(category?: string): Promise<GlobalVideoLibrary[]>;
@@ -922,6 +933,62 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async getAffiliatePublishersAnalytics(): Promise<{
+    id: string;
+    affiliateId: string;
+    affiliateName: string;
+    affiliateEmail: string;
+    totalClicks: number;
+    totalConversions: number;
+    totalRevenue: string;
+    totalEarnings: string;
+    campaignCount: number;
+  }[]> {
+    const affiliateMap = new Map<string, {
+      id: string;
+      affiliateId: string;
+      affiliateName: string;
+      affiliateEmail: string;
+      totalClicks: number;
+      totalConversions: number;
+      totalRevenue: number;
+      totalEarnings: number;
+      campaignCount: number;
+    }>();
+
+    for (const ca of this.campaignAffiliates.values()) {
+      const user = this.users.get(ca.affiliateId);
+      if (!user) continue;
+      
+      const existing = affiliateMap.get(ca.affiliateId);
+      if (existing) {
+        existing.totalClicks += ca.totalClicks || 0;
+        existing.totalConversions += ca.totalConversions || 0;
+        existing.totalRevenue += parseFloat(ca.totalRevenue?.toString() || "0");
+        existing.totalEarnings += parseFloat(ca.totalEarnings?.toString() || "0");
+        existing.campaignCount += 1;
+      } else {
+        affiliateMap.set(ca.affiliateId, {
+          id: ca.affiliateId,
+          affiliateId: ca.affiliateId,
+          affiliateName: user.displayName || user.username,
+          affiliateEmail: user.email,
+          totalClicks: ca.totalClicks || 0,
+          totalConversions: ca.totalConversions || 0,
+          totalRevenue: parseFloat(ca.totalRevenue?.toString() || "0"),
+          totalEarnings: parseFloat(ca.totalEarnings?.toString() || "0"),
+          campaignCount: 1,
+        });
+      }
+    }
+
+    return Array.from(affiliateMap.values()).map(a => ({
+      ...a,
+      totalRevenue: a.totalRevenue.toFixed(2),
+      totalEarnings: a.totalEarnings.toFixed(2),
+    }));
+  }
+
   // Global Video Library
   async getGlobalVideoListings(category?: string): Promise<GlobalVideoLibrary[]> {
     let listings = Array.from(this.globalVideoLibrary.values())
@@ -1377,6 +1444,45 @@ export class DatabaseStorage implements IStorage {
   async updateCampaignAffiliateStats(id: string, stats: Partial<CampaignAffiliate>): Promise<CampaignAffiliate | undefined> {
     const [updated] = await db.update(campaignAffiliates).set(stats).where(eq(campaignAffiliates.id, id)).returning();
     return updated;
+  }
+
+  async getAffiliatePublishersAnalytics(): Promise<{
+    id: string;
+    affiliateId: string;
+    affiliateName: string;
+    affiliateEmail: string;
+    totalClicks: number;
+    totalConversions: number;
+    totalRevenue: string;
+    totalEarnings: string;
+    campaignCount: number;
+  }[]> {
+    const results = await db
+      .select({
+        affiliateId: campaignAffiliates.affiliateId,
+        totalClicks: sql<number>`COALESCE(SUM(${campaignAffiliates.totalClicks}), 0)::int`,
+        totalConversions: sql<number>`COALESCE(SUM(${campaignAffiliates.totalConversions}), 0)::int`,
+        totalRevenue: sql<string>`COALESCE(SUM(${campaignAffiliates.totalRevenue}), 0)::text`,
+        totalEarnings: sql<string>`COALESCE(SUM(${campaignAffiliates.totalEarnings}), 0)::text`,
+        campaignCount: sql<number>`COUNT(*)::int`,
+        affiliateName: users.displayName,
+        affiliateEmail: users.email,
+      })
+      .from(campaignAffiliates)
+      .leftJoin(users, eq(campaignAffiliates.affiliateId, users.id))
+      .groupBy(campaignAffiliates.affiliateId, users.displayName, users.email);
+
+    return results.map(r => ({
+      id: r.affiliateId,
+      affiliateId: r.affiliateId,
+      affiliateName: r.affiliateName || "Unknown",
+      affiliateEmail: r.affiliateEmail || "",
+      totalClicks: r.totalClicks,
+      totalConversions: r.totalConversions,
+      totalRevenue: r.totalRevenue,
+      totalEarnings: r.totalEarnings,
+      campaignCount: r.campaignCount,
+    }));
   }
 
   // Global Video Library
