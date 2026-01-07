@@ -15,6 +15,11 @@ import {
   type VideoDetectionJob, type InsertVideoDetectionJob,
   type VideoDetectionResult, type InsertVideoDetectionResult,
   type CreatorInvitation, type InsertCreatorInvitation,
+  type AffiliateInvitation, type InsertAffiliateInvitation,
+  type CampaignAffiliate, type InsertCampaignAffiliate,
+  type GlobalVideoLibrary, type InsertGlobalVideoLibrary,
+  type VideoLicensePurchase, type InsertVideoLicensePurchase,
+  type VideoPublishRecord, type InsertVideoPublishRecord,
   insertCreatorInvitationSchema,
 } from "@shared/schema";
 
@@ -114,6 +119,37 @@ export interface IStorage {
   createCreatorInvitation(invitation: InsertCreatorInvitation): Promise<CreatorInvitation>;
   createCreatorInvitationsBulk(invitations: InsertCreatorInvitation[]): Promise<CreatorInvitation[]>;
   updateCreatorInvitationStatus(id: string, status: string): Promise<CreatorInvitation | undefined>;
+  
+  // Affiliate Invitations
+  getAffiliateInvitations(inviterId: string): Promise<AffiliateInvitation[]>;
+  getAffiliateInvitationByToken(token: string): Promise<AffiliateInvitation | undefined>;
+  createAffiliateInvitation(invitation: InsertAffiliateInvitation): Promise<AffiliateInvitation>;
+  createAffiliateInvitationsBulk(invitations: InsertAffiliateInvitation[]): Promise<AffiliateInvitation[]>;
+  updateAffiliateInvitationStatus(id: string, status: string, acceptedByUserId?: string): Promise<AffiliateInvitation | undefined>;
+  
+  // Campaign Affiliates
+  getCampaignAffiliates(videoId: string): Promise<CampaignAffiliate[]>;
+  getCampaignAffiliatesByUser(affiliateId: string): Promise<CampaignAffiliate[]>;
+  createCampaignAffiliate(assignment: InsertCampaignAffiliate): Promise<CampaignAffiliate>;
+  updateCampaignAffiliateStats(id: string, stats: Partial<CampaignAffiliate>): Promise<CampaignAffiliate | undefined>;
+  
+  // Global Video Library
+  getGlobalVideoListings(category?: string): Promise<GlobalVideoLibrary[]>;
+  getGlobalVideoListing(id: string): Promise<GlobalVideoLibrary | undefined>;
+  getGlobalVideoListingByVideo(videoId: string): Promise<GlobalVideoLibrary | undefined>;
+  createGlobalVideoListing(listing: InsertGlobalVideoLibrary): Promise<GlobalVideoLibrary>;
+  updateGlobalVideoListing(id: string, data: Partial<GlobalVideoLibrary>): Promise<GlobalVideoLibrary | undefined>;
+  
+  // Video License Purchases
+  getVideoLicensePurchases(affiliateId: string): Promise<VideoLicensePurchase[]>;
+  getVideoLicensePurchase(id: string): Promise<VideoLicensePurchase | undefined>;
+  createVideoLicensePurchase(purchase: InsertVideoLicensePurchase): Promise<VideoLicensePurchase>;
+  updateVideoLicensePurchaseStatus(id: string, status: string, paymentIntentId?: string): Promise<VideoLicensePurchase | undefined>;
+  
+  // Video Publish Records
+  getVideoPublishRecord(videoId: string): Promise<VideoPublishRecord | undefined>;
+  createVideoPublishRecord(record: InsertVideoPublishRecord): Promise<VideoPublishRecord>;
+  updateVideoPublishRecord(id: string, data: Partial<VideoPublishRecord>): Promise<VideoPublishRecord | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -132,6 +168,11 @@ export class MemStorage implements IStorage {
   private detectionJobs: Map<string, VideoDetectionJob> = new Map();
   private detectionResults: Map<string, VideoDetectionResult> = new Map();
   private creatorInvitations: Map<string, CreatorInvitation> = new Map();
+  private affiliateInvitations: Map<string, AffiliateInvitation> = new Map();
+  private campaignAffiliates: Map<string, CampaignAffiliate> = new Map();
+  private globalVideoLibrary: Map<string, GlobalVideoLibrary> = new Map();
+  private videoLicensePurchases: Map<string, VideoLicensePurchase> = new Map();
+  private videoPublishRecords: Map<string, VideoPublishRecord> = new Map();
 
   constructor() {
     this.seedDemoData();
@@ -152,6 +193,9 @@ export class MemStorage implements IStorage {
       referralCode: `REF_${randomUUID().slice(0, 8).toUpperCase()}`,
       commissionRate: "15.00",
       charityContribution: "0.00",
+      stripeCustomerId: null,
+      stripeConnectAccountId: null,
+      stripeConnectOnboarded: false,
     };
     this.users.set(demoUserId, demoUser);
 
@@ -212,6 +256,9 @@ export class MemStorage implements IStorage {
       referralCode: `REF_${randomUUID().slice(0, 8).toUpperCase()}`,
       commissionRate: user.commissionRate ?? "15.00",
       charityContribution: user.charityContribution ?? "0.00",
+      stripeCustomerId: null,
+      stripeConnectAccountId: null,
+      stripeConnectOnboarded: false,
     };
     this.users.set(id, newUser);
     return newUser;
@@ -758,6 +805,218 @@ export class MemStorage implements IStorage {
     if (!invitation) return undefined;
     const updated = { ...invitation, status: status as "pending" | "sent" | "accepted" | "declined" };
     this.creatorInvitations.set(id, updated);
+    return updated;
+  }
+
+  // Affiliate Invitations
+  async getAffiliateInvitations(inviterId: string): Promise<AffiliateInvitation[]> {
+    return Array.from(this.affiliateInvitations.values())
+      .filter((inv) => inv.inviterId === inviterId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getAffiliateInvitationByToken(token: string): Promise<AffiliateInvitation | undefined> {
+    return Array.from(this.affiliateInvitations.values()).find((inv) => inv.inviteToken === token);
+  }
+
+  async createAffiliateInvitation(invitation: InsertAffiliateInvitation): Promise<AffiliateInvitation> {
+    const id = randomUUID();
+    const newInvitation: AffiliateInvitation = {
+      id,
+      inviterId: invitation.inviterId,
+      affiliateName: invitation.affiliateName,
+      email: invitation.email,
+      commissionRate: invitation.commissionRate ?? "10.00",
+      message: invitation.message ?? null,
+      status: "pending",
+      inviteToken: randomUUID(),
+      acceptedByUserId: null,
+      createdAt: new Date(),
+    };
+    this.affiliateInvitations.set(id, newInvitation);
+    return newInvitation;
+  }
+
+  async createAffiliateInvitationsBulk(invitations: InsertAffiliateInvitation[]): Promise<AffiliateInvitation[]> {
+    const created: AffiliateInvitation[] = [];
+    for (const invitation of invitations) {
+      const result = await this.createAffiliateInvitation(invitation);
+      created.push(result);
+    }
+    return created;
+  }
+
+  async updateAffiliateInvitationStatus(id: string, status: string, acceptedByUserId?: string): Promise<AffiliateInvitation | undefined> {
+    const invitation = this.affiliateInvitations.get(id);
+    if (!invitation) return undefined;
+    const updated = { 
+      ...invitation, 
+      status: status as "pending" | "sent" | "accepted" | "declined",
+      acceptedByUserId: acceptedByUserId ?? invitation.acceptedByUserId
+    };
+    this.affiliateInvitations.set(id, updated);
+    return updated;
+  }
+
+  // Campaign Affiliates
+  async getCampaignAffiliates(videoId: string): Promise<CampaignAffiliate[]> {
+    return Array.from(this.campaignAffiliates.values())
+      .filter((ca) => ca.videoId === videoId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getCampaignAffiliatesByUser(affiliateId: string): Promise<CampaignAffiliate[]> {
+    return Array.from(this.campaignAffiliates.values())
+      .filter((ca) => ca.affiliateId === affiliateId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async createCampaignAffiliate(assignment: InsertCampaignAffiliate): Promise<CampaignAffiliate> {
+    const id = randomUUID();
+    const utmCode = randomUUID();
+    const newAssignment: CampaignAffiliate = {
+      id,
+      videoId: assignment.videoId,
+      affiliateId: assignment.affiliateId,
+      commissionRate: assignment.commissionRate,
+      utmCode,
+      embedCode: null,
+      totalClicks: 0,
+      totalConversions: 0,
+      totalRevenue: "0.00",
+      totalEarnings: "0.00",
+      notifiedAt: null,
+      createdAt: new Date(),
+    };
+    this.campaignAffiliates.set(id, newAssignment);
+    return newAssignment;
+  }
+
+  async updateCampaignAffiliateStats(id: string, stats: Partial<CampaignAffiliate>): Promise<CampaignAffiliate | undefined> {
+    const assignment = this.campaignAffiliates.get(id);
+    if (!assignment) return undefined;
+    const updated = { ...assignment, ...stats };
+    this.campaignAffiliates.set(id, updated);
+    return updated;
+  }
+
+  // Global Video Library
+  async getGlobalVideoListings(category?: string): Promise<GlobalVideoLibrary[]> {
+    let listings = Array.from(this.globalVideoLibrary.values())
+      .filter((l) => l.publishStatus === "published");
+    if (category) {
+      listings = listings.filter((l) => l.category === category);
+    }
+    return listings.sort((a, b) => (b.listedAt?.getTime() || 0) - (a.listedAt?.getTime() || 0));
+  }
+
+  async getGlobalVideoListing(id: string): Promise<GlobalVideoLibrary | undefined> {
+    return this.globalVideoLibrary.get(id);
+  }
+
+  async getGlobalVideoListingByVideo(videoId: string): Promise<GlobalVideoLibrary | undefined> {
+    return Array.from(this.globalVideoLibrary.values()).find((l) => l.videoId === videoId);
+  }
+
+  async createGlobalVideoListing(listing: InsertGlobalVideoLibrary): Promise<GlobalVideoLibrary> {
+    const id = randomUUID();
+    const newListing: GlobalVideoLibrary = {
+      id,
+      videoId: listing.videoId,
+      creatorId: listing.creatorId,
+      licenseFee: listing.licenseFee ?? "45.00",
+      publishStatus: "unpublished",
+      stripePaymentIntentId: null,
+      listingTitle: listing.listingTitle ?? null,
+      listingDescription: listing.listingDescription ?? null,
+      category: listing.category ?? null,
+      tags: listing.tags ?? null,
+      totalLicenses: 0,
+      listedAt: null,
+      createdAt: new Date(),
+    };
+    this.globalVideoLibrary.set(id, newListing);
+    return newListing;
+  }
+
+  async updateGlobalVideoListing(id: string, data: Partial<GlobalVideoLibrary>): Promise<GlobalVideoLibrary | undefined> {
+    const listing = this.globalVideoLibrary.get(id);
+    if (!listing) return undefined;
+    const updated = { ...listing, ...data };
+    this.globalVideoLibrary.set(id, updated);
+    return updated;
+  }
+
+  // Video License Purchases
+  async getVideoLicensePurchases(affiliateId: string): Promise<VideoLicensePurchase[]> {
+    return Array.from(this.videoLicensePurchases.values())
+      .filter((p) => p.affiliateId === affiliateId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getVideoLicensePurchase(id: string): Promise<VideoLicensePurchase | undefined> {
+    return this.videoLicensePurchases.get(id);
+  }
+
+  async createVideoLicensePurchase(purchase: InsertVideoLicensePurchase): Promise<VideoLicensePurchase> {
+    const id = randomUUID();
+    const utmCode = randomUUID();
+    const newPurchase: VideoLicensePurchase = {
+      id,
+      globalListingId: purchase.globalListingId,
+      affiliateId: purchase.affiliateId,
+      licenseFee: purchase.licenseFee,
+      status: "pending",
+      stripePaymentIntentId: null,
+      utmCode,
+      embedCode: null,
+      commissionRate: purchase.commissionRate ?? "10.00",
+      purchasedAt: null,
+      createdAt: new Date(),
+    };
+    this.videoLicensePurchases.set(id, newPurchase);
+    return newPurchase;
+  }
+
+  async updateVideoLicensePurchaseStatus(id: string, status: string, paymentIntentId?: string): Promise<VideoLicensePurchase | undefined> {
+    const purchase = this.videoLicensePurchases.get(id);
+    if (!purchase) return undefined;
+    const updated = { 
+      ...purchase, 
+      status: status as "pending" | "paid" | "failed" | "refunded",
+      stripePaymentIntentId: paymentIntentId ?? purchase.stripePaymentIntentId,
+      purchasedAt: status === "paid" ? new Date() : purchase.purchasedAt,
+    };
+    this.videoLicensePurchases.set(id, updated);
+    return updated;
+  }
+
+  // Video Publish Records
+  async getVideoPublishRecord(videoId: string): Promise<VideoPublishRecord | undefined> {
+    return Array.from(this.videoPublishRecords.values()).find((r) => r.videoId === videoId && r.isActive);
+  }
+
+  async createVideoPublishRecord(record: InsertVideoPublishRecord): Promise<VideoPublishRecord> {
+    const id = randomUUID();
+    const newRecord: VideoPublishRecord = {
+      id,
+      videoId: record.videoId,
+      embedCode: record.embedCode,
+      embedCodeMinified: record.embedCode.replace(/\s+/g, ' ').trim(),
+      widgetConfig: record.widgetConfig ?? null,
+      baseUtmCode: randomUUID(),
+      publishedAt: new Date(),
+      isActive: true,
+    };
+    this.videoPublishRecords.set(id, newRecord);
+    return newRecord;
+  }
+
+  async updateVideoPublishRecord(id: string, data: Partial<VideoPublishRecord>): Promise<VideoPublishRecord | undefined> {
+    const record = this.videoPublishRecords.get(id);
+    if (!record) return undefined;
+    const updated = { ...record, ...data };
+    this.videoPublishRecords.set(id, updated);
     return updated;
   }
 }

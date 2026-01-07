@@ -1,10 +1,24 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertVideoSchema, insertBrandReferralSchema, insertBrandSchema, insertProductSchema, insertAnalyticsEventSchema, insertCreatorInvitationSchema } from "@shared/schema";
+import { 
+  insertVideoSchema, 
+  insertBrandReferralSchema, 
+  insertBrandSchema, 
+  insertProductSchema, 
+  insertAnalyticsEventSchema, 
+  insertCreatorInvitationSchema,
+  insertAffiliateInvitationSchema,
+  insertCampaignAffiliateSchema,
+  insertGlobalVideoLibrarySchema,
+  insertVideoLicensePurchaseSchema,
+  insertVideoPublishRecordSchema,
+} from "@shared/schema";
 import { z } from "zod";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
+import { stripeService } from "./stripeService";
+import { getStripePublishableKey } from "./stripeClient";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -706,5 +720,508 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== VIDEO PUBLISH ROUTES ====================
+
+  // Publish a video and generate embed code
+  app.post("/api/videos/:id/publish", async (req, res) => {
+    try {
+      const video = await storage.getVideo(req.params.id);
+      if (!video) {
+        return res.status(404).json({ error: "Video not found" });
+      }
+
+      const { widgetConfig } = req.body;
+      
+      // Generate embed code with UTM tracking
+      const baseUrl = process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost:5000";
+      const embedCode = generateEmbedCode(video.id, baseUrl, widgetConfig);
+
+      // Create publish record
+      const publishRecord = await storage.createVideoPublishRecord({
+        videoId: video.id,
+        embedCode,
+        widgetConfig: widgetConfig ? JSON.stringify(widgetConfig) : null,
+      });
+
+      // Update video status
+      await storage.updateVideo(video.id, { status: "published" });
+
+      res.json({
+        embedCode: publishRecord.embedCode,
+        embedCodeMinified: publishRecord.embedCodeMinified,
+        utmCode: publishRecord.baseUtmCode,
+        publishedAt: publishRecord.publishedAt,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to publish video" });
+    }
+  });
+
+  // Get published video embed info
+  app.get("/api/videos/:id/publish", async (req, res) => {
+    try {
+      const publishRecord = await storage.getVideoPublishRecord(req.params.id);
+      if (!publishRecord) {
+        return res.json({ published: false });
+      }
+      res.json({ published: true, ...publishRecord });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get publish info" });
+    }
+  });
+
+  // ==================== AFFILIATE INVITATION ROUTES ====================
+
+  // Get affiliate invitations sent by current user
+  app.get("/api/affiliates/invitations", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const invitations = await storage.getAffiliateInvitations(user.id);
+      res.json(invitations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get affiliate invitations" });
+    }
+  });
+
+  // Send affiliate invitation
+  app.post("/api/affiliates/invite", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const validatedData = insertAffiliateInvitationSchema.omit({ inviterId: true }).parse(req.body);
+      const invitation = await storage.createAffiliateInvitation({
+        ...validatedData,
+        inviterId: user.id,
+      });
+      res.status(201).json(invitation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create affiliate invitation" });
+    }
+  });
+
+  // Bulk invite affiliates via CSV
+  app.post("/api/affiliates/invite/bulk", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { invitations } = req.body;
+      if (!Array.isArray(invitations) || invitations.length === 0) {
+        return res.status(400).json({ error: "No invitations provided" });
+      }
+
+      if (invitations.length > 200) {
+        return res.status(400).json({ error: "Maximum 200 invitations per batch" });
+      }
+
+      const validatedInvitations = invitations.map((inv: any) => ({
+        inviterId: user.id,
+        affiliateName: inv.affiliateName,
+        email: inv.email,
+        commissionRate: inv.commissionRate || "10.00",
+        message: inv.message,
+      }));
+
+      const created = await storage.createAffiliateInvitationsBulk(validatedInvitations);
+      res.status(201).json({ created: created.length, invitations: created });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to bulk create affiliate invitations" });
+    }
+  });
+
+  // Accept affiliate invitation (for affiliate login)
+  app.post("/api/affiliates/accept/:token", async (req, res) => {
+    try {
+      const invitation = await storage.getAffiliateInvitationByToken(req.params.token);
+      if (!invitation) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+
+      if (invitation.status !== "pending" && invitation.status !== "sent") {
+        return res.status(400).json({ error: "Invitation already processed" });
+      }
+
+      // Create affiliate user account
+      const affiliateUser = await storage.createUser({
+        username: `affiliate_${invitation.email.split("@")[0]}`,
+        password: "affiliate123", // In production, generate secure password or use OAuth
+        email: invitation.email,
+        displayName: invitation.affiliateName,
+        role: "affiliate",
+      });
+
+      await storage.updateAffiliateInvitationStatus(invitation.id, "accepted", affiliateUser.id);
+
+      res.json({ success: true, user: affiliateUser });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to accept invitation" });
+    }
+  });
+
+  // ==================== CAMPAIGN AFFILIATES ROUTES ====================
+
+  // Get affiliates for a video campaign
+  app.get("/api/videos/:id/affiliates", async (req, res) => {
+    try {
+      const affiliates = await storage.getCampaignAffiliates(req.params.id);
+      res.json(affiliates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get campaign affiliates" });
+    }
+  });
+
+  // Add affiliate to video campaign
+  app.post("/api/videos/:id/affiliates", async (req, res) => {
+    try {
+      const validatedData = insertCampaignAffiliateSchema.parse({
+        videoId: req.params.id,
+        ...req.body,
+      });
+      
+      const video = await storage.getVideo(req.params.id);
+      if (!video) {
+        return res.status(404).json({ error: "Video not found" });
+      }
+
+      const assignment = await storage.createCampaignAffiliate(validatedData);
+
+      // Generate personalized embed code for affiliate
+      const baseUrl = process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost:5000";
+      const embedCode = generateAffiliateEmbedCode(video.id, assignment.utmCode!, baseUrl);
+      await storage.updateCampaignAffiliateStats(assignment.id, { embedCode });
+
+      res.status(201).json({ ...assignment, embedCode });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to add affiliate to campaign" });
+    }
+  });
+
+  // Get campaigns for affiliate user
+  app.get("/api/affiliates/campaigns", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const campaigns = await storage.getCampaignAffiliatesByUser(user.id);
+      res.json(campaigns);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get affiliate campaigns" });
+    }
+  });
+
+  // ==================== GLOBAL VIDEO LIBRARY ROUTES ====================
+
+  // Get all published listings in global library
+  app.get("/api/library", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const listings = await storage.getGlobalVideoListings(category);
+      
+      // Enrich with video details
+      const enrichedListings = await Promise.all(
+        listings.map(async (listing) => {
+          const video = await storage.getVideo(listing.videoId);
+          const creator = await storage.getUser(listing.creatorId);
+          return {
+            ...listing,
+            video,
+            creator: creator ? { displayName: creator.displayName, avatarUrl: creator.avatarUrl } : null,
+          };
+        })
+      );
+      
+      res.json(enrichedListings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get library listings" });
+    }
+  });
+
+  // Add video to global library (creator pays listing fee)
+  app.post("/api/library/list", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const validatedData = insertGlobalVideoLibrarySchema.parse({
+        ...req.body,
+        creatorId: user.id,
+      });
+
+      const video = await storage.getVideo(validatedData.videoId);
+      if (!video || video.creatorId !== user.id) {
+        return res.status(404).json({ error: "Video not found or not owned by user" });
+      }
+
+      // Check if already listed
+      const existingListing = await storage.getGlobalVideoListingByVideo(validatedData.videoId);
+      if (existingListing) {
+        return res.status(400).json({ error: "Video already listed in library" });
+      }
+
+      const listing = await storage.createGlobalVideoListing(validatedData);
+
+      // Create Stripe payment intent for listing fee
+      const paymentIntent = await stripeService.createPaymentIntent(
+        45.00,
+        "eur",
+        { listingId: listing.id, userId: user.id, type: "library_listing" }
+      );
+
+      await storage.updateGlobalVideoListing(listing.id, {
+        stripePaymentIntentId: paymentIntent.id,
+        publishStatus: "pending_payment",
+      });
+
+      res.status(201).json({
+        listing,
+        paymentIntent: {
+          clientSecret: paymentIntent.client_secret,
+          amount: paymentIntent.amount,
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Failed to create library listing:", error);
+      res.status(500).json({ error: "Failed to create library listing" });
+    }
+  });
+
+  // Confirm library listing payment
+  app.post("/api/library/:id/confirm-payment", async (req, res) => {
+    try {
+      const listing = await storage.getGlobalVideoListing(req.params.id);
+      if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+      }
+
+      await storage.updateGlobalVideoListing(listing.id, {
+        publishStatus: "published",
+        listedAt: new Date(),
+      });
+
+      res.json({ success: true, listing: await storage.getGlobalVideoListing(listing.id) });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // ==================== VIDEO LICENSE PURCHASE ROUTES ====================
+
+  // Purchase license for a video from global library
+  app.post("/api/library/:id/purchase", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const listing = await storage.getGlobalVideoListing(req.params.id);
+      if (!listing || listing.publishStatus !== "published") {
+        return res.status(404).json({ error: "Listing not found or not available" });
+      }
+
+      const { commissionRate } = req.body;
+
+      const purchase = await storage.createVideoLicensePurchase({
+        globalListingId: listing.id,
+        affiliateId: user.id,
+        licenseFee: listing.licenseFee,
+        commissionRate: commissionRate || "10.00",
+      });
+
+      // Create Stripe payment intent
+      const paymentIntent = await stripeService.createPaymentIntent(
+        Number(listing.licenseFee),
+        "eur",
+        { purchaseId: purchase.id, userId: user.id, type: "license_purchase" }
+      );
+
+      res.status(201).json({
+        purchase,
+        paymentIntent: {
+          clientSecret: paymentIntent.client_secret,
+          amount: paymentIntent.amount,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to create license purchase:", error);
+      res.status(500).json({ error: "Failed to create license purchase" });
+    }
+  });
+
+  // Confirm license purchase payment
+  app.post("/api/purchases/:id/confirm-payment", async (req, res) => {
+    try {
+      const purchase = await storage.getVideoLicensePurchase(req.params.id);
+      if (!purchase) {
+        return res.status(404).json({ error: "Purchase not found" });
+      }
+
+      await storage.updateVideoLicensePurchaseStatus(purchase.id, "paid", req.body.paymentIntentId);
+
+      // Get listing and video for embed code generation
+      const listing = await storage.getGlobalVideoListing(purchase.globalListingId);
+      if (listing) {
+        const baseUrl = process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost:5000";
+        const embedCode = generateAffiliateEmbedCode(listing.videoId, purchase.utmCode!, baseUrl);
+        
+        // Update purchase with embed code
+        const updatedPurchase = await storage.getVideoLicensePurchase(purchase.id);
+        if (updatedPurchase) {
+          // Also increment license count
+          await storage.updateGlobalVideoListing(listing.id, {
+            totalLicenses: (listing.totalLicenses || 0) + 1,
+          });
+        }
+        
+        res.json({ 
+          success: true, 
+          purchase: updatedPurchase,
+          embedCode,
+          utmCode: purchase.utmCode,
+        });
+      } else {
+        res.json({ success: true, purchase: await storage.getVideoLicensePurchase(purchase.id) });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // Get affiliate's purchased licenses
+  app.get("/api/affiliates/licenses", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const purchases = await storage.getVideoLicensePurchases(user.id);
+      res.json(purchases);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get licenses" });
+    }
+  });
+
+  // ==================== STRIPE ROUTES ====================
+
+  // Get Stripe publishable key
+  app.get("/api/stripe/config", async (req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get Stripe config" });
+    }
+  });
+
+  // Create Stripe Connect account for affiliate payouts
+  app.post("/api/stripe/connect/create", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      if (user.stripeConnectAccountId) {
+        return res.json({ accountId: user.stripeConnectAccountId });
+      }
+
+      const account = await stripeService.createConnectAccount(user.email, user.id);
+      await storage.updateUser(user.id, { stripeConnectAccountId: account.id } as any);
+
+      res.json({ accountId: account.id });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create connect account" });
+    }
+  });
+
+  // Create onboarding link for Stripe Connect
+  app.post("/api/stripe/connect/onboarding", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user || !user.stripeConnectAccountId) {
+        return res.status(400).json({ error: "No connect account found" });
+      }
+
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(",")[0]}`;
+      const accountLink = await stripeService.createConnectAccountLink(
+        user.stripeConnectAccountId,
+        `${baseUrl}/affiliate/settings`,
+        `${baseUrl}/affiliate/settings?onboarded=true`
+      );
+
+      res.json({ url: accountLink.url });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create onboarding link" });
+    }
+  });
+
+  // Get Stripe Connect account status
+  app.get("/api/stripe/connect/status", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      if (!user.stripeConnectAccountId) {
+        return res.json({ connected: false });
+      }
+
+      const account = await stripeService.getConnectAccount(user.stripeConnectAccountId);
+      const isOnboarded = account.charges_enabled && account.payouts_enabled;
+
+      if (isOnboarded && !user.stripeConnectOnboarded) {
+        await storage.updateUser(user.id, { stripeConnectOnboarded: true } as any);
+      }
+
+      res.json({
+        connected: true,
+        onboarded: isOnboarded,
+        accountId: user.stripeConnectAccountId,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get connect status" });
+    }
+  });
+
   return httpServer;
+}
+
+// Helper function to generate embed code
+function generateEmbedCode(videoId: string, baseUrl: string, config?: any): string {
+  const widgetUrl = `https://${baseUrl}/embed/${videoId}`;
+  return `<!-- Video Commerce Widget -->
+<div id="vc-widget-${videoId}" data-video-id="${videoId}"></div>
+<script src="${widgetUrl}/widget.js" async></script>
+<script>
+  window.vcWidgetConfig = ${JSON.stringify(config || {})};
+</script>`;
+}
+
+// Helper function to generate affiliate-specific embed code with UTM
+function generateAffiliateEmbedCode(videoId: string, utmCode: string, baseUrl: string): string {
+  const widgetUrl = `https://${baseUrl}/embed/${videoId}`;
+  return `<!-- Video Commerce Widget - Affiliate -->
+<div id="vc-widget-${videoId}" data-video-id="${videoId}" data-utm="${utmCode}"></div>
+<script src="${widgetUrl}/widget.js?utm=${utmCode}" async></script>`;
 }

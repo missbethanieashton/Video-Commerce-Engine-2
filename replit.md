@@ -28,8 +28,22 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 - **Primary Database**: PostgreSQL with Drizzle ORM
 - **Schema Location**: `shared/schema.ts` contains all table definitions
-- **Key Entities**: Users (with role-based access), Brands, Products, Videos, Video-Brand associations, Brand Referrals, Analytics Events, Affiliate Payouts
+- **Key Entities**: Users (with role-based access and Stripe Connect), Brands, Products, Videos, Video-Brand associations, Brand Referrals, Analytics Events, Affiliate Payouts, Affiliate Invitations, Campaign Affiliates, Global Video Library, Video License Purchases, Video Publish Records
 - **Object Storage**: Google Cloud Storage for video and image uploads
+
+### Affiliate System
+- **Three User Roles**: Creator, Brand, Affiliate - each with dedicated portal and navigation
+- **Affiliate Invitations**: Manual single invite or CSV bulk import (max 200 per batch)
+- **Campaign Affiliates**: Link affiliates to specific video campaigns with unique UTM codes
+- **Global Video Library**: Creators pay €45 to list videos; affiliates pay €45 to license
+- **Video Publishing**: Generate embeddable widget code with UTM tracking
+- **Stripe Integration**: Connect accounts for affiliate payouts, payment intents for licensing
+
+### Payment Flow
+- **Stripe Connect**: Affiliates onboard to receive payouts directly
+- **Listing Fee**: Creators pay €45 to list videos in Global Library
+- **License Fee**: Affiliates pay €45 to license videos for their campaigns
+- **Commission Tracking**: Automatic calculation and distribution via Stripe Connect
 
 ### Code Organization
 ```

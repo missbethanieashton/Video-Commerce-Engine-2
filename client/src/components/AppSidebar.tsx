@@ -9,6 +9,7 @@ import {
   Search,
   Send,
   Palette,
+  UserPlus,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,10 @@ const contentItems = [
 const analyticsItems = [
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/crm", label: "CRM Analytics", icon: Users },
+];
+
+const affiliateItems = [
+  { path: "/affiliates", label: "Manage Affiliates", icon: UserPlus },
 ];
 
 const brandItems = [
@@ -147,6 +152,15 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(analyticsItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Affiliates
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(affiliateItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 

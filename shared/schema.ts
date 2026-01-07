@@ -22,6 +22,15 @@ export const campaignStatusEnum = pgEnum("campaign_status", [
 export const invitationStatusEnum = pgEnum("invitation_status", [
   "pending", "sent", "accepted", "declined"
 ]);
+export const videoPublishStatusEnum = pgEnum("video_publish_status", [
+  "unpublished", "pending_payment", "published", "delisted"
+]);
+export const licensePurchaseStatusEnum = pgEnum("license_purchase_status", [
+  "pending", "paid", "failed", "refunded"
+]);
+export const payoutStatusEnum = pgEnum("payout_status", [
+  "pending", "processing", "paid", "failed"
+]);
 
 // Users table with role-based access
 export const users = pgTable("users", {
@@ -36,6 +45,9 @@ export const users = pgTable("users", {
   referralCode: text("referral_code").default(sql`'REF_' || substr(gen_random_uuid()::text, 1, 8)`),
   commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("15.00"),
   charityContribution: decimal("charity_contribution", { precision: 5, scale: 2 }).default("0.00"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeConnectAccountId: text("stripe_connect_account_id"),
+  stripeConnectOnboarded: boolean("stripe_connect_onboarded").default(false),
 });
 
 // Brands table
@@ -251,6 +263,80 @@ export const creatorInvitations = pgTable("creator_invitations", {
   invitedAt: timestamp("invited_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Affiliate Invitations - invite affiliates to promote videos
+export const affiliateInvitations = pgTable("affiliate_invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  inviterId: varchar("inviter_id").notNull().references(() => users.id),
+  affiliateName: text("affiliate_name").notNull(),
+  email: text("email").notNull(),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull().default("10.00"),
+  message: text("message"),
+  status: invitationStatusEnum("status").default("pending"),
+  inviteToken: text("invite_token").default(sql`gen_random_uuid()`),
+  acceptedByUserId: varchar("accepted_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Campaign Affiliates - affiliates assigned to specific video campaigns
+export const campaignAffiliates = pgTable("campaign_affiliates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  affiliateId: varchar("affiliate_id").notNull().references(() => users.id),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull(),
+  utmCode: text("utm_code").default(sql`gen_random_uuid()`),
+  embedCode: text("embed_code"),
+  totalClicks: integer("total_clicks").default(0),
+  totalConversions: integer("total_conversions").default(0),
+  totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0.00"),
+  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0.00"),
+  notifiedAt: timestamp("notified_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Global Video Library - videos available for affiliate licensing
+export const globalVideoLibrary = pgTable("global_video_library", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  licenseFee: decimal("license_fee", { precision: 10, scale: 2 }).notNull().default("45.00"),
+  publishStatus: videoPublishStatusEnum("publish_status").default("unpublished"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  listingTitle: text("listing_title"),
+  listingDescription: text("listing_description"),
+  category: text("category"),
+  tags: text("tags"),
+  totalLicenses: integer("total_licenses").default(0),
+  listedAt: timestamp("listed_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Video License Purchases - affiliates purchasing video licenses
+export const videoLicensePurchases = pgTable("video_license_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  globalListingId: varchar("global_listing_id").notNull().references(() => globalVideoLibrary.id),
+  affiliateId: varchar("affiliate_id").notNull().references(() => users.id),
+  licenseFee: decimal("license_fee", { precision: 10, scale: 2 }).notNull(),
+  status: licensePurchaseStatusEnum("status").default("pending"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  utmCode: text("utm_code").default(sql`gen_random_uuid()`),
+  embedCode: text("embed_code"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull().default("10.00"),
+  purchasedAt: timestamp("purchased_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Video Publish Records - embed code and UTM tracking for published videos
+export const videoPublishRecords = pgTable("video_publish_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  embedCode: text("embed_code").notNull(),
+  embedCodeMinified: text("embed_code_minified"),
+  widgetConfig: text("widget_config"),
+  baseUtmCode: text("base_utm_code").default(sql`gen_random_uuid()`),
+  publishedAt: timestamp("published_at").default(sql`CURRENT_TIMESTAMP`),
+  isActive: boolean("is_active").default(true),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
@@ -330,6 +416,31 @@ export const videoDetectionResultsRelations = relations(videoDetectionResults, (
   brand: one(brands, { fields: [videoDetectionResults.brandId], references: [brands.id] }),
 }));
 
+export const affiliateInvitationsRelations = relations(affiliateInvitations, ({ one }) => ({
+  inviter: one(users, { fields: [affiliateInvitations.inviterId], references: [users.id] }),
+  acceptedBy: one(users, { fields: [affiliateInvitations.acceptedByUserId], references: [users.id] }),
+}));
+
+export const campaignAffiliatesRelations = relations(campaignAffiliates, ({ one }) => ({
+  video: one(videos, { fields: [campaignAffiliates.videoId], references: [videos.id] }),
+  affiliate: one(users, { fields: [campaignAffiliates.affiliateId], references: [users.id] }),
+}));
+
+export const globalVideoLibraryRelations = relations(globalVideoLibrary, ({ one, many }) => ({
+  video: one(videos, { fields: [globalVideoLibrary.videoId], references: [videos.id] }),
+  creator: one(users, { fields: [globalVideoLibrary.creatorId], references: [users.id] }),
+  purchases: many(videoLicensePurchases),
+}));
+
+export const videoLicensePurchasesRelations = relations(videoLicensePurchases, ({ one }) => ({
+  listing: one(globalVideoLibrary, { fields: [videoLicensePurchases.globalListingId], references: [globalVideoLibrary.id] }),
+  affiliate: one(users, { fields: [videoLicensePurchases.affiliateId], references: [users.id] }),
+}));
+
+export const videoPublishRecordsRelations = relations(videoPublishRecords, ({ one }) => ({
+  video: one(videos, { fields: [videoPublishRecords.videoId], references: [videos.id] }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, affiliateTrackingId: true, referralCode: true });
 export const insertBrandSchema = createInsertSchema(brands).omit({ id: true });
@@ -346,6 +457,11 @@ export const insertVideoCarouselOverrideSchema = createInsertSchema(videoCarouse
 export const insertVideoDetectionJobSchema = createInsertSchema(videoDetectionJobs).omit({ id: true, status: true, totalFrames: true, processedFrames: true, error: true, startedAt: true, completedAt: true, createdAt: true });
 export const insertVideoDetectionResultSchema = createInsertSchema(videoDetectionResults).omit({ id: true, createdAt: true });
 export const insertCreatorInvitationSchema = createInsertSchema(creatorInvitations).omit({ id: true, status: true, invitedAt: true });
+export const insertAffiliateInvitationSchema = createInsertSchema(affiliateInvitations).omit({ id: true, status: true, inviteToken: true, acceptedByUserId: true, createdAt: true });
+export const insertCampaignAffiliateSchema = createInsertSchema(campaignAffiliates).omit({ id: true, utmCode: true, embedCode: true, totalClicks: true, totalConversions: true, totalRevenue: true, totalEarnings: true, notifiedAt: true, createdAt: true });
+export const insertGlobalVideoLibrarySchema = createInsertSchema(globalVideoLibrary).omit({ id: true, publishStatus: true, stripePaymentIntentId: true, totalLicenses: true, listedAt: true, createdAt: true });
+export const insertVideoLicensePurchaseSchema = createInsertSchema(videoLicensePurchases).omit({ id: true, status: true, stripePaymentIntentId: true, utmCode: true, embedCode: true, purchasedAt: true, createdAt: true });
+export const insertVideoPublishRecordSchema = createInsertSchema(videoPublishRecords).omit({ id: true, embedCodeMinified: true, baseUtmCode: true, publishedAt: true, isActive: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -378,6 +494,16 @@ export type InsertVideoDetectionResult = z.infer<typeof insertVideoDetectionResu
 export type VideoDetectionResult = typeof videoDetectionResults.$inferSelect;
 export type InsertCreatorInvitation = z.infer<typeof insertCreatorInvitationSchema>;
 export type CreatorInvitation = typeof creatorInvitations.$inferSelect;
+export type InsertAffiliateInvitation = z.infer<typeof insertAffiliateInvitationSchema>;
+export type AffiliateInvitation = typeof affiliateInvitations.$inferSelect;
+export type InsertCampaignAffiliate = z.infer<typeof insertCampaignAffiliateSchema>;
+export type CampaignAffiliate = typeof campaignAffiliates.$inferSelect;
+export type InsertGlobalVideoLibrary = z.infer<typeof insertGlobalVideoLibrarySchema>;
+export type GlobalVideoLibrary = typeof globalVideoLibrary.$inferSelect;
+export type InsertVideoLicensePurchase = z.infer<typeof insertVideoLicensePurchaseSchema>;
+export type VideoLicensePurchase = typeof videoLicensePurchases.$inferSelect;
+export type InsertVideoPublishRecord = z.infer<typeof insertVideoPublishRecordSchema>;
+export type VideoPublishRecord = typeof videoPublishRecords.$inferSelect;
 
 // Button label options for carousel
 export const BUTTON_LABEL_OPTIONS = [

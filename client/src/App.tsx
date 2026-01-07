@@ -8,8 +8,10 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BrandAppSidebar } from "@/components/BrandAppSidebar";
+import { AffiliateAppSidebar } from "@/components/AffiliateAppSidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { BrandMobileNav } from "@/components/BrandMobileNav";
+import { AffiliateMobileNav } from "@/components/AffiliateMobileNav";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import MyVideos from "@/pages/my-videos";
@@ -24,6 +26,10 @@ import BrandInventory from "@/pages/brand-inventory";
 import BrandCreators from "@/pages/brand-creators";
 import BrandCampaigns from "@/pages/brand-campaigns";
 import BrandKit from "@/pages/brand-kit";
+import AffiliateLibrary from "@/pages/affiliate-library";
+import AffiliateCampaigns from "@/pages/affiliate-campaigns";
+import AffiliateSettings from "@/pages/affiliate-settings";
+import Affiliates from "@/pages/affiliates";
 
 function CreatorRouter() {
   return (
@@ -33,6 +39,7 @@ function CreatorRouter() {
       <Route path="/library" component={Library} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/crm" component={CRMAnalytics} />
+      <Route path="/affiliates" component={Affiliates} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/brand-kit" component={BrandKit} />
       <Route path="/help" component={Help} />
@@ -57,12 +64,30 @@ function BrandRouter() {
   );
 }
 
+function AffiliateRouter() {
+  return (
+    <Switch>
+      <Route path="/affiliate" component={Dashboard} />
+      <Route path="/affiliate/library" component={AffiliateLibrary} />
+      <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
+      <Route path="/affiliate/analytics" component={Analytics} />
+      <Route path="/affiliate/settings" component={AffiliateSettings} />
+      <Route path="/affiliate/help" component={Help} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
 function Router() {
   const [location] = useLocation();
   const isBrandRoute = location.startsWith("/brand");
+  const isAffiliateRoute = location.startsWith("/affiliate");
   
   if (isBrandRoute) {
     return <BrandRouter />;
+  }
+  if (isAffiliateRoute) {
+    return <AffiliateRouter />;
   }
   return <CreatorRouter />;
 }
@@ -70,12 +95,25 @@ function Router() {
 function AppContent() {
   const [location] = useLocation();
   const isBrandRoute = location.startsWith("/brand");
+  const isAffiliateRoute = location.startsWith("/affiliate");
+
+  const getSidebar = () => {
+    if (isBrandRoute) return <BrandAppSidebar />;
+    if (isAffiliateRoute) return <AffiliateAppSidebar />;
+    return <AppSidebar />;
+  };
+
+  const getMobileNav = () => {
+    if (isBrandRoute) return <BrandMobileNav />;
+    if (isAffiliateRoute) return <AffiliateMobileNav />;
+    return <MobileNav />;
+  };
 
   return (
     <>
       <div className="flex h-screen w-full">
         <div className="hidden md:block">
-          {isBrandRoute ? <BrandAppSidebar /> : <AppSidebar />}
+          {getSidebar()}
         </div>
         <div className="flex flex-col flex-1 min-w-0">
           <header className="flex items-center justify-between gap-4 p-4 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
@@ -87,12 +125,12 @@ function AppContent() {
             </div>
             <ThemeToggle />
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#fffefd] dark:bg-background">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 bg-[#fffefd] dark:bg-background">
             <Router />
           </main>
         </div>
       </div>
-      {isBrandRoute ? <BrandMobileNav /> : <MobileNav />}
+      {getMobileNav()}
     </>
   );
 }
