@@ -19,6 +19,9 @@ export const carouselPositionEnum = pgEnum("carousel_position", [
 export const campaignStatusEnum = pgEnum("campaign_status", [
   "draft", "active", "paused", "completed", "cancelled"
 ]);
+export const invitationStatusEnum = pgEnum("invitation_status", [
+  "pending", "sent", "accepted", "declined"
+]);
 
 // Users table with role-based access
 export const users = pgTable("users", {
@@ -236,6 +239,18 @@ export const videoDetectionResults = pgTable("video_detection_results", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Creator Invitations - brand invitations to influencer affiliates
+export const creatorInvitations = pgTable("creator_invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brandId: varchar("brand_id").notNull().references(() => brands.id),
+  creatorName: text("creator_name").notNull(),
+  email: text("email").notNull(),
+  category: text("category"),
+  message: text("message"),
+  status: invitationStatusEnum("status").default("pending"),
+  invitedAt: timestamp("invited_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
@@ -248,7 +263,12 @@ export const brandsRelations = relations(brands, ({ many, one }) => ({
   products: many(products),
   videoBrands: many(videoBrands),
   campaigns: many(campaigns),
+  creatorInvitations: many(creatorInvitations),
   owner: one(users, { fields: [brands.ownerId], references: [users.id] }),
+}));
+
+export const creatorInvitationsRelations = relations(creatorInvitations, ({ one }) => ({
+  brand: one(brands, { fields: [creatorInvitations.brandId], references: [brands.id] }),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -325,6 +345,7 @@ export const insertBrandKitSchema = createInsertSchema(brandKits).omit({ id: tru
 export const insertVideoCarouselOverrideSchema = createInsertSchema(videoCarouselOverrides).omit({ id: true, createdAt: true });
 export const insertVideoDetectionJobSchema = createInsertSchema(videoDetectionJobs).omit({ id: true, status: true, totalFrames: true, processedFrames: true, error: true, startedAt: true, completedAt: true, createdAt: true });
 export const insertVideoDetectionResultSchema = createInsertSchema(videoDetectionResults).omit({ id: true, createdAt: true });
+export const insertCreatorInvitationSchema = createInsertSchema(creatorInvitations).omit({ id: true, status: true, invitedAt: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -355,6 +376,8 @@ export type InsertVideoDetectionJob = z.infer<typeof insertVideoDetectionJobSche
 export type VideoDetectionJob = typeof videoDetectionJobs.$inferSelect;
 export type InsertVideoDetectionResult = z.infer<typeof insertVideoDetectionResultSchema>;
 export type VideoDetectionResult = typeof videoDetectionResults.$inferSelect;
+export type InsertCreatorInvitation = z.infer<typeof insertCreatorInvitationSchema>;
+export type CreatorInvitation = typeof creatorInvitations.$inferSelect;
 
 // Button label options for carousel
 export const BUTTON_LABEL_OPTIONS = [
