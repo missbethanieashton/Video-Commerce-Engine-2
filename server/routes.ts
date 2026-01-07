@@ -429,29 +429,27 @@ export async function registerRoutes(
         return res.status(400).json({ error: "No brand available" });
       }
 
-      // Validate and prepare invitations
+      // Validate each invitation using the shared insert schema
       const validInvitations: Array<{ brandId: string; creatorName: string; email: string; category: string | null; message: string | null }> = [];
       const errors: Array<{ index: number; error: string }> = [];
 
-      invitations.forEach((inv: { creatorName?: string; email?: string; category?: string; message?: string }, index: number) => {
-        if (!inv.creatorName || !inv.email) {
-          errors.push({ index, error: "Name and email are required" });
-          return;
-        }
-        
-        // Basic email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(inv.email)) {
-          errors.push({ index, error: "Invalid email format" });
+      // Create a schema for validating invitation rows (matches insertCreatorInvitationSchema)
+      const invitationRowSchema = insertCreatorInvitationSchema.omit({ brandId: true });
+
+      invitations.forEach((inv: unknown, index: number) => {
+        const parsed = invitationRowSchema.safeParse(inv);
+        if (!parsed.success) {
+          const errorMessage = parsed.error.errors.map(e => e.message).join(", ");
+          errors.push({ index, error: errorMessage });
           return;
         }
 
         validInvitations.push({
           brandId: useBrandId,
-          creatorName: inv.creatorName,
-          email: inv.email,
-          category: inv.category || null,
-          message: inv.message || null,
+          creatorName: parsed.data.creatorName,
+          email: parsed.data.email,
+          category: parsed.data.category || null,
+          message: parsed.data.message || null,
         });
       });
 

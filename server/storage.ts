@@ -15,6 +15,7 @@ import {
   type VideoDetectionJob, type InsertVideoDetectionJob,
   type VideoDetectionResult, type InsertVideoDetectionResult,
   type CreatorInvitation, type InsertCreatorInvitation,
+  insertCreatorInvitationSchema,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -742,7 +743,11 @@ export class MemStorage implements IStorage {
   async createCreatorInvitationsBulk(invitations: InsertCreatorInvitation[]): Promise<CreatorInvitation[]> {
     const created: CreatorInvitation[] = [];
     for (const invitation of invitations) {
-      const result = await this.createCreatorInvitation(invitation);
+      const validated = insertCreatorInvitationSchema.safeParse(invitation);
+      if (!validated.success) {
+        continue;
+      }
+      const result = await this.createCreatorInvitation(validated.data);
       created.push(result);
     }
     return created;
