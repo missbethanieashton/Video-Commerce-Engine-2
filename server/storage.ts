@@ -14,6 +14,7 @@ import {
   type VideoCarouselOverride, type InsertVideoCarouselOverride,
   type VideoDetectionJob, type InsertVideoDetectionJob,
   type VideoDetectionResult, type InsertVideoDetectionResult,
+  type CreatorInvitation, type InsertCreatorInvitation,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -106,6 +107,12 @@ export interface IStorage {
   getDetectionResults(jobId: string): Promise<VideoDetectionResult[]>;
   getDetectionResultsByVideo(videoId: string): Promise<VideoDetectionResult[]>;
   createDetectionResult(result: InsertVideoDetectionResult): Promise<VideoDetectionResult>;
+  
+  // Creator Invitations
+  getCreatorInvitations(brandId: string): Promise<CreatorInvitation[]>;
+  createCreatorInvitation(invitation: InsertCreatorInvitation): Promise<CreatorInvitation>;
+  createCreatorInvitationsBulk(invitations: InsertCreatorInvitation[]): Promise<CreatorInvitation[]>;
+  updateCreatorInvitationStatus(id: string, status: string): Promise<CreatorInvitation | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -123,6 +130,7 @@ export class MemStorage implements IStorage {
   private videoCarouselOverrides: Map<string, VideoCarouselOverride> = new Map();
   private detectionJobs: Map<string, VideoDetectionJob> = new Map();
   private detectionResults: Map<string, VideoDetectionResult> = new Map();
+  private creatorInvitations: Map<string, CreatorInvitation> = new Map();
 
   constructor() {
     this.seedDemoData();
@@ -706,6 +714,46 @@ export class MemStorage implements IStorage {
     };
     this.detectionResults.set(id, newResult);
     return newResult;
+  }
+
+  // Creator Invitations
+  async getCreatorInvitations(brandId: string): Promise<CreatorInvitation[]> {
+    return Array.from(this.creatorInvitations.values())
+      .filter((inv) => inv.brandId === brandId)
+      .sort((a, b) => (b.invitedAt?.getTime() || 0) - (a.invitedAt?.getTime() || 0));
+  }
+
+  async createCreatorInvitation(invitation: InsertCreatorInvitation): Promise<CreatorInvitation> {
+    const id = randomUUID();
+    const newInvitation: CreatorInvitation = {
+      id,
+      brandId: invitation.brandId,
+      creatorName: invitation.creatorName,
+      email: invitation.email,
+      category: invitation.category ?? null,
+      message: invitation.message ?? null,
+      status: "pending",
+      invitedAt: new Date(),
+    };
+    this.creatorInvitations.set(id, newInvitation);
+    return newInvitation;
+  }
+
+  async createCreatorInvitationsBulk(invitations: InsertCreatorInvitation[]): Promise<CreatorInvitation[]> {
+    const created: CreatorInvitation[] = [];
+    for (const invitation of invitations) {
+      const result = await this.createCreatorInvitation(invitation);
+      created.push(result);
+    }
+    return created;
+  }
+
+  async updateCreatorInvitationStatus(id: string, status: string): Promise<CreatorInvitation | undefined> {
+    const invitation = this.creatorInvitations.get(id);
+    if (!invitation) return undefined;
+    const updated = { ...invitation, status: status as "pending" | "sent" | "accepted" | "declined" };
+    this.creatorInvitations.set(id, updated);
+    return updated;
   }
 }
 
