@@ -1,4 +1,6 @@
 import { randomUUID } from "crypto";
+import { eq, desc } from "drizzle-orm";
+import { db } from "./db";
 import {
   type User, type InsertUser,
   type Brand, type InsertBrand,
@@ -21,6 +23,26 @@ import {
   type VideoLicensePurchase, type InsertVideoLicensePurchase,
   type VideoPublishRecord, type InsertVideoPublishRecord,
   insertCreatorInvitationSchema,
+  users,
+  brands,
+  products,
+  videos,
+  videoBrands,
+  videoProducts,
+  brandReferrals,
+  analyticsEvents,
+  affiliatePayouts,
+  brandKits,
+  campaigns,
+  videoCarouselOverrides,
+  videoDetectionJobs,
+  videoDetectionResults,
+  creatorInvitations,
+  affiliateInvitations,
+  campaignAffiliates,
+  globalVideoLibrary,
+  videoLicensePurchases,
+  videoPublishRecords,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1021,4 +1043,450 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// DatabaseStorage implementation using PostgreSQL
+export class DatabaseStorage implements IStorage {
+  // Users
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined> {
+    const [updated] = await db.update(users).set(data).where(eq(users.id, id)).returning();
+    return updated;
+  }
+
+  // Brands
+  async getBrands(): Promise<Brand[]> {
+    return db.select().from(brands);
+  }
+
+  async getBrand(id: string): Promise<Brand | undefined> {
+    const [brand] = await db.select().from(brands).where(eq(brands.id, id));
+    return brand;
+  }
+
+  async createBrand(brand: InsertBrand): Promise<Brand> {
+    const [newBrand] = await db.insert(brands).values(brand).returning();
+    return newBrand;
+  }
+
+  async updateBrand(id: string, data: Partial<InsertBrand>): Promise<Brand | undefined> {
+    const [updated] = await db.update(brands).set(data).where(eq(brands.id, id)).returning();
+    return updated;
+  }
+
+  // Products
+  async getProducts(brandId?: string): Promise<Product[]> {
+    if (brandId) {
+      return db.select().from(products).where(eq(products.brandId, brandId));
+    }
+    return db.select().from(products);
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product;
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    const [newProduct] = await db.insert(products).values(product).returning();
+    return newProduct;
+  }
+
+  // Videos
+  async getVideos(creatorId?: string): Promise<Video[]> {
+    if (creatorId) {
+      return db.select().from(videos).where(eq(videos.creatorId, creatorId)).orderBy(desc(videos.createdAt));
+    }
+    return db.select().from(videos).orderBy(desc(videos.createdAt));
+  }
+
+  async getVideo(id: string): Promise<Video | undefined> {
+    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    return video;
+  }
+
+  async createVideo(video: InsertVideo): Promise<Video> {
+    const [newVideo] = await db.insert(videos).values(video).returning();
+    return newVideo;
+  }
+
+  async updateVideo(id: string, data: Partial<InsertVideo>): Promise<Video | undefined> {
+    const [updated] = await db.update(videos).set(data).where(eq(videos.id, id)).returning();
+    return updated;
+  }
+
+  async deleteVideo(id: string): Promise<boolean> {
+    const result = await db.delete(videos).where(eq(videos.id, id));
+    return true;
+  }
+
+  async getAllPublishedVideos(): Promise<Video[]> {
+    return db.select().from(videos).where(eq(videos.status, "published"));
+  }
+
+  // Video-Brand associations
+  async addVideoBrand(videoBrand: InsertVideoBrand): Promise<VideoBrand> {
+    const [newVb] = await db.insert(videoBrands).values(videoBrand).returning();
+    return newVb;
+  }
+
+  async getVideoBrands(videoId: string): Promise<VideoBrand[]> {
+    return db.select().from(videoBrands).where(eq(videoBrands.videoId, videoId));
+  }
+
+  // Video-Product associations
+  async addVideoProduct(videoProduct: InsertVideoProduct): Promise<VideoProduct> {
+    const [newVp] = await db.insert(videoProducts).values(videoProduct).returning();
+    return newVp;
+  }
+
+  async getVideoProducts(videoId: string): Promise<VideoProduct[]> {
+    return db.select().from(videoProducts).where(eq(videoProducts.videoId, videoId));
+  }
+
+  // Brand Referrals
+  async getReferrals(creatorId: string): Promise<BrandReferral[]> {
+    return db.select().from(brandReferrals).where(eq(brandReferrals.creatorId, creatorId)).orderBy(desc(brandReferrals.createdAt));
+  }
+
+  async getReferral(id: string): Promise<BrandReferral | undefined> {
+    const [referral] = await db.select().from(brandReferrals).where(eq(brandReferrals.id, id));
+    return referral;
+  }
+
+  async createReferral(referral: InsertBrandReferral): Promise<BrandReferral> {
+    const [newReferral] = await db.insert(brandReferrals).values(referral).returning();
+    return newReferral;
+  }
+
+  async updateReferralStatus(id: string, status: string): Promise<BrandReferral | undefined> {
+    const validStatus = status as "pending" | "sent" | "accepted" | "declined";
+    const [updated] = await db.update(brandReferrals).set({ status: validStatus }).where(eq(brandReferrals.id, id)).returning();
+    return updated;
+  }
+
+  // Analytics
+  async getAnalyticsEvents(videoId?: string): Promise<AnalyticsEvent[]> {
+    if (videoId) {
+      return db.select().from(analyticsEvents).where(eq(analyticsEvents.videoId, videoId));
+    }
+    return db.select().from(analyticsEvents);
+  }
+
+  async createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    const [newEvent] = await db.insert(analyticsEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async getVideoStats(creatorId: string): Promise<{ totalViews: number; totalClicks: number; totalRevenue: number; averageCTR: number }> {
+    return { totalViews: 0, totalClicks: 0, totalRevenue: 0, averageCTR: 0 };
+  }
+
+  // Payouts
+  async getPayouts(userId: string): Promise<AffiliatePayout[]> {
+    return db.select().from(affiliatePayouts).where(eq(affiliatePayouts.userId, userId));
+  }
+
+  async createPayout(payout: InsertAffiliatePayout): Promise<AffiliatePayout> {
+    const [newPayout] = await db.insert(affiliatePayouts).values(payout).returning();
+    return newPayout;
+  }
+
+  // Campaigns
+  async getCampaigns(brandId: string): Promise<Campaign[]> {
+    return db.select().from(campaigns).where(eq(campaigns.brandId, brandId));
+  }
+
+  async getCampaign(id: string): Promise<Campaign | undefined> {
+    const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, id));
+    return campaign;
+  }
+
+  async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
+    const [newCampaign] = await db.insert(campaigns).values(campaign).returning();
+    return newCampaign;
+  }
+
+  async updateCampaign(id: string, data: Partial<Campaign>): Promise<Campaign | undefined> {
+    const [updated] = await db.update(campaigns).set(data).where(eq(campaigns.id, id)).returning();
+    return updated;
+  }
+
+  async deleteCampaign(id: string): Promise<boolean> {
+    await db.delete(campaigns).where(eq(campaigns.id, id));
+    return true;
+  }
+
+  async getCampaignStats(brandId: string): Promise<{ totalCampaigns: number; activeCampaigns: number; totalBudget: number; totalSpent: number; totalRevenue: number; averageROI: number }> {
+    const allCampaigns = await this.getCampaigns(brandId);
+    return {
+      totalCampaigns: allCampaigns.length,
+      activeCampaigns: allCampaigns.filter(c => c.status === "active").length,
+      totalBudget: allCampaigns.reduce((sum, c) => sum + parseFloat(c.budget || "0"), 0),
+      totalSpent: 0,
+      totalRevenue: 0,
+      averageROI: 0,
+    };
+  }
+
+  // Brand Kits
+  async getBrandKit(userId: string): Promise<BrandKit | undefined> {
+    const [kit] = await db.select().from(brandKits).where(eq(brandKits.userId, userId));
+    return kit;
+  }
+
+  async createBrandKit(kit: InsertBrandKit): Promise<BrandKit> {
+    const [newKit] = await db.insert(brandKits).values(kit).returning();
+    return newKit;
+  }
+
+  async updateBrandKit(id: string, data: Partial<InsertBrandKit>): Promise<BrandKit | undefined> {
+    const [updated] = await db.update(brandKits).set(data).where(eq(brandKits.id, id)).returning();
+    return updated;
+  }
+
+  // Video Carousel Overrides
+  async getVideoCarouselOverride(videoId: string): Promise<VideoCarouselOverride | undefined> {
+    const [override] = await db.select().from(videoCarouselOverrides).where(eq(videoCarouselOverrides.videoId, videoId));
+    return override;
+  }
+
+  async createVideoCarouselOverride(override: InsertVideoCarouselOverride): Promise<VideoCarouselOverride> {
+    const [newOverride] = await db.insert(videoCarouselOverrides).values(override).returning();
+    return newOverride;
+  }
+
+  async updateVideoCarouselOverride(videoId: string, data: Partial<InsertVideoCarouselOverride>): Promise<VideoCarouselOverride | undefined> {
+    const [updated] = await db.update(videoCarouselOverrides).set(data).where(eq(videoCarouselOverrides.videoId, videoId)).returning();
+    return updated;
+  }
+
+  // Video Detection Jobs
+  async getDetectionJob(id: string): Promise<VideoDetectionJob | undefined> {
+    const [job] = await db.select().from(videoDetectionJobs).where(eq(videoDetectionJobs.id, id));
+    return job;
+  }
+
+  async getDetectionJobByVideoId(videoId: string): Promise<VideoDetectionJob | undefined> {
+    const [job] = await db.select().from(videoDetectionJobs).where(eq(videoDetectionJobs.videoId, videoId));
+    return job;
+  }
+
+  async createDetectionJob(job: InsertVideoDetectionJob): Promise<VideoDetectionJob> {
+    const [newJob] = await db.insert(videoDetectionJobs).values(job).returning();
+    return newJob;
+  }
+
+  async updateDetectionJob(id: string, data: Partial<VideoDetectionJob>): Promise<VideoDetectionJob | undefined> {
+    const [updated] = await db.update(videoDetectionJobs).set(data).where(eq(videoDetectionJobs.id, id)).returning();
+    return updated;
+  }
+
+  // Video Detection Results
+  async getDetectionResults(jobId: string): Promise<VideoDetectionResult[]> {
+    return db.select().from(videoDetectionResults).where(eq(videoDetectionResults.jobId, jobId));
+  }
+
+  async getDetectionResultsByVideo(videoId: string): Promise<VideoDetectionResult[]> {
+    return db.select().from(videoDetectionResults).where(eq(videoDetectionResults.videoId, videoId));
+  }
+
+  async createDetectionResult(result: InsertVideoDetectionResult): Promise<VideoDetectionResult> {
+    const [newResult] = await db.insert(videoDetectionResults).values(result).returning();
+    return newResult;
+  }
+
+  // Creator Invitations
+  async getCreatorInvitations(brandId: string): Promise<CreatorInvitation[]> {
+    return db.select().from(creatorInvitations).where(eq(creatorInvitations.brandId, brandId)).orderBy(desc(creatorInvitations.invitedAt));
+  }
+
+  async createCreatorInvitation(invitation: InsertCreatorInvitation): Promise<CreatorInvitation> {
+    const [newInvitation] = await db.insert(creatorInvitations).values(invitation).returning();
+    return newInvitation;
+  }
+
+  async createCreatorInvitationsBulk(invitations: InsertCreatorInvitation[]): Promise<CreatorInvitation[]> {
+    if (invitations.length === 0) return [];
+    return db.insert(creatorInvitations).values(invitations).returning();
+  }
+
+  async updateCreatorInvitationStatus(id: string, status: string): Promise<CreatorInvitation | undefined> {
+    const [updated] = await db.update(creatorInvitations).set({ status: status as "pending" | "sent" | "accepted" | "declined" }).where(eq(creatorInvitations.id, id)).returning();
+    return updated;
+  }
+
+  // Affiliate Invitations
+  async getAffiliateInvitations(inviterId: string): Promise<AffiliateInvitation[]> {
+    return db.select().from(affiliateInvitations).where(eq(affiliateInvitations.inviterId, inviterId)).orderBy(desc(affiliateInvitations.createdAt));
+  }
+
+  async getAffiliateInvitationByToken(token: string): Promise<AffiliateInvitation | undefined> {
+    const [invitation] = await db.select().from(affiliateInvitations).where(eq(affiliateInvitations.inviteToken, token));
+    return invitation;
+  }
+
+  async createAffiliateInvitation(invitation: InsertAffiliateInvitation): Promise<AffiliateInvitation> {
+    const [newInvitation] = await db.insert(affiliateInvitations).values(invitation).returning();
+    return newInvitation;
+  }
+
+  async createAffiliateInvitationsBulk(invitations: InsertAffiliateInvitation[]): Promise<AffiliateInvitation[]> {
+    if (invitations.length === 0) return [];
+    return db.insert(affiliateInvitations).values(invitations).returning();
+  }
+
+  async updateAffiliateInvitationStatus(id: string, status: string, acceptedByUserId?: string): Promise<AffiliateInvitation | undefined> {
+    const updateData: Partial<AffiliateInvitation> = { status: status as "pending" | "sent" | "accepted" | "declined" };
+    if (acceptedByUserId) updateData.acceptedByUserId = acceptedByUserId;
+    const [updated] = await db.update(affiliateInvitations).set(updateData).where(eq(affiliateInvitations.id, id)).returning();
+    return updated;
+  }
+
+  // Campaign Affiliates
+  async getCampaignAffiliates(videoId: string): Promise<CampaignAffiliate[]> {
+    return db.select().from(campaignAffiliates).where(eq(campaignAffiliates.videoId, videoId));
+  }
+
+  async getCampaignAffiliatesByUser(affiliateId: string): Promise<CampaignAffiliate[]> {
+    return db.select().from(campaignAffiliates).where(eq(campaignAffiliates.affiliateId, affiliateId));
+  }
+
+  async createCampaignAffiliate(assignment: InsertCampaignAffiliate): Promise<CampaignAffiliate> {
+    const [newAssignment] = await db.insert(campaignAffiliates).values(assignment).returning();
+    return newAssignment;
+  }
+
+  async updateCampaignAffiliateStats(id: string, stats: Partial<CampaignAffiliate>): Promise<CampaignAffiliate | undefined> {
+    const [updated] = await db.update(campaignAffiliates).set(stats).where(eq(campaignAffiliates.id, id)).returning();
+    return updated;
+  }
+
+  // Global Video Library
+  async getGlobalVideoListings(category?: string): Promise<GlobalVideoLibrary[]> {
+    if (category) {
+      return db.select().from(globalVideoLibrary).where(eq(globalVideoLibrary.category, category));
+    }
+    return db.select().from(globalVideoLibrary);
+  }
+
+  async getGlobalVideoListing(id: string): Promise<GlobalVideoLibrary | undefined> {
+    const [listing] = await db.select().from(globalVideoLibrary).where(eq(globalVideoLibrary.id, id));
+    return listing;
+  }
+
+  async getGlobalVideoListingByVideo(videoId: string): Promise<GlobalVideoLibrary | undefined> {
+    const [listing] = await db.select().from(globalVideoLibrary).where(eq(globalVideoLibrary.videoId, videoId));
+    return listing;
+  }
+
+  async createGlobalVideoListing(listing: InsertGlobalVideoLibrary): Promise<GlobalVideoLibrary> {
+    const [newListing] = await db.insert(globalVideoLibrary).values(listing).returning();
+    return newListing;
+  }
+
+  async updateGlobalVideoListing(id: string, data: Partial<GlobalVideoLibrary>): Promise<GlobalVideoLibrary | undefined> {
+    const [updated] = await db.update(globalVideoLibrary).set(data).where(eq(globalVideoLibrary.id, id)).returning();
+    return updated;
+  }
+
+  // Video License Purchases
+  async getVideoLicensePurchases(affiliateId: string): Promise<VideoLicensePurchase[]> {
+    return db.select().from(videoLicensePurchases).where(eq(videoLicensePurchases.affiliateId, affiliateId));
+  }
+
+  async getVideoLicensePurchase(id: string): Promise<VideoLicensePurchase | undefined> {
+    const [purchase] = await db.select().from(videoLicensePurchases).where(eq(videoLicensePurchases.id, id));
+    return purchase;
+  }
+
+  async createVideoLicensePurchase(purchase: InsertVideoLicensePurchase): Promise<VideoLicensePurchase> {
+    const [newPurchase] = await db.insert(videoLicensePurchases).values(purchase).returning();
+    return newPurchase;
+  }
+
+  async updateVideoLicensePurchaseStatus(id: string, status: string, paymentIntentId?: string): Promise<VideoLicensePurchase | undefined> {
+    const updateData: Partial<VideoLicensePurchase> = { status: status as "pending" | "paid" | "failed" | "refunded" };
+    if (paymentIntentId) updateData.stripePaymentIntentId = paymentIntentId;
+    if (status === "paid") updateData.purchasedAt = new Date();
+    const [updated] = await db.update(videoLicensePurchases).set(updateData).where(eq(videoLicensePurchases.id, id)).returning();
+    return updated;
+  }
+
+  // Video Publish Records
+  async getVideoPublishRecord(videoId: string): Promise<VideoPublishRecord | undefined> {
+    const [record] = await db.select().from(videoPublishRecords).where(eq(videoPublishRecords.videoId, videoId));
+    return record;
+  }
+
+  async createVideoPublishRecord(record: InsertVideoPublishRecord): Promise<VideoPublishRecord> {
+    const [newRecord] = await db.insert(videoPublishRecords).values(record).returning();
+    return newRecord;
+  }
+
+  async updateVideoPublishRecord(id: string, data: Partial<VideoPublishRecord>): Promise<VideoPublishRecord | undefined> {
+    const [updated] = await db.update(videoPublishRecords).set(data).where(eq(videoPublishRecords.id, id)).returning();
+    return updated;
+  }
+}
+
+// Seed demo data into database
+async function seedDemoData() {
+  const existingUser = await db.select().from(users).where(eq(users.username, "demo_creator"));
+  if (existingUser.length > 0) return; // Already seeded
+
+  // Create demo user
+  const [demoUser] = await db.insert(users).values({
+    username: "demo_creator",
+    password: "demo123",
+    email: "demo@example.com",
+    displayName: "Demo Creator",
+    role: "creator",
+    commissionRate: "15.00",
+    charityContribution: "0.00",
+  }).returning();
+
+  // Create demo brands
+  const brandData = [
+    { name: "Nike", category: "Fashion", website: "nike.com" },
+    { name: "Apple", category: "Electronics", website: "apple.com" },
+    { name: "Samsung", category: "Electronics", website: "samsung.com" },
+    { name: "Adidas", category: "Fashion", website: "adidas.com" },
+    { name: "Sony", category: "Electronics", website: "sony.com" },
+    { name: "Sephora", category: "Beauty", website: "sephora.com" },
+    { name: "Lululemon", category: "Fitness", website: "lululemon.com" },
+    { name: "Dyson", category: "Home", website: "dyson.com" },
+  ];
+
+  await db.insert(brands).values(brandData.map(data => ({
+    name: data.name,
+    category: data.category,
+    website: data.website,
+    isActive: true,
+  })));
+
+  console.log("Demo data seeded successfully");
+}
+
+// Initialize database storage and seed data
+const storage = new DatabaseStorage();
+seedDemoData().catch(console.error);
+
+export { storage };
