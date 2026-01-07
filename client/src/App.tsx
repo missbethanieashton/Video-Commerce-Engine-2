@@ -29,6 +29,7 @@ import BrandKit from "@/pages/brand-kit";
 import AffiliateLibrary from "@/pages/affiliate-library";
 import AffiliateCampaigns from "@/pages/affiliate-campaigns";
 import AffiliateSettings from "@/pages/affiliate-settings";
+import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import Affiliates from "@/pages/affiliates";
 
 function CreatorRouter() {
@@ -67,7 +68,7 @@ function BrandRouter() {
 function AffiliateRouter() {
   return (
     <Switch>
-      <Route path="/affiliate" component={Dashboard} />
+      <Route path="/affiliate" component={AffiliateDashboard} />
       <Route path="/affiliate/library" component={AffiliateLibrary} />
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
