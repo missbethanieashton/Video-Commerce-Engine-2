@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import { AffiliateCard } from "@/components/AffiliateCard";
 import { DashboardTabs } from "@/components/DashboardTabs";
 import { AffiliateTable } from "@/components/AffiliateTable";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { EarningsNotification } from "@/components/EarningsNotification";
 import { Eye, DollarSign, Heart, MousePointer, Upload, Play, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -16,7 +18,15 @@ import type { Video, Brand, User } from "@shared/schema";
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("stats");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [demoEarnings, setDemoEarnings] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDemoEarnings(1500);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/users/me"],
@@ -117,6 +127,12 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
+      <div className="-mx-4 md:-mx-6 -mt-6 mb-4 overflow-hidden">
+        <AnnouncementBanner />
+      </div>
+
+      <EarningsNotification currentEarnings={demoEarnings} />
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
