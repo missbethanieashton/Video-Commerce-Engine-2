@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
-import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor } from "lucide-react";
+import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
@@ -72,26 +72,6 @@ const STATS = [
   { icon: ShoppingBag, value: "2.1M", label: "Products Tagged", color: "text-[#677A67]" },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote: "MTERLIZD has completely transformed how we work with creators. The AI product detection alone has saved us hundreds of hours.",
-    author: "Sarah Chen",
-    role: "Head of Influencer Marketing",
-    company: "Forbes",
-  },
-  {
-    quote: "The affiliate tracking is flawless. We finally have clear visibility into which creator partnerships drive real revenue.",
-    author: "Michael Torres",
-    role: "VP of Digital",
-    company: "Fast Company",
-  },
-  {
-    quote: "As a creator, the Global Video Library has opened up entirely new revenue streams I never knew existed.",
-    author: "Emma Williams",
-    role: "Fashion Creator",
-    company: "Fashionista",
-  },
-];
 
 function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: string }) {
   const numericValue = parseFloat(value.replace(/[^0-9.]/g, ""));
@@ -177,70 +157,6 @@ function StatsSection() {
   );
 }
 
-function TestimonialCarousel() {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <section className="py-20 px-4 bg-[#43484D]">
-      <div className="max-w-4xl mx-auto">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-12 text-white"
-          style={{ fontFamily: "'Public Pixel', sans-serif" }}
-        >
-          Trusted by Industry Leaders
-        </motion.h2>
-        <div className="relative min-h-[200px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <Quote className="w-12 h-12 mx-auto mb-6 text-[#E7B97F] opacity-50" />
-              <p className="text-xl md:text-2xl text-white/90 mb-6 italic leading-relaxed">
-                "{TESTIMONIALS[activeIndex].quote}"
-              </p>
-              <div className="text-[#E7B97F] font-semibold">
-                {TESTIMONIALS[activeIndex].author}
-              </div>
-              <div className="text-white/60 text-sm">
-                {TESTIMONIALS[activeIndex].role} at {TESTIMONIALS[activeIndex].company}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <div className="flex justify-center gap-2 mt-8" role="tablist" aria-label="Testimonial navigation">
-          {TESTIMONIALS.map((testimonial, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === activeIndex ? "bg-[#E7B97F] w-8" : "bg-white/30"
-              }`}
-              data-testid={`button-testimonial-${index}`}
-              role="tab"
-              aria-selected={index === activeIndex}
-              aria-label={`View testimonial from ${testimonial.author}`}
-            />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function VideoOrientationSection() {
   return (
@@ -776,7 +692,6 @@ export default function Landing() {
       <StatsSection />
       <ParallaxImageSection />
       <VideoOrientationSection />
-      <TestimonialCarousel />
       <VideoOfTheWeekSection />
       <SignupSection />
 
