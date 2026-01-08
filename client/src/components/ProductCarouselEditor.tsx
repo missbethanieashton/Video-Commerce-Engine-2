@@ -34,6 +34,9 @@ export interface CarouselSettings {
   buttonTextColor: string;
   buttonFont: string;
   titleFont: string;
+  titleFontSize: number;
+  priceFontSize: number;
+  buttonFontSize: number;
 }
 
 interface ProductCarouselEditorProps {
@@ -60,6 +63,9 @@ const defaultSettings: CarouselSettings = {
   buttonTextColor: "#FFFFFF",
   buttonFont: "system",
   titleFont: "system",
+  titleFontSize: 100,
+  priceFontSize: 100,
+  buttonFontSize: 100,
 };
 
 const getFontFamily = (font: string): string => {
@@ -190,23 +196,32 @@ export function ProductCarouselEditor({
             <div className="flex-1 text-white min-w-0">
               {settings.showTitle && (
                 <p 
-                  className="font-medium text-xs truncate"
-                  style={{ fontFamily: getFontFamily(settings.titleFont) }}
+                  className="font-medium truncate"
+                  style={{ 
+                    fontFamily: getFontFamily(settings.titleFont),
+                    fontSize: `${12 * (settings.titleFontSize / 100)}px`,
+                  }}
                 >
                   Product
                 </p>
               )}
               {settings.showPrice && (
-                <p className="text-[10px] opacity-80">$99</p>
+                <p 
+                  className="opacity-80"
+                  style={{ fontSize: `${10 * (settings.priceFontSize / 100)}px` }}
+                >
+                  $99
+                </p>
               )}
             </div>
             {settings.showButton && (
               <button 
-                className="rounded-full text-[9px] px-2 py-1 flex-shrink-0 font-medium"
+                className="rounded-full px-2 py-1 flex-shrink-0 font-medium"
                 style={{
                   backgroundColor: settings.buttonColor,
                   color: settings.buttonTextColor,
                   fontFamily: getFontFamily(settings.buttonFont),
+                  fontSize: `${9 * (settings.buttonFontSize / 100)}px`,
                 }}
                 data-testid="button-preview-cta"
               >
@@ -373,68 +388,122 @@ export function ProductCarouselEditor({
         </TabsContent>
 
         <TabsContent value="fonts" className="space-y-3 mt-3">
-          <div>
-            <Label className="text-xs">Title Font</Label>
-            <Select 
-              value={settings.titleFont} 
-              onValueChange={(val) => updateSetting("titleFont", val)}
-            >
-              <SelectTrigger className="mt-1 h-8 text-xs" data-testid="select-title-font">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_OPTIONS.map((font) => (
-                  <SelectItem 
-                    key={font.value} 
-                    value={font.value} 
-                    className="text-xs"
-                    style={{ fontFamily: getFontFamily(font.value) }}
-                  >
-                    {font.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Title Font</Label>
+              <Select 
+                value={settings.titleFont} 
+                onValueChange={(val) => updateSetting("titleFont", val)}
+              >
+                <SelectTrigger className="mt-1 h-8 text-xs" data-testid="select-title-font">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_OPTIONS.map((font) => (
+                    <SelectItem 
+                      key={font.value} 
+                      value={font.value} 
+                      className="text-xs"
+                      style={{ fontFamily: getFontFamily(font.value) }}
+                    >
+                      {font.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-xs">Button Font</Label>
+              <Select 
+                value={settings.buttonFont} 
+                onValueChange={(val) => updateSetting("buttonFont", val)}
+              >
+                <SelectTrigger className="mt-1 h-8 text-xs" data-testid="select-button-font">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_OPTIONS.map((font) => (
+                    <SelectItem 
+                      key={font.value} 
+                      value={font.value} 
+                      className="text-xs"
+                      style={{ fontFamily: getFontFamily(font.value) }}
+                    >
+                      {font.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label className="text-xs">Button Font</Label>
-            <Select 
-              value={settings.buttonFont} 
-              onValueChange={(val) => updateSetting("buttonFont", val)}
-            >
-              <SelectTrigger className="mt-1 h-8 text-xs" data-testid="select-button-font">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_OPTIONS.map((font) => (
-                  <SelectItem 
-                    key={font.value} 
-                    value={font.value} 
-                    className="text-xs"
-                    style={{ fontFamily: getFontFamily(font.value) }}
-                  >
-                    {font.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-xs font-medium text-muted-foreground">Font Size Scale</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Title: {settings.titleFontSize}%</Label>
+                <Slider
+                  value={[settings.titleFontSize]}
+                  onValueChange={(val) => updateSetting("titleFontSize", val[0])}
+                  min={50}
+                  max={150}
+                  step={5}
+                  className="mt-2"
+                  data-testid="slider-title-font-size"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Price: {settings.priceFontSize}%</Label>
+                <Slider
+                  value={[settings.priceFontSize]}
+                  onValueChange={(val) => updateSetting("priceFontSize", val[0])}
+                  min={50}
+                  max={150}
+                  step={5}
+                  className="mt-2"
+                  data-testid="slider-price-font-size"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Button: {settings.buttonFontSize}%</Label>
+                <Slider
+                  value={[settings.buttonFontSize]}
+                  onValueChange={(val) => updateSetting("buttonFontSize", val[0])}
+                  min={50}
+                  max={150}
+                  step={5}
+                  className="mt-2"
+                  data-testid="slider-button-font-size"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="p-3 bg-muted/50 rounded-md">
             <p className="text-xs text-muted-foreground mb-2">Preview:</p>
             <p 
-              className="text-sm font-medium"
-              style={{ fontFamily: getFontFamily(settings.titleFont) }}
+              className="font-medium"
+              style={{ 
+                fontFamily: getFontFamily(settings.titleFont),
+                fontSize: `${14 * (settings.titleFontSize / 100)}px`,
+              }}
             >
-              Title Preview Text
+              Title Preview
+            </p>
+            <p 
+              className="text-muted-foreground"
+              style={{ fontSize: `${12 * (settings.priceFontSize / 100)}px` }}
+            >
+              $99.00
             </p>
             <span 
-              className="text-xs inline-block mt-1 px-2 py-0.5 rounded"
+              className="inline-block mt-2 px-2 py-0.5 rounded font-medium"
               style={{ 
                 fontFamily: getFontFamily(settings.buttonFont),
                 backgroundColor: settings.buttonColor,
                 color: settings.buttonTextColor,
+                fontSize: `${12 * (settings.buttonFontSize / 100)}px`,
               }}
             >
               {settings.buttonLabel}
