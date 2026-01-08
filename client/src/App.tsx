@@ -146,19 +146,28 @@ function AppContent() {
   );
 }
 
-function App() {
+function AppWithSidebar() {
   const sidebarStyle = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
   };
 
   return (
+    <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+      <AppContent />
+    </SidebarProvider>
+  );
+}
+
+function App() {
+  const [location] = useLocation();
+  const isLandingRoute = location === "/welcome";
+
+  return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-            <AppContent />
-          </SidebarProvider>
+          {isLandingRoute ? <Landing /> : <AppWithSidebar />}
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>

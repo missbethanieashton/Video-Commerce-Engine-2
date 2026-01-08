@@ -15,6 +15,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
+import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
+import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 
 const formSchema = insertSubscriberIntakeSchema;
 type FormData = z.infer<typeof formSchema>;
@@ -291,6 +293,50 @@ function VideoOrientationSection() {
   );
 }
 
+function ParallaxImageSection() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
+
+  return (
+    <section ref={ref} className="relative h-[60vh] overflow-hidden">
+      <motion.div
+        style={{ y }}
+        className="absolute inset-0 w-full h-[140%] -top-[20%]"
+      >
+        <img
+          src={buyTheRunwayImage}
+          alt="Buy The Runway"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+      </motion.div>
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-3xl md:text-5xl font-bold text-white mb-4"
+        >
+          Shop the Runway
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="text-lg md:text-xl text-white/80 max-w-2xl"
+        >
+          Turn fashion moments into shoppable experiences with AI-powered product detection
+        </motion.p>
+      </div>
+    </section>
+  );
+}
+
 function VideoOfTheWeekSection() {
   const engagementBubbles = [
     { label: "Clicks", value: "12.4K", top: "10%", left: "5%", delay: 0 },
@@ -317,33 +363,36 @@ function VideoOfTheWeekSection() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="relative"
+          className="relative flex justify-center"
         >
-          <Card className="overflow-hidden border-0 shadow-2xl">
-            <div className="aspect-video bg-gradient-to-br from-[#677A67] to-[#87A7AC] relative flex items-center justify-center">
-              <button 
-                className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-                aria-label="Play video"
-                data-testid="button-play-video-week"
-              >
-                <Play className="w-10 h-10 text-white ml-1" fill="white" />
-              </button>
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                <div>
-                  <div className="text-white font-semibold">Summer Style Haul 2024</div>
-                  <div className="text-white/70 text-sm">@fashionista_emma</div>
-                </div>
-                <div className="flex gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-12 h-12 rounded-lg bg-white/20 backdrop-blur-sm"
-                    />
-                  ))}
+          {/* Mobile Phone Frame */}
+          <div className="relative w-[280px] md:w-[320px]">
+            {/* Phone bezel */}
+            <div className="relative bg-[#1a1a1a] rounded-[3rem] p-3 shadow-2xl">
+              {/* Notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-[#1a1a1a] rounded-b-2xl z-20" />
+              {/* Screen */}
+              <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full aspect-[9/16] object-cover"
+                  aria-label="Discovery Packs video"
+                >
+                  <source src={discoveryPacksVideo} type="video/mp4" />
+                </video>
+                {/* Video overlay info */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <div className="text-white font-semibold text-sm">Discovery Packs</div>
+                  <div className="text-white/70 text-xs">@mterlizd_official</div>
                 </div>
               </div>
+              {/* Home indicator */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/30 rounded-full" />
             </div>
-          </Card>
+          </div>
           {engagementBubbles.map((bubble, index) => (
             <motion.div
               key={bubble.label}
@@ -710,6 +759,7 @@ export default function Landing() {
       </section>
 
       <StatsSection />
+      <ParallaxImageSection />
       <VideoOrientationSection />
       <TestimonialCarousel />
       <VideoOfTheWeekSection />
