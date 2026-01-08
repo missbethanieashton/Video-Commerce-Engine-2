@@ -31,6 +31,7 @@ import AffiliateCampaigns from "@/pages/affiliate-campaigns";
 import AffiliateSettings from "@/pages/affiliate-settings";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import Affiliates from "@/pages/affiliates";
+import Landing from "@/pages/landing";
 
 function CreatorRouter() {
   return (
@@ -83,7 +84,11 @@ function Router() {
   const [location] = useLocation();
   const isBrandRoute = location.startsWith("/brand");
   const isAffiliateRoute = location.startsWith("/affiliate");
+  const isLandingRoute = location === "/welcome";
   
+  if (isLandingRoute) {
+    return <Landing />;
+  }
   if (isBrandRoute) {
     return <BrandRouter />;
   }
@@ -97,6 +102,7 @@ function AppContent() {
   const [location] = useLocation();
   const isBrandRoute = location.startsWith("/brand");
   const isAffiliateRoute = location.startsWith("/affiliate");
+  const isLandingRoute = location === "/welcome";
 
   const getSidebar = () => {
     if (isBrandRoute) return <BrandAppSidebar />;
@@ -109,6 +115,10 @@ function AppContent() {
     if (isAffiliateRoute) return <AffiliateMobileNav />;
     return <MobileNav />;
   };
+
+  if (isLandingRoute) {
+    return <Landing />;
+  }
 
   return (
     <>
