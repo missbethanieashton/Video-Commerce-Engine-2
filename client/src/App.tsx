@@ -32,6 +32,8 @@ import AffiliateSettings from "@/pages/affiliate-settings";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import Affiliates from "@/pages/affiliates";
 import Landing from "@/pages/landing";
+import Rewards from "@/pages/rewards";
+import Profile from "@/pages/profile";
 
 function CreatorRouter() {
   return (
@@ -44,6 +46,8 @@ function CreatorRouter() {
       <Route path="/affiliates" component={Affiliates} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/brand-kit" component={BrandKit} />
+      <Route path="/rewards" component={Rewards} />
+      <Route path="/profile" component={Profile} />
       <Route path="/help" component={Help} />
       <Route path="/more" component={More} />
       <Route component={NotFound} />

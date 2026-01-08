@@ -23,6 +23,8 @@ import {
   type VideoLicensePurchase, type InsertVideoLicensePurchase,
   type VideoPublishRecord, type InsertVideoPublishRecord,
   type SubscriberIntake, type InsertSubscriberIntake,
+  type UserProfile, type InsertUserProfile,
+  type CreatorReward, type InsertCreatorReward,
   insertCreatorInvitationSchema,
   users,
   brands,
@@ -45,6 +47,8 @@ import {
   videoLicensePurchases,
   videoPublishRecords,
   subscriberIntakes,
+  userProfiles,
+  creatorRewards,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -190,6 +194,17 @@ export interface IStorage {
   createSubscriberIntake(intake: InsertSubscriberIntake): Promise<SubscriberIntake>;
   getSubscriberIntakes(): Promise<SubscriberIntake[]>;
   getSubscriberIntakeByEmail(email: string): Promise<SubscriberIntake | undefined>;
+  
+  // User Profiles
+  getUserProfile(userId: string): Promise<UserProfile | undefined>;
+  createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
+  updateUserProfile(userId: string, data: Partial<InsertUserProfile>): Promise<UserProfile | undefined>;
+  
+  // Creator Rewards
+  getCreatorRewards(creatorId: string): Promise<CreatorReward[]>;
+  getCreatorRewardsSummary(creatorId: string): Promise<{ totalCredits: number; availableCredits: number; redeemedCredits: number; euroValue: number }>;
+  createCreatorReward(reward: InsertCreatorReward): Promise<CreatorReward>;
+  redeemCreatorReward(rewardId: string, listingId: string): Promise<CreatorReward | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -1140,6 +1155,86 @@ export class MemStorage implements IStorage {
       (i) => i.email.toLowerCase() === email.toLowerCase()
     );
   }
+
+  // User Profiles
+  private userProfilesMap: Map<string, UserProfile> = new Map();
+
+  async getUserProfile(userId: string): Promise<UserProfile | undefined> {
+    return Array.from(this.userProfilesMap.values()).find((p) => p.userId === userId);
+  }
+
+  async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
+    const id = randomUUID();
+    const newProfile: UserProfile = {
+      id,
+      userId: profile.userId,
+      bio: profile.bio ?? null,
+      profileMediaUrl: profile.profileMediaUrl ?? null,
+      profileMediaType: profile.profileMediaType ?? null,
+      locationCity: profile.locationCity ?? null,
+      locationCountry: profile.locationCountry ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.userProfilesMap.set(id, newProfile);
+    return newProfile;
+  }
+
+  async updateUserProfile(userId: string, data: Partial<InsertUserProfile>): Promise<UserProfile | undefined> {
+    const existing = await this.getUserProfile(userId);
+    if (existing) {
+      const updated = { ...existing, ...data, updatedAt: new Date() };
+      this.userProfilesMap.set(existing.id, updated);
+      return updated;
+    } else {
+      return this.createUserProfile({ userId, ...data });
+    }
+  }
+
+  // Creator Rewards
+  private creatorRewardsMap: Map<string, CreatorReward> = new Map();
+
+  async getCreatorRewards(creatorId: string): Promise<CreatorReward[]> {
+    return Array.from(this.creatorRewardsMap.values())
+      .filter((r) => r.creatorId === creatorId)
+      .sort((a, b) => (b.earnedAt?.getTime() || 0) - (a.earnedAt?.getTime() || 0));
+  }
+
+  async getCreatorRewardsSummary(creatorId: string): Promise<{ totalCredits: number; availableCredits: number; redeemedCredits: number; euroValue: number }> {
+    const rewards = await this.getCreatorRewards(creatorId);
+    const totalCredits = rewards.reduce((sum, r) => sum + (r.creditsAmount || 0), 0);
+    const redeemedCredits = rewards.filter(r => r.status === "redeemed").reduce((sum, r) => sum + (r.creditsAmount || 0), 0);
+    const availableCredits = rewards.filter(r => r.status === "credited").reduce((sum, r) => sum + (r.creditsAmount || 0), 0);
+    const euroValue = availableCredits;
+    return { totalCredits, availableCredits, redeemedCredits, euroValue };
+  }
+
+  async createCreatorReward(reward: InsertCreatorReward): Promise<CreatorReward> {
+    const id = randomUUID();
+    const newReward: CreatorReward = {
+      id,
+      creatorId: reward.creatorId,
+      rewardType: reward.rewardType ?? "brand_referral",
+      creditsAmount: reward.creditsAmount ?? 45,
+      euroValue: reward.euroValue ?? "45.00",
+      status: reward.status ?? "credited",
+      brandReferralId: reward.brandReferralId ?? null,
+      description: reward.description ?? null,
+      redeemedForListingId: reward.redeemedForListingId ?? null,
+      earnedAt: new Date(),
+      redeemedAt: null,
+    };
+    this.creatorRewardsMap.set(id, newReward);
+    return newReward;
+  }
+
+  async redeemCreatorReward(rewardId: string, listingId: string): Promise<CreatorReward | undefined> {
+    const reward = this.creatorRewardsMap.get(rewardId);
+    if (!reward) return undefined;
+    const updated = { ...reward, status: "redeemed" as const, redeemedForListingId: listingId, redeemedAt: new Date() };
+    this.creatorRewardsMap.set(rewardId, updated);
+    return updated;
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -1597,6 +1692,55 @@ export class DatabaseStorage implements IStorage {
   async getSubscriberIntakeByEmail(email: string): Promise<SubscriberIntake | undefined> {
     const [intake] = await db.select().from(subscriberIntakes).where(eq(subscriberIntakes.email, email));
     return intake;
+  }
+
+  // User Profiles
+  async getUserProfile(userId: string): Promise<UserProfile | undefined> {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
+    return profile;
+  }
+
+  async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
+    const [newProfile] = await db.insert(userProfiles).values(profile).returning();
+    return newProfile;
+  }
+
+  async updateUserProfile(userId: string, data: Partial<InsertUserProfile>): Promise<UserProfile | undefined> {
+    const existing = await this.getUserProfile(userId);
+    if (existing) {
+      const [updated] = await db.update(userProfiles).set({ ...data, updatedAt: new Date() }).where(eq(userProfiles.userId, userId)).returning();
+      return updated;
+    } else {
+      return this.createUserProfile({ userId, ...data });
+    }
+  }
+
+  // Creator Rewards
+  async getCreatorRewards(creatorId: string): Promise<CreatorReward[]> {
+    return db.select().from(creatorRewards).where(eq(creatorRewards.creatorId, creatorId)).orderBy(desc(creatorRewards.earnedAt));
+  }
+
+  async getCreatorRewardsSummary(creatorId: string): Promise<{ totalCredits: number; availableCredits: number; redeemedCredits: number; euroValue: number }> {
+    const rewards = await this.getCreatorRewards(creatorId);
+    const totalCredits = rewards.reduce((sum, r) => sum + (r.creditsAmount || 0), 0);
+    const redeemedCredits = rewards.filter(r => r.status === "redeemed").reduce((sum, r) => sum + (r.creditsAmount || 0), 0);
+    const availableCredits = rewards.filter(r => r.status === "credited").reduce((sum, r) => sum + (r.creditsAmount || 0), 0);
+    const euroValue = availableCredits; // 1 credit = €1
+    return { totalCredits, availableCredits, redeemedCredits, euroValue };
+  }
+
+  async createCreatorReward(reward: InsertCreatorReward): Promise<CreatorReward> {
+    const [newReward] = await db.insert(creatorRewards).values(reward).returning();
+    return newReward;
+  }
+
+  async redeemCreatorReward(rewardId: string, listingId: string): Promise<CreatorReward | undefined> {
+    const [updated] = await db.update(creatorRewards).set({
+      status: "redeemed",
+      redeemedForListingId: listingId,
+      redeemedAt: new Date(),
+    }).where(eq(creatorRewards.id, rewardId)).returning();
+    return updated;
   }
 }
 

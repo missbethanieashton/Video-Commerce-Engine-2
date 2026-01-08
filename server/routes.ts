@@ -14,6 +14,9 @@ import {
   insertVideoLicensePurchaseSchema,
   insertVideoPublishRecordSchema,
   insertSubscriberIntakeSchema,
+  insertUserProfileSchema,
+  insertCreatorRewardSchema,
+  VIDEO_CATEGORY_OPTIONS,
 } from "@shared/schema";
 import { z } from "zod";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
@@ -1282,6 +1285,91 @@ export async function registerRoutes(
     } catch (error) {
       res.status(500).json({ error: "Failed to get connect status" });
     }
+  });
+
+  // ==================== USER PROFILE ROUTES ====================
+
+  // Get user profile
+  app.get("/api/profile", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const profile = await storage.getUserProfile(user.id);
+      res.json(profile || { userId: user.id });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get profile" });
+    }
+  });
+
+  // Update user profile
+  app.put("/api/profile", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const validated = insertUserProfileSchema.partial().parse(req.body);
+      const profile = await storage.updateUserProfile(user.id, validated);
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // ==================== CREATOR REWARDS ROUTES ====================
+
+  // Get creator rewards
+  app.get("/api/rewards", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const rewards = await storage.getCreatorRewards(user.id);
+      res.json(rewards);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get rewards" });
+    }
+  });
+
+  // Get creator rewards summary
+  app.get("/api/rewards/summary", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const summary = await storage.getCreatorRewardsSummary(user.id);
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get rewards summary" });
+    }
+  });
+
+  // Redeem reward for video listing
+  app.post("/api/rewards/:id/redeem", async (req, res) => {
+    try {
+      const { listingId } = req.body;
+      if (!listingId) {
+        return res.status(400).json({ error: "Listing ID required" });
+      }
+      const reward = await storage.redeemCreatorReward(req.params.id, listingId);
+      if (!reward) {
+        return res.status(404).json({ error: "Reward not found" });
+      }
+      res.json(reward);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to redeem reward" });
+    }
+  });
+
+  // ==================== VIDEO CATEGORIES ROUTES ====================
+
+  // Get available video categories
+  app.get("/api/video-categories", async (req, res) => {
+    res.json(VIDEO_CATEGORY_OPTIONS);
   });
 
   return httpServer;

@@ -32,6 +32,18 @@ export const payoutStatusEnum = pgEnum("payout_status", [
   "pending", "processing", "paid", "failed"
 ]);
 
+export const videoCategoryEnum = pgEnum("video_category", [
+  "fashion", "travel", "skincare", "cuisine_bev", "health", "eco", "interiors"
+]);
+
+export const rewardTypeEnum = pgEnum("reward_type", [
+  "brand_referral", "bonus", "promotional"
+]);
+
+export const rewardStatusEnum = pgEnum("reward_status", [
+  "pending", "credited", "redeemed", "expired"
+]);
+
 // Users table with role-based access
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -92,6 +104,7 @@ export const videos = pgTable("videos", {
   totalViews: integer("total_views").default(0),
   totalClicks: integer("total_clicks").default(0),
   totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0.00"),
+  categories: text("categories"), // JSON array of up to 3 categories
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -337,6 +350,34 @@ export const videoPublishRecords = pgTable("video_publish_records", {
   isActive: boolean("is_active").default(true),
 });
 
+// User Profiles - personal details for all user types
+export const userProfiles = pgTable("user_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  bio: varchar("bio", { length: 100 }),
+  profileMediaUrl: text("profile_media_url"),
+  profileMediaType: text("profile_media_type"), // "image" or "video"
+  locationCity: text("location_city"),
+  locationCountry: text("location_country"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Creator Rewards - tracks credits earned from brand referrals
+export const creatorRewards = pgTable("creator_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  rewardType: rewardTypeEnum("reward_type").notNull().default("brand_referral"),
+  creditsAmount: integer("credits_amount").notNull().default(45),
+  euroValue: decimal("euro_value", { precision: 10, scale: 2 }).notNull().default("45.00"),
+  status: rewardStatusEnum("status").notNull().default("credited"),
+  brandReferralId: varchar("brand_referral_id").references(() => brandReferrals.id),
+  description: text("description"),
+  redeemedForListingId: varchar("redeemed_for_listing_id"),
+  earnedAt: timestamp("earned_at").default(sql`CURRENT_TIMESTAMP`),
+  redeemedAt: timestamp("redeemed_at"),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
@@ -441,6 +482,15 @@ export const videoPublishRecordsRelations = relations(videoPublishRecords, ({ on
   video: one(videos, { fields: [videoPublishRecords.videoId], references: [videos.id] }),
 }));
 
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+  user: one(users, { fields: [userProfiles.userId], references: [users.id] }),
+}));
+
+export const creatorRewardsRelations = relations(creatorRewards, ({ one }) => ({
+  creator: one(users, { fields: [creatorRewards.creatorId], references: [users.id] }),
+  brandReferral: one(brandReferrals, { fields: [creatorRewards.brandReferralId], references: [brandReferrals.id] }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, affiliateTrackingId: true, referralCode: true });
 export const insertBrandSchema = createInsertSchema(brands).omit({ id: true });
@@ -462,6 +512,8 @@ export const insertCampaignAffiliateSchema = createInsertSchema(campaignAffiliat
 export const insertGlobalVideoLibrarySchema = createInsertSchema(globalVideoLibrary).omit({ id: true, publishStatus: true, stripePaymentIntentId: true, totalLicenses: true, listedAt: true, createdAt: true });
 export const insertVideoLicensePurchaseSchema = createInsertSchema(videoLicensePurchases).omit({ id: true, status: true, stripePaymentIntentId: true, utmCode: true, embedCode: true, purchasedAt: true, createdAt: true });
 export const insertVideoPublishRecordSchema = createInsertSchema(videoPublishRecords).omit({ id: true, embedCodeMinified: true, baseUtmCode: true, publishedAt: true, isActive: true });
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCreatorRewardSchema = createInsertSchema(creatorRewards).omit({ id: true, earnedAt: true, redeemedAt: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -504,6 +556,10 @@ export type InsertVideoLicensePurchase = z.infer<typeof insertVideoLicensePurcha
 export type VideoLicensePurchase = typeof videoLicensePurchases.$inferSelect;
 export type InsertVideoPublishRecord = z.infer<typeof insertVideoPublishRecordSchema>;
 export type VideoPublishRecord = typeof videoPublishRecords.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertCreatorReward = z.infer<typeof insertCreatorRewardSchema>;
+export type CreatorReward = typeof creatorRewards.$inferSelect;
 
 // Button label options for carousel
 export const BUTTON_LABEL_OPTIONS = [
@@ -513,6 +569,17 @@ export const BUTTON_LABEL_OPTIONS = [
 // Carousel position options
 export const CAROUSEL_POSITION_OPTIONS = [
   "bottom", "top", "left", "right", "bottom-left", "bottom-right", "top-left", "top-right"
+] as const;
+
+// Video category options for taxonomy
+export const VIDEO_CATEGORY_OPTIONS = [
+  { value: "fashion", label: "Fashion" },
+  { value: "travel", label: "Travel" },
+  { value: "skincare", label: "Skincare" },
+  { value: "cuisine_bev", label: "Cuisine & Beverage" },
+  { value: "health", label: "Health" },
+  { value: "eco", label: "Eco" },
+  { value: "interiors", label: "Interiors" },
 ] as const;
 
 // Subscriber intake role enum

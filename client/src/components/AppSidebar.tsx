@@ -10,6 +10,8 @@ import {
   Send,
   Palette,
   UserPlus,
+  Gift,
+  UserCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,6 +50,14 @@ const affiliateItems = [
 const brandItems = [
   { path: "/brand-kit", label: "Brand Kit", icon: Palette },
   { path: "/referrals", label: "Brand Referrals", icon: Send },
+];
+
+const rewardsItems = [
+  { path: "/rewards", label: "My Rewards", icon: Gift },
+];
+
+const accountItems = [
+  { path: "/profile", label: "Personal Details", icon: UserCircle },
 ];
 
 const otherItems = [
@@ -170,6 +180,24 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(brandItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Rewards
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(rewardsItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Account
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(accountItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 
