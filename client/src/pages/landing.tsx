@@ -146,6 +146,7 @@ function StatsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-12 text-[#43484D]"
+          style={{ fontFamily: "'Robert', sans-serif" }}
         >
           Powering the Future of Video Commerce
         </motion.h2>
@@ -193,6 +194,7 @@ function TestimonialCarousel() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-12 text-white"
+          style={{ fontFamily: "'Robert', sans-serif" }}
         >
           Trusted by Industry Leaders
         </motion.h2>
@@ -248,6 +250,7 @@ function VideoOrientationSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D]"
+          style={{ fontFamily: "'Robert', sans-serif" }}
         >
           One Platform, Every Format
         </motion.h2>
@@ -320,6 +323,7 @@ function ParallaxImageSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-5xl font-bold text-white mb-4"
+          style={{ fontFamily: "'Robert', sans-serif" }}
         >
           Shop the Runway
         </motion.h2>
@@ -353,6 +357,7 @@ function VideoOfTheWeekSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D]"
+          style={{ fontFamily: "'Robert', sans-serif" }}
         >
           Video of the Week
         </motion.h2>
@@ -476,7 +481,7 @@ function SignupSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white" style={{ fontFamily: "'Robert', sans-serif" }}>
             Join the Revolution
           </h2>
           <p className="text-center text-white/70 mb-12">
@@ -718,7 +723,7 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6" style={{ fontFamily: "'Robert', sans-serif" }}>
               <TypewriterText />
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
