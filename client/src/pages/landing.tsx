@@ -16,7 +16,8 @@ import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
-import discoveryPacksVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
+import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
+import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 
 const formSchema = insertSubscriberIntakeSchema;
 type FormData = z.infer<typeof formSchema>;
@@ -146,7 +147,7 @@ function StatsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-12 text-[#43484D]"
-          style={{ fontFamily: "'Robert', sans-serif" }}
+          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Powering the Future of Video Commerce
         </motion.h2>
@@ -194,7 +195,7 @@ function TestimonialCarousel() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-12 text-white"
-          style={{ fontFamily: "'Robert', sans-serif" }}
+          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Trusted by Industry Leaders
         </motion.h2>
@@ -250,7 +251,7 @@ function VideoOrientationSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D]"
-          style={{ fontFamily: "'Robert', sans-serif" }}
+          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           One Platform, Every Format
         </motion.h2>
@@ -264,8 +265,17 @@ function VideoOrientationSection() {
             viewport={{ once: true }}
           >
             <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-shadow group">
-              <div className="aspect-[9/16] max-h-[400px] bg-gradient-to-b from-[#677A67] to-[#43484D] relative flex items-center justify-center mx-auto w-48">
-                <Smartphone className="w-16 h-16 text-white/50" />
+              <div className="aspect-[9/16] max-h-[400px] relative mx-auto w-48 overflow-hidden rounded-lg">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                  aria-label="Vertical video demo"
+                >
+                  <source src={verticalDemoVideo} type="video/mp4" />
+                </video>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="text-white font-semibold text-sm">Vertical / Reels</div>
@@ -323,7 +333,7 @@ function ParallaxImageSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-5xl font-bold text-white mb-4"
-          style={{ fontFamily: "'Robert', sans-serif" }}
+          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Shop the Runway
         </motion.h2>
@@ -357,7 +367,7 @@ function VideoOfTheWeekSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D]"
-          style={{ fontFamily: "'Robert', sans-serif" }}
+          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video of the Week
         </motion.h2>
@@ -390,7 +400,7 @@ function VideoOfTheWeekSection() {
                 </video>
                 {/* Video overlay info */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <div className="text-white font-semibold text-sm">App Preview</div>
+                  <div className="text-white font-semibold text-sm">Discovery Packs</div>
                   <div className="text-white/70 text-xs">@mterlizd_official</div>
                 </div>
               </div>
@@ -481,7 +491,7 @@ function SignupSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white" style={{ fontFamily: "'Robert', sans-serif" }}>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
             Join the Revolution
           </h2>
           <p className="text-center text-white/70 mb-12">
@@ -723,7 +733,7 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6" style={{ fontFamily: "'Robert', sans-serif" }}>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
               <TypewriterText />
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
