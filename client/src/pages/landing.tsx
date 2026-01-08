@@ -147,7 +147,7 @@ function StatsSection() {
         >
           Powering the Future of Video Commerce
         </motion.h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {STATS.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -217,8 +217,8 @@ function TestimonialCarousel() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <div className="flex justify-center gap-2 mt-8">
-          {TESTIMONIALS.map((_, index) => (
+        <div className="flex justify-center gap-2 mt-8" role="tablist" aria-label="Testimonial navigation">
+          {TESTIMONIALS.map((testimonial, index) => (
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
@@ -226,6 +226,9 @@ function TestimonialCarousel() {
                 index === activeIndex ? "bg-[#E7B97F] w-8" : "bg-white/30"
               }`}
               data-testid={`button-testimonial-${index}`}
+              role="tab"
+              aria-selected={index === activeIndex}
+              aria-label={`View testimonial from ${testimonial.author}`}
             />
           ))}
         </div>
@@ -318,9 +321,13 @@ function VideoOfTheWeekSection() {
         >
           <Card className="overflow-hidden border-0 shadow-2xl">
             <div className="aspect-video bg-gradient-to-br from-[#677A67] to-[#87A7AC] relative flex items-center justify-center">
-              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+              <button 
+                className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                aria-label="Play video"
+                data-testid="button-play-video-week"
+              >
                 <Play className="w-10 h-10 text-white ml-1" fill="white" />
-              </div>
+              </button>
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                 <div>
                   <div className="text-white font-semibold">Summer Style Haul 2024</div>
@@ -649,6 +656,7 @@ export default function Landing() {
             muted
             playsInline
             className="w-full h-full object-cover"
+            aria-hidden="true"
           >
             <source src={heroVideo} type="video/mp4" />
           </video>
