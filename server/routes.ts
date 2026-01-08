@@ -21,6 +21,7 @@ import {
 import { z } from "zod";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 
@@ -34,6 +35,9 @@ export async function registerRoutes(
 
   // ==================== AI DETECTION ROUTES ====================
   registerDetectionRoutes(app, storage);
+
+  // ==================== OBJECT STORAGE ROUTES ====================
+  registerObjectStorageRoutes(app);
 
   // ==================== USER ROUTES ====================
   
