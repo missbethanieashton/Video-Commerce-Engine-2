@@ -571,6 +571,18 @@ export const CAROUSEL_POSITION_OPTIONS = [
   "bottom", "top", "left", "right", "bottom-left", "bottom-right", "top-left", "top-right"
 ] as const;
 
+// Font options for carousel text
+export const FONT_OPTIONS = [
+  { value: "system", label: "System Default" },
+  { value: "public-pixel", label: "Public Pixel" },
+  { value: "inter", label: "Inter" },
+  { value: "roboto", label: "Roboto" },
+  { value: "poppins", label: "Poppins" },
+  { value: "montserrat", label: "Montserrat" },
+  { value: "playfair", label: "Playfair Display" },
+  { value: "oswald", label: "Oswald" },
+] as const;
+
 // Video category options for taxonomy
 export const VIDEO_CATEGORY_OPTIONS = [
   { value: "fashion", label: "Fashion" },
