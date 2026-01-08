@@ -309,10 +309,10 @@ function ParallaxImageSection() {
 
 function VideoOfTheWeekSection() {
   const engagementBubbles = [
-    { label: "Clicks", value: "12.4K", top: "10%", left: "5%", delay: 0 },
-    { label: "Sales", value: "$8,200", top: "30%", right: "5%", delay: 0.2 },
-    { label: "Shares", value: "3.2K", bottom: "20%", left: "10%", delay: 0.4 },
-    { label: "ROI", value: "420%", bottom: "10%", right: "10%", delay: 0.6 },
+    { label: "Clicks", value: "12.4K", top: "10%", left: "5%", delay: 0, size: 90 },
+    { label: "Sales", value: "$8,200", top: "30%", right: "5%", delay: 0.5, size: 100 },
+    { label: "Shares", value: "3.2K", bottom: "20%", left: "10%", delay: 1.0, size: 90 },
+    { label: "ROI", value: "420%", bottom: "10%", right: "10%", delay: 1.5, size: 85 },
   ];
 
   return (
@@ -370,17 +370,32 @@ function VideoOfTheWeekSection() {
               initial={{ opacity: 0, scale: 0 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: bubble.delay, type: "spring", stiffness: 200 }}
-              className="absolute bg-white rounded-full shadow-lg px-4 py-2 text-center"
+              animate={{
+                scale: [1, 1.15, 1],
+              }}
+              transition={{
+                delay: bubble.delay,
+                scale: {
+                  delay: bubble.delay,
+                  duration: 0.8,
+                  repeat: Infinity,
+                  repeatDelay: 2.2,
+                  ease: "easeInOut",
+                },
+              }}
+              className="absolute bg-white shadow-lg flex flex-col items-center justify-center"
               style={{
                 top: bubble.top,
                 left: bubble.left,
                 right: bubble.right,
                 bottom: bubble.bottom,
+                width: bubble.size,
+                height: bubble.size,
+                borderRadius: "50%",
               }}
             >
-              <div className="text-lg font-bold text-[#43484D]">{bubble.value}</div>
-              <div className="text-xs text-muted-foreground">{bubble.label}</div>
+              <div className="text-base font-bold text-[#43484D] leading-tight">{bubble.value}</div>
+              <div className="text-[10px] text-muted-foreground leading-tight">{bubble.label}</div>
             </motion.div>
           ))}
         </motion.div>
