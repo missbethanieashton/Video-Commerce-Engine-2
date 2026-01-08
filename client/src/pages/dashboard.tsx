@@ -9,7 +9,7 @@ import { DashboardTabs } from "@/components/DashboardTabs";
 import { AffiliateTable } from "@/components/AffiliateTable";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-import { EarningsNotification } from "@/components/EarningsNotification";
+import { CreatorRewardNotification } from "@/components/EarningsNotification";
 import { Eye, DollarSign, Heart, MousePointer, Upload, Play, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -131,7 +131,7 @@ export default function Dashboard() {
         <AnnouncementBanner />
       </div>
 
-      <EarningsNotification currentEarnings={demoEarnings} />
+      <CreatorRewardNotification />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

@@ -1,81 +1,50 @@
-import { useState, useEffect, useCallback } from "react";
-import { X, DollarSign, TrendingUp } from "lucide-react";
+import { useState, useCallback } from "react";
+import { X, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface EarningsNotificationProps {
-  currentEarnings: number;
+interface CreatorRewardNotificationProps {
+  visible?: boolean;
+  onDismiss?: () => void;
 }
 
-const EARNING_THRESHOLDS = [100, 500, 1000, 1500, 2500, 5000, 10000, 25000, 50000, 100000];
-
-export function EarningsNotification({ currentEarnings }: EarningsNotificationProps) {
-  const [notification, setNotification] = useState<{
-    amount: number;
-    visible: boolean;
-  } | null>(null);
-  const [lastNotifiedThreshold, setLastNotifiedThreshold] = useState(0);
-
-  useEffect(() => {
-    const reachedThreshold = EARNING_THRESHOLDS.find(
-      (threshold) => currentEarnings >= threshold && threshold > lastNotifiedThreshold
-    );
-
-    if (reachedThreshold) {
-      setNotification({ amount: reachedThreshold, visible: true });
-      setLastNotifiedThreshold(reachedThreshold);
-
-      const timer = setTimeout(() => {
-        setNotification((prev) => (prev ? { ...prev, visible: false } : null));
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [currentEarnings, lastNotifiedThreshold]);
+export function CreatorRewardNotification({ visible = true, onDismiss }: CreatorRewardNotificationProps) {
+  const [isVisible, setIsVisible] = useState(visible);
 
   const dismiss = useCallback(() => {
-    setNotification((prev) => (prev ? { ...prev, visible: false } : null));
-  }, []);
+    setIsVisible(false);
+    onDismiss?.();
+  }, [onDismiss]);
 
-  if (!notification?.visible) return null;
-
-  const formattedAmount = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(notification.amount);
+  if (!isVisible) return null;
 
   return (
     <div 
       className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-right-full duration-300"
-      data-testid="notification-earnings"
+      data-testid="notification-creator-reward"
     >
       <div 
-        className="relative flex items-center gap-3 px-5 py-4 rounded-xl shadow-lg border"
+        className="relative flex items-center gap-4 shadow-xl border border-white/10"
         style={{
-          backgroundColor: "hsl(34, 67%, 70%)",
-          borderColor: "hsl(34, 67%, 60%)",
+          backgroundColor: "#43484D",
+          borderRadius: "30px",
+          padding: "20px 28px",
         }}
       >
         <div 
-          className="flex items-center justify-center w-10 h-10 rounded-full"
-          style={{ backgroundColor: "hsl(34, 67%, 60%)" }}
+          className="flex items-center justify-center w-12 h-12 rounded-full flex-shrink-0"
+          style={{ backgroundColor: "#677A67" }}
         >
-          <DollarSign className="w-5 h-5 text-white" />
+          <Gift className="w-6 h-6 text-white" />
         </div>
-        <div className="pr-6">
-          <div className="flex items-center gap-1.5 text-white">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-sm font-medium">Milestone Reached!</span>
-          </div>
-          <p className="text-lg font-bold text-white">
-            You just earned {formattedAmount}
+        <div className="pr-8">
+          <p className="text-base font-semibold text-white leading-snug">
+            Upload Videos, and Earn Rewards every time you Refer a Brand
           </p>
         </div>
         <Button
           size="icon"
           variant="ghost"
-          className="absolute top-2 right-2 h-6 w-6 text-white/80 hover:text-white hover:bg-white/20"
+          className="absolute top-3 right-3 h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
           onClick={dismiss}
           data-testid="button-dismiss-notification"
         >
@@ -84,6 +53,12 @@ export function EarningsNotification({ currentEarnings }: EarningsNotificationPr
       </div>
     </div>
   );
+}
+
+// Legacy export for backward compatibility - deprecated
+export function EarningsNotification({ currentEarnings }: { currentEarnings: number }) {
+  // This component is deprecated - returning null
+  return null;
 }
 
 export function useEarningsDemo() {

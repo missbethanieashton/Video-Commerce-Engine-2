@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { BrandDashboardTabs } from "@/components/BrandDashboardTabs";
 import { BrandAnnouncementBanner } from "@/components/BrandAnnouncementBanner";
-import { EarningsNotification } from "@/components/EarningsNotification";
 import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -38,17 +37,9 @@ type ConnectCreatorForm = z.infer<typeof connectCreatorSchema>;
 
 export default function BrandDashboard() {
   const [activeTab, setActiveTab] = useState("stats");
-  const [demoEarnings, setDemoEarnings] = useState(0);
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [isApiConnected, setIsApiConnected] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDemoEarnings(2500);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/users/me"],
@@ -126,8 +117,6 @@ export default function BrandDashboard() {
       <div className="-mx-4 md:-mx-6 -mt-6 mb-4 overflow-hidden">
         <BrandAnnouncementBanner />
       </div>
-
-      <EarningsNotification currentEarnings={demoEarnings} />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
