@@ -16,7 +16,7 @@ import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
-import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
+import discoveryPacksVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 
 const formSchema = insertSubscriberIntakeSchema;
 type FormData = z.infer<typeof formSchema>;
@@ -385,7 +385,7 @@ function VideoOfTheWeekSection() {
                 </video>
                 {/* Video overlay info */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <div className="text-white font-semibold text-sm">Discovery Packs</div>
+                  <div className="text-white font-semibold text-sm">App Preview</div>
                   <div className="text-white/70 text-xs">@mterlizd_official</div>
                 </div>
               </div>
