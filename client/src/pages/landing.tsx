@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
-import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor } from "lucide-react";
+import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor, Video, Building2, Share2 } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
@@ -751,12 +752,51 @@ export default function Landing() {
       <VideoOfTheWeekSection />
       <SignupSection />
 
-      <footer className="py-8 px-4 bg-[#43484D] border-t border-white/10">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="text-2xl font-bold bg-gradient-to-r from-[#677A67] to-white bg-clip-text text-transparent mb-4">
-            MTERLIZD
+      <footer className="py-12 px-4 bg-[#43484D] border-t border-white/10">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="text-2xl font-bold bg-gradient-to-r from-[#677A67] to-white bg-clip-text text-transparent mb-4">
+              MTERLIZD
+            </div>
+            <p className="text-white/60 text-sm mb-6">
+              Choose your portal to get started
+            </p>
           </div>
-          <p className="text-white/60 text-sm">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+            <Link href="/creator">
+              <Button 
+                variant="outline" 
+                className="w-full border-[#677A67]/50 text-white hover:bg-[#677A67]/20 rounded-lg py-6"
+                data-testid="button-portal-creator"
+              >
+                <Video className="w-5 h-5 mr-2" />
+                Creator Portal
+              </Button>
+            </Link>
+            <Link href="/brand">
+              <Button 
+                variant="outline" 
+                className="w-full border-[#677A67]/50 text-white hover:bg-[#677A67]/20 rounded-lg py-6"
+                data-testid="button-portal-brand"
+              >
+                <Building2 className="w-5 h-5 mr-2" />
+                Brand Portal
+              </Button>
+            </Link>
+            <Link href="/affiliate">
+              <Button 
+                variant="outline" 
+                className="w-full border-[#677A67]/50 text-white hover:bg-[#677A67]/20 rounded-lg py-6"
+                data-testid="button-portal-affiliate"
+              >
+                <Share2 className="w-5 h-5 mr-2" />
+                Affiliate Portal
+              </Button>
+            </Link>
+          </div>
+          
+          <p className="text-white/40 text-xs text-center">
             2024 MTERLIZD. All rights reserved.
           </p>
         </div>

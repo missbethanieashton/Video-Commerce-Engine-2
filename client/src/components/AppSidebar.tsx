@@ -30,38 +30,38 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const overviewItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/creator", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 const contentItems = [
-  { path: "/my-videos", label: "My Videos", icon: Video },
-  { path: "/library", label: "Global Video Library", icon: Library },
+  { path: "/creator/my-videos", label: "My Videos", icon: Video },
+  { path: "/creator/library", label: "Global Video Library", icon: Library },
 ];
 
 const analyticsItems = [
-  { path: "/analytics", label: "Analytics", icon: BarChart3 },
-  { path: "/crm", label: "CRM Analytics", icon: Users },
+  { path: "/creator/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/creator/crm", label: "CRM Analytics", icon: Users },
 ];
 
 const affiliateItems = [
-  { path: "/affiliates", label: "Manage Affiliates", icon: UserPlus },
+  { path: "/creator/affiliates", label: "Manage Affiliates", icon: UserPlus },
 ];
 
 const brandItems = [
-  { path: "/brand-kit", label: "Brand Kit", icon: Palette },
-  { path: "/referrals", label: "Brand Referrals", icon: Send },
+  { path: "/creator/brand-kit", label: "Brand Kit", icon: Palette },
+  { path: "/creator/referrals", label: "Brand Referrals", icon: Send },
 ];
 
 const rewardsItems = [
-  { path: "/rewards", label: "My Rewards", icon: Gift },
+  { path: "/creator/rewards", label: "My Rewards", icon: Gift },
 ];
 
 const accountItems = [
-  { path: "/profile", label: "Personal Details", icon: UserCircle },
+  { path: "/creator/profile", label: "Personal Details", icon: UserCircle },
 ];
 
 const otherItems = [
-  { path: "/help", label: "Help Center", icon: HelpCircle },
+  { path: "/creator/help", label: "Help Center", icon: HelpCircle },
 ];
 
 interface AppSidebarProps {
@@ -80,7 +80,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
     <SidebarMenu>
       {items.map((item) => {
         const isActive = location === item.path || 
-          (item.path !== "/" && location.startsWith(item.path));
+          (item.path !== "/creator" && location.startsWith(item.path));
         const Icon = item.icon;
 
         return (

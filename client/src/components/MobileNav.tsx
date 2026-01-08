@@ -2,11 +2,11 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Video, Library, BarChart3, MoreHorizontal } from "lucide-react";
 
 const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/my-videos", label: "Videos", icon: Video },
-  { path: "/library", label: "Library", icon: Library },
-  { path: "/analytics", label: "Analytics", icon: BarChart3 },
-  { path: "/more", label: "More", icon: MoreHorizontal },
+  { path: "/creator", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/creator/my-videos", label: "Videos", icon: Video },
+  { path: "/creator/library", label: "Library", icon: Library },
+  { path: "/creator/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/creator/more", label: "More", icon: MoreHorizontal },
 ];
 
 export function MobileNav() {
@@ -17,7 +17,7 @@ export function MobileNav() {
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const isActive = location === item.path || 
-            (item.path !== "/" && location.startsWith(item.path));
+            (item.path !== "/creator" && location.startsWith(item.path));
           const Icon = item.icon;
           
           return (

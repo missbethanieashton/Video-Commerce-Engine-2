@@ -38,18 +38,18 @@ import Profile from "@/pages/profile";
 function CreatorRouter() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/my-videos" component={MyVideos} />
-      <Route path="/library" component={Library} />
-      <Route path="/analytics" component={Analytics} />
-      <Route path="/crm" component={CRMAnalytics} />
-      <Route path="/affiliates" component={Affiliates} />
-      <Route path="/referrals" component={Referrals} />
-      <Route path="/brand-kit" component={BrandKit} />
-      <Route path="/rewards" component={Rewards} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/help" component={Help} />
-      <Route path="/more" component={More} />
+      <Route path="/creator" component={Dashboard} />
+      <Route path="/creator/my-videos" component={MyVideos} />
+      <Route path="/creator/library" component={Library} />
+      <Route path="/creator/analytics" component={Analytics} />
+      <Route path="/creator/crm" component={CRMAnalytics} />
+      <Route path="/creator/affiliates" component={Affiliates} />
+      <Route path="/creator/referrals" component={Referrals} />
+      <Route path="/creator/brand-kit" component={BrandKit} />
+      <Route path="/creator/rewards" component={Rewards} />
+      <Route path="/creator/profile" component={Profile} />
+      <Route path="/creator/help" component={Help} />
+      <Route path="/creator/more" component={More} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -88,7 +88,8 @@ function Router() {
   const [location] = useLocation();
   const isBrandRoute = location.startsWith("/brand");
   const isAffiliateRoute = location.startsWith("/affiliate");
-  const isLandingRoute = location === "/welcome";
+  const isCreatorRoute = location.startsWith("/creator");
+  const isLandingRoute = location === "/";
   
   if (isLandingRoute) {
     return <Landing />;
@@ -99,6 +100,9 @@ function Router() {
   if (isAffiliateRoute) {
     return <AffiliateRouter />;
   }
+  if (isCreatorRoute) {
+    return <CreatorRouter />;
+  }
   return <CreatorRouter />;
 }
 
@@ -106,7 +110,7 @@ function AppContent() {
   const [location] = useLocation();
   const isBrandRoute = location.startsWith("/brand");
   const isAffiliateRoute = location.startsWith("/affiliate");
-  const isLandingRoute = location === "/welcome";
+  const isLandingRoute = location === "/";
 
   const getSidebar = () => {
     if (isBrandRoute) return <BrandAppSidebar />;
@@ -165,7 +169,7 @@ function AppWithSidebar() {
 
 function App() {
   const [location] = useLocation();
-  const isLandingRoute = location === "/welcome";
+  const isLandingRoute = location === "/";
 
   return (
     <QueryClientProvider client={queryClient}>
