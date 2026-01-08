@@ -141,37 +141,25 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 function StatsSection() {
   return (
     <section className="py-20 px-4 bg-[#43484D]">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-12 text-white"
+          className="text-3xl md:text-4xl font-bold text-center mb-6 text-white"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
-          Powering the Future of Video Commerce
+          Video Commerce
         </motion.h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {STATS.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="text-center p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow">
-                <CardContent className="p-0">
-                  <stat.icon className={`w-8 h-8 mx-auto mb-3 ${stat.color}`} />
-                  <div className="text-3xl md:text-4xl font-bold text-[#43484D] mb-1">
-                    <AnimatedCounter value={stat.value} />
-                  </div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto"
+        >
+          Upload your videos to our Global Video Directory, and multiply your sales and earnings
+        </motion.p>
       </div>
     </section>
   );
