@@ -370,20 +370,20 @@ function VideoOfTheWeekSection() {
               initial={{ opacity: 0, scale: 0 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              animate={{
-                scale: [1, 1.15, 1],
-              }}
-              transition={{
-                delay: bubble.delay,
-                scale: {
-                  delay: bubble.delay,
-                  duration: 0.8,
+              whileHover={{
+                scale: [1, 1.2, 1],
+                transition: {
+                  duration: 0.6,
                   repeat: Infinity,
-                  repeatDelay: 2.2,
                   ease: "easeInOut",
                 },
               }}
-              className="absolute bg-white shadow-lg flex flex-col items-center justify-center"
+              transition={{
+                delay: bubble.delay,
+                type: "spring",
+                stiffness: 200,
+              }}
+              className="absolute bg-white shadow-lg flex flex-col items-center justify-center cursor-pointer"
               style={{
                 top: bubble.top,
                 left: bubble.left,
