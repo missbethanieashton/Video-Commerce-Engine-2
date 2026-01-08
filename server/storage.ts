@@ -22,6 +22,7 @@ import {
   type GlobalVideoLibrary, type InsertGlobalVideoLibrary,
   type VideoLicensePurchase, type InsertVideoLicensePurchase,
   type VideoPublishRecord, type InsertVideoPublishRecord,
+  type SubscriberIntake, type InsertSubscriberIntake,
   insertCreatorInvitationSchema,
   users,
   brands,
@@ -43,6 +44,7 @@ import {
   globalVideoLibrary,
   videoLicensePurchases,
   videoPublishRecords,
+  subscriberIntakes,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -183,6 +185,11 @@ export interface IStorage {
   getVideoPublishRecord(videoId: string): Promise<VideoPublishRecord | undefined>;
   createVideoPublishRecord(record: InsertVideoPublishRecord): Promise<VideoPublishRecord>;
   updateVideoPublishRecord(id: string, data: Partial<VideoPublishRecord>): Promise<VideoPublishRecord | undefined>;
+  
+  // Subscriber Intakes
+  createSubscriberIntake(intake: InsertSubscriberIntake): Promise<SubscriberIntake>;
+  getSubscriberIntakes(): Promise<SubscriberIntake[]>;
+  getSubscriberIntakeByEmail(email: string): Promise<SubscriberIntake | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -1108,6 +1115,31 @@ export class MemStorage implements IStorage {
     this.videoPublishRecords.set(id, updated);
     return updated;
   }
+
+  // Subscriber Intakes
+  private subscriberIntakesMap: Map<string, SubscriberIntake> = new Map();
+
+  async createSubscriberIntake(intake: InsertSubscriberIntake): Promise<SubscriberIntake> {
+    const id = randomUUID();
+    const newIntake: SubscriberIntake = {
+      id,
+      ...intake,
+      createdAt: new Date(),
+    };
+    this.subscriberIntakesMap.set(id, newIntake);
+    return newIntake;
+  }
+
+  async getSubscriberIntakes(): Promise<SubscriberIntake[]> {
+    return Array.from(this.subscriberIntakesMap.values())
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getSubscriberIntakeByEmail(email: string): Promise<SubscriberIntake | undefined> {
+    return Array.from(this.subscriberIntakesMap.values()).find(
+      (i) => i.email.toLowerCase() === email.toLowerCase()
+    );
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -1550,6 +1582,21 @@ export class DatabaseStorage implements IStorage {
   async updateVideoPublishRecord(id: string, data: Partial<VideoPublishRecord>): Promise<VideoPublishRecord | undefined> {
     const [updated] = await db.update(videoPublishRecords).set(data).where(eq(videoPublishRecords.id, id)).returning();
     return updated;
+  }
+
+  // Subscriber Intakes
+  async createSubscriberIntake(intake: InsertSubscriberIntake): Promise<SubscriberIntake> {
+    const [newIntake] = await db.insert(subscriberIntakes).values(intake).returning();
+    return newIntake;
+  }
+
+  async getSubscriberIntakes(): Promise<SubscriberIntake[]> {
+    return db.select().from(subscriberIntakes).orderBy(desc(subscriberIntakes.createdAt));
+  }
+
+  async getSubscriberIntakeByEmail(email: string): Promise<SubscriberIntake | undefined> {
+    const [intake] = await db.select().from(subscriberIntakes).where(eq(subscriberIntakes.email, email));
+    return intake;
   }
 }
 

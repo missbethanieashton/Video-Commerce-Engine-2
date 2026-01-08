@@ -13,6 +13,7 @@ import {
   insertGlobalVideoLibrarySchema,
   insertVideoLicensePurchaseSchema,
   insertVideoPublishRecordSchema,
+  insertSubscriberIntakeSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
@@ -371,6 +372,39 @@ export async function registerRoutes(
       res.json(sorted);
     } catch (error) {
       res.status(500).json({ error: "Failed to get affiliate publishers analytics" });
+    }
+  });
+
+  // ==================== SUBSCRIBER INTAKE ROUTES ====================
+  
+  // Create subscriber intake (landing page signup)
+  app.post("/api/subscriber-intake", async (req, res) => {
+    try {
+      const data = insertSubscriberIntakeSchema.parse(req.body);
+      
+      // Check if email already exists
+      const existing = await storage.getSubscriberIntakeByEmail(data.email);
+      if (existing) {
+        return res.status(409).json({ error: "Email already registered" });
+      }
+      
+      const intake = await storage.createSubscriberIntake(data);
+      res.status(201).json(intake);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create subscriber" });
+    }
+  });
+
+  // Get all subscriber intakes (admin)
+  app.get("/api/subscriber-intakes", async (req, res) => {
+    try {
+      const intakes = await storage.getSubscriberIntakes();
+      res.json(intakes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get subscribers" });
     }
   });
 
