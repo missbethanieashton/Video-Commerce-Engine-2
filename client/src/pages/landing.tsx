@@ -74,21 +74,21 @@ const STATS = [
 
 const TESTIMONIALS = [
   {
-    quote: "MTERLIZD has completely transformed how we work with creators. The AI product detection alone has saved us hundreds of hours.",
-    author: "Sarah Chen",
-    role: "Head of Influencer Marketing",
+    quote: "Most Innovative Tech",
+    author: "",
+    role: "",
     company: "Forbes",
   },
   {
-    quote: "The affiliate tracking is flawless. We finally have clear visibility into which creator partnerships drive real revenue.",
-    author: "Michael Torres",
-    role: "VP of Digital",
+    quote: "Top 100 Fast Moving Companies",
+    author: "",
+    role: "",
     company: "Fast Company",
   },
   {
-    quote: "As a creator, the Global Video Library has opened up entirely new revenue streams I never knew existed.",
-    author: "Emma Williams",
-    role: "Fashion Creator",
+    quote: "Touch Technology Tells Brands Exactly What Consumers WANT To Shop",
+    author: "",
+    role: "",
     company: "Fashionista",
   },
 ];
@@ -204,11 +204,8 @@ function TestimonialCarousel() {
               <p className="text-xl md:text-2xl text-white/90 mb-6 italic leading-relaxed">
                 "{TESTIMONIALS[activeIndex].quote}"
               </p>
-              <div className="text-[#E7B97F] font-semibold">
-                {TESTIMONIALS[activeIndex].author}
-              </div>
-              <div className="text-white/60 text-sm">
-                {TESTIMONIALS[activeIndex].role} at {TESTIMONIALS[activeIndex].company}
+              <div className="text-[#E7B97F] font-semibold text-lg">
+                {TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
           </AnimatePresence>
