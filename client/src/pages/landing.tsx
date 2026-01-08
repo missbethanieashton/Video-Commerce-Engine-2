@@ -140,7 +140,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="px-4 bg-[#43484D]" style={{ paddingTop: "50px", paddingBottom: "50px" }}>
+    <section className="px-4 bg-[#43484D]" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -291,7 +291,7 @@ function ParallaxImageSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
 
   return (
-    <section ref={ref} className="relative h-[60vh] overflow-hidden">
+    <section ref={ref} className="relative h-[80vh] overflow-hidden">
       <motion.div
         style={{ y }}
         className="absolute inset-0 w-full h-[140%] -top-[20%]"
@@ -469,7 +469,7 @@ function SignupSection() {
                   className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-left hover:bg-white/20 transition-colors group"
                   data-testid={`button-role-${item.role}`}
                 >
-                  <div className="text-xl font-semibold text-white mb-2 group-hover:text-[#677A67] transition-colors">
+                  <div className="text-xl font-semibold text-white mb-2">
                     {item.title}
                   </div>
                   <div className="text-white/60 text-sm">{item.desc}</div>
