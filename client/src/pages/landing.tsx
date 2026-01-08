@@ -704,7 +704,7 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
               <TypewriterText />
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
