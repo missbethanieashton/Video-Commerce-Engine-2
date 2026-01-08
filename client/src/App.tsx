@@ -136,7 +136,7 @@ function AppContent() {
             </div>
             <ThemeToggle />
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 bg-[#fffefd] dark:bg-background">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 bg-white dark:bg-background">
             <Router />
           </main>
         </div>

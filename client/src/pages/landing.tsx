@@ -67,8 +67,8 @@ function TypewriterText() {
 
 const STATS = [
   { icon: Users, value: "50K+", label: "Active Creators", color: "text-[#677A67]" },
-  { icon: DollarSign, value: "$12M", label: "Creator Earnings", color: "text-[#E7B97F]" },
-  { icon: TrendingUp, value: "340%", label: "Avg. ROI Increase", color: "text-[#87A7AC]" },
+  { icon: DollarSign, value: "$12M", label: "Creator Earnings", color: "text-[#677A67]" },
+  { icon: TrendingUp, value: "340%", label: "Avg. ROI Increase", color: "text-[#43484D]" },
   { icon: ShoppingBag, value: "2.1M", label: "Products Tagged", color: "text-[#677A67]" },
 ];
 
@@ -140,13 +140,13 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="py-20 px-4 bg-[#EAE6D8]">
+    <section className="py-20 px-4 bg-[#43484D]">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-12 text-[#43484D]"
+          className="text-3xl md:text-4xl font-bold text-center mb-12 text-white"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Powering the Future of Video Commerce
@@ -200,11 +200,11 @@ function TestimonialCarousel() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <Quote className="w-12 h-12 mx-auto mb-6 text-[#E7B97F] opacity-50" />
+              <Quote className="w-12 h-12 mx-auto mb-6 text-[#677A67] opacity-70" />
               <p className="text-xl md:text-2xl text-white/90 mb-6 italic leading-relaxed">
                 "{TESTIMONIALS[activeIndex].quote}"
               </p>
-              <div className="text-[#E7B97F] font-semibold text-lg">
+              <div className="text-[#677A67] font-semibold text-lg">
                 {TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
@@ -216,7 +216,7 @@ function TestimonialCarousel() {
               key={index}
               onClick={() => setActiveIndex(index)}
               className={`w-3 h-3 rounded-full transition-all ${
-                index === activeIndex ? "bg-[#E7B97F] w-8" : "bg-white/30"
+                index === activeIndex ? "bg-[#677A67] w-8" : "bg-white/30"
               }`}
               data-testid={`button-testimonial-${index}`}
               role="tab"
@@ -232,7 +232,7 @@ function TestimonialCarousel() {
 
 function VideoOrientationSection() {
   return (
-    <section className="py-20 px-4 bg-[#fffefd]">
+    <section className="py-20 px-4 bg-white dark:bg-[#1a1a1a]">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -278,7 +278,7 @@ function VideoOrientationSection() {
             viewport={{ once: true }}
           >
             <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-shadow group">
-              <div className="aspect-video bg-gradient-to-b from-[#87A7AC] to-[#43484D] relative flex items-center justify-center">
+              <div className="aspect-video bg-gradient-to-b from-[#677A67] to-[#43484D] relative flex items-center justify-center">
                 <Monitor className="w-16 h-16 text-white/50" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
@@ -328,13 +328,13 @@ function VideoOfTheWeekSection() {
   ];
 
   return (
-    <section className="py-20 px-4 bg-[#EAE6D8]">
+    <section className="py-20 px-4 bg-white dark:bg-[#1a1a1a]">
       <div className="max-w-4xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D]"
+          className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D] dark:text-white"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video of the Week
@@ -481,11 +481,11 @@ function SignupSection() {
                   className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-left hover:bg-white/20 transition-colors group"
                   data-testid={`button-role-${item.role}`}
                 >
-                  <div className="text-xl font-semibold text-white mb-2 group-hover:text-[#E7B97F] transition-colors">
+                  <div className="text-xl font-semibold text-white mb-2 group-hover:text-[#677A67] transition-colors">
                     {item.title}
                   </div>
                   <div className="text-white/60 text-sm">{item.desc}</div>
-                  <ArrowRight className="w-5 h-5 text-[#E7B97F] mt-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight className="w-5 h-5 text-[#677A67] mt-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.button>
               ))}
             </div>
@@ -649,7 +649,7 @@ function SignupSection() {
                     <Button
                       type="submit"
                       disabled={mutation.isPending}
-                      className="w-full bg-[#E7B97F] hover:bg-[#d9a86f] text-[#43484D] font-semibold py-6 rounded-full mt-6"
+                      className="w-full bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold py-6 rounded-full mt-6"
                       style={{ paddingLeft: "30px", paddingRight: "30px" }}
                       data-testid="button-submit-signup"
                     >
@@ -676,7 +676,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fffefd]">
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1a]">
       <section className="relative h-screen overflow-hidden">
         <motion.div
           style={{ opacity: heroOpacity, scale: heroScale }}
@@ -711,7 +711,7 @@ export default function Landing() {
               <Button
                 onClick={scrollToSignup}
                 size="lg"
-                className="bg-[#E7B97F] hover:bg-[#d9a86f] text-[#43484D] font-semibold rounded-full"
+                className="bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold rounded-full"
                 style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
                 data-testid="button-hero-cta"
               >
@@ -750,7 +750,7 @@ export default function Landing() {
 
       <footer className="py-8 px-4 bg-[#43484D] border-t border-white/10">
         <div className="max-w-6xl mx-auto text-center">
-          <div className="text-2xl font-bold bg-gradient-to-r from-[#E7B97F] to-[#87A7AC] bg-clip-text text-transparent mb-4">
+          <div className="text-2xl font-bold bg-gradient-to-r from-[#677A67] to-white bg-clip-text text-transparent mb-4">
             MTERLIZD
           </div>
           <p className="text-white/60 text-sm">
