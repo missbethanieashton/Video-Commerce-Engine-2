@@ -158,7 +158,7 @@ export function ProductCarouselEditor({
               size="sm" 
               variant="secondary" 
               onClick={onSaveDraft}
-              data-testid="button-save-draft"
+              data-testid="button-save-carousel-draft"
             >
               <Save className="h-4 w-4" />
               <span className="ml-1">Save Draft</span>

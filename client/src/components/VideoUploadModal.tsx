@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,11 +37,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2, Wand2, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2, Wand2, Settings, ChevronDown, ChevronUp, Save } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useUpload } from "@/hooks/use-upload";
 import { ProductCarouselEditor, defaultCarouselSettings, type CarouselSettings } from "@/components/ProductCarouselEditor";
+import { useToast } from "@/hooks/use-toast";
 import type { Brand } from "@shared/schema";
 
 const videoUploadSchema = z.object({
@@ -65,7 +66,7 @@ interface VideoUploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   brands: Brand[];
-  onUpload: (data: VideoUploadForm & { videoUrl: string; selectedBrands: string[] }) => Promise<void>;
+  onUpload: (data: VideoUploadForm & { videoUrl: string; selectedBrands: string[]; carouselSettings: CarouselSettings }) => Promise<void>;
   onReferBrand: (data: ReferralForm) => Promise<void>;
 }
 
@@ -85,6 +86,7 @@ export function VideoUploadModal({
   const [enableAiDetection, setEnableAiDetection] = useState(true);
   const [showCarouselSettings, setShowCarouselSettings] = useState(false);
   const [carouselSettings, setCarouselSettings] = useState<CarouselSettings>(defaultCarouselSettings);
+  const { toast } = useToast();
 
   const { uploadFile, isUploading, progress } = useUpload({
     onSuccess: (response) => {
@@ -92,6 +94,34 @@ export function VideoUploadModal({
       setStep("details");
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const savedDraft = localStorage.getItem("videoDraft");
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          if (draft.videoUrl) {
+            setVideoUrl(draft.videoUrl);
+            setSelectedBrands(draft.selectedBrands || []);
+            setCarouselSettings(draft.carouselSettings || defaultCarouselSettings);
+            setEnableAiDetection(draft.enableAiDetection ?? true);
+            form.setValue("title", draft.title || "");
+            form.setValue("description", draft.description || "");
+            setStep("details");
+            toast({
+              title: "Draft Restored",
+              description: "Your previous draft has been restored. Note: You may need to re-upload the video file.",
+            });
+          } else {
+            localStorage.removeItem("videoDraft");
+          }
+        } catch (e) {
+          localStorage.removeItem("videoDraft");
+        }
+      }
+    }
+  }, [open]);
 
   const form = useForm<VideoUploadForm>({
     resolver: zodResolver(videoUploadSchema),
@@ -145,7 +175,9 @@ export function VideoUploadModal({
         ...data,
         videoUrl,
         selectedBrands,
+        carouselSettings,
       });
+      localStorage.removeItem("videoDraft");
       resetAndClose();
     } finally {
       setIsSubmitting(false);
@@ -174,6 +206,31 @@ export function VideoUploadModal({
     form.reset();
     referralForm.reset();
     onOpenChange(false);
+  };
+
+  const handleSaveDraft = () => {
+    if (!videoUrl) {
+      toast({
+        title: "Cannot Save Draft",
+        description: "Please upload a video first before saving a draft.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const draftData = {
+      title: form.getValues("title"),
+      description: form.getValues("description"),
+      videoUrl,
+      selectedBrands,
+      carouselSettings,
+      enableAiDetection,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem("videoDraft", JSON.stringify(draftData));
+    toast({
+      title: "Draft Saved",
+      description: "Your video draft has been saved. You can continue editing later.",
+    });
   };
 
   return (
@@ -461,20 +518,32 @@ export function VideoUploadModal({
 
               <Separator />
 
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={resetAndClose}>
-                  Cancel
+              <div className="flex justify-between gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleSaveDraft}
+                  className="gap-2"
+                  data-testid="button-save-draft"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Draft
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-full">
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Publishing...
-                    </>
-                  ) : (
-                    "Publish Video"
-                  )}
-                </Button>
+                <div className="flex gap-3">
+                  <Button type="button" variant="ghost" onClick={resetAndClose}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting} className="rounded-full">
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      "Publish Video"
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>
