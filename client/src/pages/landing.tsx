@@ -140,7 +140,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="py-20 px-4 bg-[#43484D]">
+    <section className="px-4 bg-[#43484D]" style={{ paddingTop: "50px", paddingBottom: "50px" }}>
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
