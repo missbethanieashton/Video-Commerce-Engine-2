@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
+import { SiInstagram, SiLinkedin } from "react-icons/si";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
@@ -1050,6 +1051,29 @@ export default function Landing() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex justify-center gap-4 mb-4">
+            <a
+              href="https://instagram.com/join.materialized"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Materialized on Instagram"
+              data-testid="link-footer-instagram"
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              <SiInstagram className="w-5 h-5" />
+            </a>
+            <a
+              href="https://linkedin.com/company/materialized"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Materialized on LinkedIn"
+              data-testid="link-footer-linkedin"
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              <SiLinkedin className="w-5 h-5" />
+            </a>
           </div>
 
           <p className="text-white/40 text-xs text-center" data-testid="text-footer-copyright">
