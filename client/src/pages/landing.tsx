@@ -335,7 +335,7 @@ function VideoOfTheWeekSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] dark:text-white text-[24px]"
+          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] dark:text-white text-[22px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video of the Week
