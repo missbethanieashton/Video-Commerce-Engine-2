@@ -392,7 +392,7 @@ function VideoOrientationSection() {
           One Platform, Every Format
         </motion.h2>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Whether you create vertical Reels or horizontal long-form content, our platform adapts to your style
+          Whether you create vertical Reels or horizontal long-form content, our platform adapts to your style. Materialized offers multiple customization options, including the layout of your product carousel and branded video players
         </p>
         <div className="grid md:grid-cols-2 gap-8">
           <motion.div
