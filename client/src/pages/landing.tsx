@@ -435,17 +435,47 @@ function VideoOrientationSection() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
+            className="flex justify-center"
           >
-            <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-shadow group">
-              <div className="aspect-video bg-gradient-to-b from-[#677A67] to-[#43484D] relative flex items-center justify-center">
-                <Monitor className="w-16 h-16 text-white/50" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="text-white font-semibold text-sm">Horizontal / YouTube</div>
-                  <div className="text-white/70 text-xs">16:9 Format</div>
+            {/* iPad landscape frame */}
+            <div className="w-full max-w-[560px]">
+              <div
+                className="relative rounded-[28px] p-[14px]"
+                style={{
+                  background: "linear-gradient(145deg, #d4d4d4 0%, #b0b0b0 40%, #c8c8c8 100%)",
+                  boxShadow: "0 30px 70px rgba(0,0,0,0.45), 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.15)",
+                }}
+              >
+                {/* Front camera dot */}
+                <div className="absolute top-[7px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#888] shadow-inner" />
+                {/* Side button (right) */}
+                <div className="absolute right-[-3px] top-[60px] w-[3px] h-8 rounded-r-full bg-[#a0a0a0]" />
+                {/* Volume buttons (left) */}
+                <div className="absolute left-[-3px] top-[50px] w-[3px] h-5 rounded-l-full bg-[#a0a0a0]" />
+                <div className="absolute left-[-3px] top-[78px] w-[3px] h-5 rounded-l-full bg-[#a0a0a0]" />
+
+                {/* Screen */}
+                <div className="relative rounded-[16px] overflow-hidden bg-black" style={{ aspectRatio: "16/10" }}>
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: "center 60%" }}
+                    aria-label="Jetski vessels video"
+                  >
+                    <source src="/vessels-jetski.mp4" type="video/mp4" />
+                  </video>
+                  {/* Subtle screen glare */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <div className="text-white font-semibold text-sm drop-shadow">Horizontal / YouTube</div>
+                    <div className="text-white/70 text-xs drop-shadow">16:9 Format</div>
+                  </div>
                 </div>
               </div>
-            </Card>
+            </div>
           </motion.div>
         </div>
       </div>
