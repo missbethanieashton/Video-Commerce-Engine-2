@@ -60,7 +60,7 @@ export default function More() {
               variant="outline"
               size="sm"
               className="rounded-full"
-              onClick={() => navigate("/creator/profile")}
+              onClick={() => navigate("/brand/profile")}
               data-testid="button-edit-profile"
             >
               Edit Profile

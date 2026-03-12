@@ -65,6 +65,7 @@ function BrandRouter() {
       <Route path="/brand/creators" component={BrandCreators} />
       <Route path="/brand/analytics" component={Analytics} />
       <Route path="/brand/campaigns" component={BrandCampaigns} />
+      <Route path="/brand/profile" component={Profile} />
       <Route path="/brand/settings" component={More} />
       <Route path="/brand/help" component={Help} />
       <Route component={NotFound} />
