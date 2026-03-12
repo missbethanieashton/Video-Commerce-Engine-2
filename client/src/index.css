@@ -293,3 +293,8 @@
     inset: -1px;
   }
 }
+
+/* Custom cursor - hide native cursor sitewide */
+*, *::before, *::after {
+  cursor: none !important;
+}
