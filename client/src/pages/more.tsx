@@ -27,6 +27,12 @@ const brandMenuItems = [
   { path: "/brand/help", label: "Help Center", icon: HelpCircle },
 ];
 
+const creatorMenuItems = [
+  { path: "/creator/crm", label: "CRM Analytics", icon: BarChart3 },
+  { path: "/creator/referrals", label: "Brand Referrals", icon: Target },
+  { path: "/creator/help", label: "Help Center", icon: HelpCircle },
+];
+
 const settingsItems = [
   { label: "Notifications", icon: Bell },
   { label: "Privacy & Security", icon: Shield },
@@ -81,6 +87,7 @@ export default function More() {
   const username = user?.username || "brand-account";
   const role = user?.role || "brand";
   const initials = getInitials(displayName);
+  const menuItems = role === "brand" ? brandMenuItems : creatorMenuItems;
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
@@ -120,11 +127,11 @@ export default function More() {
 
       <Card>
         <CardContent className="p-0">
-          {brandMenuItems.map((item, index) => (
+          {menuItems.map((item, index) => (
             <Link key={item.path} href={item.path}>
               <div
                 className={`flex items-center gap-4 p-4 hover-elevate cursor-pointer ${
-                  index !== brandMenuItems.length - 1 ? "border-b border-border" : ""
+                  index !== menuItems.length - 1 ? "border-b border-border" : ""
                 }`}
                 data-testid={`link-menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
