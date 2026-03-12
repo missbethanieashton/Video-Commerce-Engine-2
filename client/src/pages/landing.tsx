@@ -848,7 +848,7 @@ export default function Landing() {
           </div>
 
           <p className="text-white/40 text-xs text-center" data-testid="text-footer-copyright">
-            &copy; 2024 Materialized. All rights reserved.
+            &copy; 2026 Materialized. All rights reserved.
           </p>
         </div>
       </footer>
