@@ -157,9 +157,9 @@ function StatsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto"
+          className="md:text-xl text-white/80 max-w-2xl mx-auto text-[16px]"
         >
-          Upload your videos to our Global Video Directory, and multiply your sales and earnings
+          Upload your videos to our Global Video Directory to multiply your sales and earnings
         </motion.p>
       </div>
     </section>
@@ -728,8 +728,7 @@ export default function Landing() {
                 style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
                 data-testid="button-hero-cta"
               >
-                Get Started Free
-                <ArrowRight className="ml-2 w-5 h-5" />
+                Free Trial
               </Button>
               <Button
                 variant="outline"
