@@ -103,7 +103,10 @@ export interface IStorage {
   getBrandOutreach(id: string): Promise<BrandOutreach | undefined>;
   getBrandOutreachByToken(token: string): Promise<BrandOutreach | undefined>;
   getBrandOutreachesByCreator(creatorId: string): Promise<BrandOutreach[]>;
+  getAllBrandOutreaches(): Promise<BrandOutreach[]>;
   updateBrandOutreachStatus(id: string, status: string, authorizedAt?: Date): Promise<BrandOutreach | undefined>;
+  updateBrandOutreachAdmin(id: string, updates: Partial<Pick<BrandOutreach, "adminNotes" | "agreementStartedAt" | "agreementSignedAt" | "brandSubscribedAt" | "status">>): Promise<BrandOutreach | undefined>;
+  recordOutreachFollowUp(id: string, followUpType: string): Promise<BrandOutreach | undefined>;
 
   // Analytics
   getAnalyticsEvents(videoId?: string): Promise<AnalyticsEvent[]>;
@@ -581,10 +584,36 @@ export class MemStorage implements IStorage {
       .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
   }
 
+  async getAllBrandOutreaches(): Promise<BrandOutreach[]> {
+    return Array.from(this.brandOutreachMap.values())
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
   async updateBrandOutreachStatus(id: string, status: string, authorizedAt?: Date): Promise<BrandOutreach | undefined> {
     const outreach = this.brandOutreachMap.get(id);
     if (!outreach) return undefined;
     const updated = { ...outreach, status: status as any, authorizedAt: authorizedAt ?? outreach.authorizedAt };
+    this.brandOutreachMap.set(id, updated);
+    return updated;
+  }
+
+  async updateBrandOutreachAdmin(id: string, updates: Partial<Pick<BrandOutreach, "adminNotes" | "agreementStartedAt" | "agreementSignedAt" | "brandSubscribedAt" | "status">>): Promise<BrandOutreach | undefined> {
+    const outreach = this.brandOutreachMap.get(id);
+    if (!outreach) return undefined;
+    const updated = { ...outreach, ...updates };
+    this.brandOutreachMap.set(id, updated);
+    return updated;
+  }
+
+  async recordOutreachFollowUp(id: string, followUpType: string): Promise<BrandOutreach | undefined> {
+    const outreach = this.brandOutreachMap.get(id);
+    if (!outreach) return undefined;
+    const updated = {
+      ...outreach,
+      followUpCount: (outreach.followUpCount ?? 0) + 1,
+      lastFollowUpAt: new Date(),
+      lastFollowUpType: followUpType as any,
+    };
     this.brandOutreachMap.set(id, updated);
     return updated;
   }
@@ -1572,10 +1601,30 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(brandOutreachRequests.createdAt));
   }
 
+  async getAllBrandOutreaches(): Promise<BrandOutreach[]> {
+    return db.select().from(brandOutreachRequests).orderBy(desc(brandOutreachRequests.createdAt));
+  }
+
   async updateBrandOutreachStatus(id: string, status: string, authorizedAt?: Date): Promise<BrandOutreach | undefined> {
     const updateData: any = { status };
     if (authorizedAt) updateData.authorizedAt = authorizedAt;
     const [updated] = await db.update(brandOutreachRequests).set(updateData).where(eq(brandOutreachRequests.id, id)).returning();
+    return updated;
+  }
+
+  async updateBrandOutreachAdmin(id: string, updates: Partial<Pick<BrandOutreach, "adminNotes" | "agreementStartedAt" | "agreementSignedAt" | "brandSubscribedAt" | "status">>): Promise<BrandOutreach | undefined> {
+    const [updated] = await db.update(brandOutreachRequests).set(updates as any).where(eq(brandOutreachRequests.id, id)).returning();
+    return updated;
+  }
+
+  async recordOutreachFollowUp(id: string, followUpType: string): Promise<BrandOutreach | undefined> {
+    const existing = await this.getBrandOutreach(id);
+    if (!existing) return undefined;
+    const [updated] = await db.update(brandOutreachRequests).set({
+      followUpCount: (existing.followUpCount ?? 0) + 1,
+      lastFollowUpAt: new Date(),
+      lastFollowUpType: followUpType as any,
+    }).where(eq(brandOutreachRequests.id, id)).returning();
     return updated;
   }
 

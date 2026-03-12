@@ -150,6 +150,155 @@ export async function sendBrandAgreementEmail(opts: {
   });
 }
 
+export async function sendDocuSignReminderEmail(opts: {
+  prContactName: string;
+  prContactEmail: string;
+  brandName: string;
+  videoTitle: string;
+  docuSignUrl: string;
+}): Promise<void> {
+  const firstName = opts.prContactName.split(" ")[0];
+  const body = `
+    <h1>Hey ${firstName}, just a nudge 👋</h1>
+    <p>
+      You authorised <strong>${opts.brandName}</strong> to feature in a shoppable video on Materialized —
+      that's great! The final step is reviewing and signing the <strong>Materialized Brand Agreement</strong>
+      via DocuSign. It takes less than two minutes.
+    </p>
+    <p>Once signed, your brand's products will be shoppable directly from <em>${opts.videoTitle || "the video"}</em>.</p>
+    <div class="cta-wrap">
+      <a href="${opts.docuSignUrl}" class="cta">Sign the Agreement</a>
+    </div>
+    <p class="note">Questions? Reply to this email and our team will be happy to help.</p>
+  `;
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: opts.prContactEmail,
+    subject: `Reminder: Your Materialized Brand Agreement is waiting — ${opts.brandName}`,
+    html: baseTemplate(body),
+  });
+}
+
+export async function sendVideoResultsExcitementEmail(opts: {
+  prContactName: string;
+  prContactEmail: string;
+  brandName: string;
+  videoTitle: string;
+  videoViews: number;
+  videoClicks: number;
+  subscribeUrl: string;
+}): Promise<void> {
+  const firstName = opts.prContactName.split(" ")[0];
+  const body = `
+    <h1>The results are in, ${firstName}! 🚀</h1>
+    <p>
+      Your shoppable video — <em>${opts.videoTitle}</em> — is already making waves.
+      Here's a snapshot of how <strong>${opts.brandName}</strong> is performing:
+    </p>
+    <div class="video-box" style="text-align:center;">
+      <p style="font-size:28px;font-weight:800;color:#202120;margin:0;">${opts.videoViews.toLocaleString()}</p>
+      <p style="margin-top:4px;color:#677A67;font-weight:600;">Video views</p>
+      <p style="font-size:28px;font-weight:800;color:#202120;margin:16px 0 0;">${opts.videoClicks.toLocaleString()}</p>
+      <p style="margin-top:4px;color:#677A67;font-weight:600;">Product clicks</p>
+    </div>
+    <p>
+      Imagine scaling this across <strong>hundreds of creator campaigns globally</strong> — each one driving
+      tracked, commission-based sales directly attributed to your brand. Materialized makes that possible.
+    </p>
+    <p>
+      Brands already using Materialized are seeing up to <strong>3× higher engagement</strong> from shoppable
+      video versus traditional display advertising — and every click is attributable, every sale is tracked.
+    </p>
+    <div class="cta-wrap">
+      <a href="${opts.subscribeUrl}" class="cta">Start Your Brand Journey</a>
+    </div>
+    <p class="note">Join the brands turning creator content into their highest-performing sales channel.</p>
+  `;
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: opts.prContactEmail,
+    subject: `📈 Your video results are in — here's what Materialized did for ${opts.brandName}`,
+    html: baseTemplate(body),
+  });
+}
+
+export async function sendGlobalPitchEmail(opts: {
+  prContactName: string;
+  prContactEmail: string;
+  brandName: string;
+  subscribeUrl: string;
+}): Promise<void> {
+  const firstName = opts.prContactName.split(" ")[0];
+  const body = `
+    <h1>Think bigger, ${firstName}.</h1>
+    <p>
+      One shoppable video is just the beginning. The world's fastest-growing brands are building
+      entire creator ecosystems — and Materialized is the infrastructure that powers them.
+    </p>
+    <p>
+      With a <strong>${opts.brandName} Brand subscription</strong>, your team gets:
+    </p>
+    <div class="video-box">
+      <p>✅ <strong>Unlimited shoppable video campaigns</strong> across any creator, any region</p>
+      <p>✅ <strong>Real-time ROI dashboard</strong> — revenue, clicks, commissions, by creator</p>
+      <p>✅ <strong>Affiliate management</strong> — invite, manage, and pay creators automatically</p>
+      <p>✅ <strong>Global product catalogue</strong> — sync your inventory once, sell everywhere</p>
+      <p>✅ <strong>Stripe Connect payouts</strong> — automated, compliant, instant</p>
+    </div>
+    <p>
+      Whether you're activating 5 creators or 5,000, Materialized scales with you — from one
+      market to every market your brand serves.
+    </p>
+    <div class="cta-wrap">
+      <a href="${opts.subscribeUrl}" class="cta">Scale ${opts.brandName} Globally</a>
+    </div>
+    <p class="note">
+      Book a 20-minute demo with our team and we'll show you exactly what a full creator programme
+      looks like for ${opts.brandName}. Reply to this email to arrange a time.
+    </p>
+  `;
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: opts.prContactEmail,
+    subject: `${opts.brandName} × Materialized — let's build your global creator programme`,
+    html: baseTemplate(body),
+  });
+}
+
+export async function sendSubscriptionNudgeEmail(opts: {
+  prContactName: string;
+  prContactEmail: string;
+  brandName: string;
+  subscribeUrl: string;
+}): Promise<void> {
+  const firstName = opts.prContactName.split(" ")[0];
+  const body = `
+    <h1>Ready to unlock everything, ${firstName}?</h1>
+    <p>
+      Your shoppable video is live — and your brand's products are already being discovered by
+      new audiences through Materialized. Now it's time to take full control.
+    </p>
+    <p>
+      A <strong>${opts.brandName} Brand subscription</strong> gives you the complete Materialized
+      dashboard: campaign management, product analytics, affiliate recruitment, and one-click
+      payouts — all in one place.
+    </p>
+    <div class="cta-wrap">
+      <a href="${opts.subscribeUrl}" class="cta">Subscribe &amp; Unlock Your Dashboard</a>
+    </div>
+    <p>
+      Our team can walk you through everything in under 20 minutes. Just reply and we'll set it up.
+    </p>
+    <p class="note">Your first 14 days are on us. No credit card required to start.</p>
+  `;
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: opts.prContactEmail,
+    subject: `Unlock your full Brand dashboard — ${opts.brandName} × Materialized`,
+    html: baseTemplate(body),
+  });
+}
+
 export function isEmailConfigured(): boolean {
   return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }

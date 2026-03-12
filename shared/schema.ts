@@ -64,6 +64,7 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeConnectAccountId: text("stripe_connect_account_id"),
   stripeConnectOnboarded: boolean("stripe_connect_onboarded").default(false),
+  isAdmin: boolean("is_admin").default(false),
 });
 
 // Brands table
@@ -655,6 +656,10 @@ export const outreachStatusEnum = pgEnum("outreach_status", [
   "pending", "email_sent", "authorized", "agreement_sent", "completed", "declined"
 ]);
 
+export const followUpTypeEnum = pgEnum("follow_up_type", [
+  "docusign_reminder", "results_excitement", "global_pitch", "subscription_nudge"
+]);
+
 // Brand Outreach Requests — creator-initiated outreach to a brand PR contact
 export const brandOutreachRequests = pgTable("brand_outreach_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -669,11 +674,20 @@ export const brandOutreachRequests = pgTable("brand_outreach_requests", {
   authToken: text("auth_token").notNull().unique().default(sql`gen_random_uuid()`),
   status: outreachStatusEnum("status").default("pending"),
   authorizedAt: timestamp("authorized_at"),
+  agreementStartedAt: timestamp("agreement_started_at"),
+  agreementSignedAt: timestamp("agreement_signed_at"),
+  brandSubscribedAt: timestamp("brand_subscribed_at"),
+  followUpCount: integer("follow_up_count").default(0),
+  lastFollowUpAt: timestamp("last_follow_up_at"),
+  lastFollowUpType: followUpTypeEnum("last_follow_up_type"),
+  adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const insertBrandOutreachSchema = createInsertSchema(brandOutreachRequests).omit({
   id: true, authToken: true, status: true, authorizedAt: true, createdAt: true,
+  agreementStartedAt: true, agreementSignedAt: true, brandSubscribedAt: true,
+  followUpCount: true, lastFollowUpAt: true, lastFollowUpType: true, adminNotes: true,
 });
 export type InsertBrandOutreach = z.infer<typeof insertBrandOutreachSchema>;
 export type BrandOutreach = typeof brandOutreachRequests.$inferSelect;

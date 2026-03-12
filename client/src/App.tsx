@@ -35,6 +35,7 @@ import Landing from "@/pages/landing";
 import Rewards from "@/pages/rewards";
 import Profile from "@/pages/profile";
 import BrandAuthorize from "@/pages/brand-authorize";
+import AdminPipeline from "@/pages/admin-pipeline";
 
 function CreatorRouter() {
   return (
@@ -121,11 +122,20 @@ function AppContent() {
   const isAffiliateRoute = location.startsWith("/affiliate");
   const isLandingRoute = location === "/";
   const isAuthorizeRoute = location.startsWith("/brand-authorize");
+  const isAdminRoute = location.startsWith("/admin");
 
   if (isAuthorizeRoute) {
     return (
       <Switch>
         <Route path="/brand-authorize/:token" component={BrandAuthorize} />
+      </Switch>
+    );
+  }
+
+  if (isAdminRoute) {
+    return (
+      <Switch>
+        <Route path="/admin" component={AdminPipeline} />
       </Switch>
     );
   }

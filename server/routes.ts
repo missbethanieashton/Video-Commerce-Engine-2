@@ -20,7 +20,15 @@ import {
   VIDEO_CATEGORY_OPTIONS,
 } from "@shared/schema";
 import { z } from "zod";
-import { sendBrandOutreachEmail, sendBrandAgreementEmail, isEmailConfigured } from "./emailService";
+import {
+  sendBrandOutreachEmail,
+  sendBrandAgreementEmail,
+  sendDocuSignReminderEmail,
+  sendVideoResultsExcitementEmail,
+  sendGlobalPitchEmail,
+  sendSubscriptionNudgeEmail,
+  isEmailConfigured,
+} from "./emailService";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
@@ -1830,6 +1838,152 @@ export async function registerRoutes(
       res.json(reward);
     } catch (error) {
       res.status(500).json({ error: "Failed to redeem reward" });
+    }
+  });
+
+  // ==================== ADMIN PIPELINE ROUTES ====================
+
+  function requireAdmin(req: any, res: any, next: any) {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+    if (!req.user.isAdmin) return res.status(403).json({ error: "Admin access required" });
+    next();
+  }
+
+  // GET all outreach requests (admin pipeline view)
+  app.get("/api/admin/pipeline", requireAdmin, async (req, res) => {
+    try {
+      const all = await storage.getAllBrandOutreaches();
+      const enriched = await Promise.all(all.map(async (o) => {
+        const creator = o.creatorId ? await storage.getUser(o.creatorId) : null;
+        let videoViews = 0;
+        let videoClicks = 0;
+        if (o.videoId) {
+          const events = await storage.getAnalyticsEvents(o.videoId);
+          videoViews = events.filter(e => e.eventType === "view").length;
+          videoClicks = events.filter(e => e.eventType === "click").length;
+        }
+        return {
+          ...o,
+          creatorName: creator?.displayName ?? "Unknown Creator",
+          creatorEmail: creator?.email ?? null,
+          videoViews,
+          videoClicks,
+        };
+      }));
+      res.json(enriched);
+    } catch (err) {
+      console.error("Admin pipeline error:", err);
+      res.status(500).json({ error: "Failed to fetch pipeline" });
+    }
+  });
+
+  // PATCH admin updates (notes, agreement status, subscription)
+  app.patch("/api/admin/pipeline/:id", requireAdmin, async (req, res) => {
+    try {
+      const { adminNotes, agreementStartedAt, agreementSignedAt, brandSubscribedAt, status } = req.body;
+      const updates: any = {};
+      if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+      if (agreementStartedAt !== undefined) updates.agreementStartedAt = agreementStartedAt ? new Date(agreementStartedAt) : null;
+      if (agreementSignedAt !== undefined) updates.agreementSignedAt = agreementSignedAt ? new Date(agreementSignedAt) : null;
+      if (brandSubscribedAt !== undefined) updates.brandSubscribedAt = brandSubscribedAt ? new Date(brandSubscribedAt) : null;
+      if (status !== undefined) updates.status = status;
+      const updated = await storage.updateBrandOutreachAdmin(req.params.id, updates);
+      if (!updated) return res.status(404).json({ error: "Outreach not found" });
+      res.json(updated);
+    } catch (err) {
+      console.error("Admin patch error:", err);
+      res.status(500).json({ error: "Failed to update outreach" });
+    }
+  });
+
+  // POST send automated follow-up email
+  app.post("/api/admin/pipeline/:id/follow-up", requireAdmin, async (req, res) => {
+    try {
+      const { followUpType } = req.body;
+      const outreach = await storage.getBrandOutreach(req.params.id);
+      if (!outreach) return res.status(404).json({ error: "Outreach not found" });
+
+      const baseUrl = process.env.BASE_URL ?? req.get("host") ?? "join.materialized.com";
+      const subscribeUrl = `https://${baseUrl}/brand`;
+      const docuSignUrl = process.env.DOCUSIGN_SIGNING_URL ?? "https://app.docusign.com/templates";
+
+      const events = outreach.videoId ? await storage.getAnalyticsEvents(outreach.videoId) : [];
+      const videoViews = events.filter(e => e.eventType === "view").length;
+      const videoClicks = events.filter(e => e.eventType === "click").length;
+
+      if (!isEmailConfigured()) {
+        await storage.recordOutreachFollowUp(outreach.id, followUpType);
+        return res.json({ success: true, emailSent: false, message: "Follow-up recorded (email not configured)" });
+      }
+
+      switch (followUpType) {
+        case "docusign_reminder":
+          await sendDocuSignReminderEmail({
+            prContactName: outreach.prContactName,
+            prContactEmail: outreach.prContactEmail,
+            brandName: outreach.brandName,
+            videoTitle: outreach.videoTitle ?? "Your shoppable video",
+            docuSignUrl,
+          });
+          break;
+        case "results_excitement":
+          await sendVideoResultsExcitementEmail({
+            prContactName: outreach.prContactName,
+            prContactEmail: outreach.prContactEmail,
+            brandName: outreach.brandName,
+            videoTitle: outreach.videoTitle ?? "Your shoppable video",
+            videoViews,
+            videoClicks,
+            subscribeUrl,
+          });
+          break;
+        case "global_pitch":
+          await sendGlobalPitchEmail({
+            prContactName: outreach.prContactName,
+            prContactEmail: outreach.prContactEmail,
+            brandName: outreach.brandName,
+            subscribeUrl,
+          });
+          break;
+        case "subscription_nudge":
+          await sendSubscriptionNudgeEmail({
+            prContactName: outreach.prContactName,
+            prContactEmail: outreach.prContactEmail,
+            brandName: outreach.brandName,
+            subscribeUrl,
+          });
+          break;
+        default:
+          return res.status(400).json({ error: "Unknown follow-up type" });
+      }
+
+      await storage.recordOutreachFollowUp(outreach.id, followUpType);
+      res.json({ success: true, emailSent: true });
+    } catch (err) {
+      console.error("Follow-up email error:", err);
+      res.status(500).json({ error: "Failed to send follow-up" });
+    }
+  });
+
+  // POST make a user admin (for bootstrapping — protected by a secret header)
+  app.post("/api/admin/make-admin", async (req, res) => {
+    const secret = req.headers["x-admin-secret"];
+    if (secret !== process.env.ADMIN_BOOTSTRAP_SECRET) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: "userId required" });
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      const [updated] = await (await import("./db")).db
+        .update((await import("@shared/schema")).users)
+        .set({ isAdmin: true })
+        .where((await import("drizzle-orm")).eq((await import("@shared/schema")).users.id, userId))
+        .returning();
+      res.json({ success: true, user: updated });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to make admin" });
     }
   });
 
