@@ -241,25 +241,36 @@ function VideoOrientationSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-shadow group">
-              <div className="aspect-[9/16] max-h-[400px] relative mx-auto w-48 overflow-hidden rounded-lg">
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  aria-label="Vertical video demo"
+            <div className="flex justify-center">
+              <div className="relative w-[220px] md:w-[260px]">
+                <div
+                  className="relative bg-[#1a1a1a] rounded-[3rem] p-3"
+                  style={{
+                    boxShadow: "0 25px 60px rgba(0,0,0,0.4), 0 10px 20px rgba(0,0,0,0.3), 0 0 40px rgba(103,122,103,0.15)",
+                  }}
                 >
-                  <source src={verticalDemoVideo} type="video/mp4" />
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="text-white font-semibold text-sm">Vertical / Reels</div>
-                  <div className="text-white/70 text-xs">9:16 Format</div>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-6 bg-[#1a1a1a] rounded-b-2xl z-20" />
+                  <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full aspect-[9/16] object-cover"
+                      aria-label="Vertical video demo"
+                    >
+                      <source src={verticalDemoVideo} type="video/mp4" />
+                    </video>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="text-white font-semibold text-sm">Vertical / Reels</div>
+                      <div className="text-white/70 text-xs">9:16 Format</div>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-1 bg-white/30 rounded-full" />
                 </div>
               </div>
-            </Card>
+            </div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 30 }}
