@@ -227,7 +227,7 @@ function VideoOrientationSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D]"
+          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] text-[24px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           One Platform, Every Format
@@ -334,7 +334,7 @@ function VideoOfTheWeekSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#43484D] dark:text-white"
+          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] dark:text-white text-[24px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video of the Week
@@ -487,7 +487,7 @@ function SignupSection() {
             Join the Revolution
           </h2>
           <p className="text-center text-white/70 mb-12">
-            Create your free account and start monetizing your content today
+            Create your free account and see how AI is transforming entertainment & building new wealth today
           </p>
 
           {!selectedRole ? (
