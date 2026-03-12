@@ -345,7 +345,8 @@ export async function registerRoutes(
 
       if (affiliateId && data.referrerDomain) {
         const videoId = data.videoId;
-        const existing = await storage.getEmbedDeployment(affiliateId, videoId, data.referrerDomain);
+        const deployUtmCode = utmCode || "";
+        const existing = await storage.getEmbedDeployment(affiliateId, videoId, data.referrerDomain, deployUtmCode);
         if (existing) {
           await storage.incrementEmbedDeploymentLoads(existing.id);
         } else {

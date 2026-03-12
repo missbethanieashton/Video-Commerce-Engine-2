@@ -211,7 +211,7 @@ export interface IStorage {
   redeemCreatorReward(rewardId: string, listingId: string): Promise<CreatorReward | undefined>;
   
   // Embed Deployments
-  getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string): Promise<EmbedDeployment | undefined>;
+  getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string, utmCode: string): Promise<EmbedDeployment | undefined>;
   getEmbedDeploymentsByAffiliate(affiliateId: string): Promise<EmbedDeployment[]>;
   createEmbedDeployment(deployment: InsertEmbedDeployment): Promise<EmbedDeployment>;
   incrementEmbedDeploymentLoads(id: string): Promise<EmbedDeployment | undefined>;
@@ -1261,8 +1261,8 @@ export class MemStorage implements IStorage {
   // Embed Deployments
   private embedDeploymentsMap: Map<string, EmbedDeployment> = new Map();
 
-  async getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string): Promise<EmbedDeployment | undefined> {
-    return Array.from(this.embedDeploymentsMap.values()).find(d => d.affiliateId === affiliateId && d.videoId === videoId && d.referrerDomain === referrerDomain);
+  async getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string, utmCode: string): Promise<EmbedDeployment | undefined> {
+    return Array.from(this.embedDeploymentsMap.values()).find(d => d.affiliateId === affiliateId && d.videoId === videoId && d.referrerDomain === referrerDomain && d.utmCode === utmCode);
   }
 
   async getEmbedDeploymentsByAffiliate(affiliateId: string): Promise<EmbedDeployment[]> {
@@ -1325,6 +1325,20 @@ export class MemStorage implements IStorage {
 
   // UTM Resolution
   async resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null> {
+    const caMatch = Array.from(this.campaignAffiliates.values()).find(ca => ca.utmCode === utmCode);
+    if (caMatch) {
+      return { affiliateId: caMatch.affiliateId, campaignAffiliateId: caMatch.id, videoId: caMatch.videoId, commissionRate: caMatch.commissionRate || "10.00" };
+    }
+
+    const lpMatch = Array.from(this.videoLicensePurchases.values()).find(lp => lp.utmCode === utmCode);
+    if (lpMatch) {
+      const listing = Array.from(this.globalVideoLibrary.values()).find(g => g.id === lpMatch.globalListingId);
+      if (listing) {
+        const affiliate = this.users.get(lpMatch.affiliateId);
+        return { affiliateId: lpMatch.affiliateId, campaignAffiliateId: null, videoId: listing.videoId, commissionRate: affiliate?.commissionRate || "10.00" };
+      }
+    }
+
     return null;
   }
 }
@@ -1836,9 +1850,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Embed Deployments
-  async getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string): Promise<EmbedDeployment | undefined> {
+  async getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string, utmCode: string): Promise<EmbedDeployment | undefined> {
     const [deploy] = await db.select().from(embedDeployments)
-      .where(sql`${embedDeployments.affiliateId} = ${affiliateId} AND ${embedDeployments.videoId} = ${videoId} AND ${embedDeployments.referrerDomain} = ${referrerDomain}`);
+      .where(sql`${embedDeployments.affiliateId} = ${affiliateId} AND ${embedDeployments.videoId} = ${videoId} AND ${embedDeployments.referrerDomain} = ${referrerDomain} AND ${embedDeployments.utmCode} = ${utmCode}`);
     return deploy;
   }
 
