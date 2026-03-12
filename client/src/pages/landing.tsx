@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
-import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor, Video } from "lucide-react";
+import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
@@ -178,9 +178,9 @@ function TestimonialCarousel() {
   }, []);
 
   return (
-    <section className="py-20 px-4 bg-[#202120]">
+    <section className="py-10 px-4 bg-[#202120]">
       <div className="max-w-4xl mx-auto">
-        <div className="relative min-h-[200px]">
+        <div className="relative min-h-[160px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIndex}
@@ -190,23 +190,33 @@ function TestimonialCarousel() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <Quote className="w-12 h-12 mx-auto mb-6 text-[#677A67] opacity-70" />
-              <p className="text-xl md:text-2xl text-white/90 mb-6 italic leading-relaxed">
-                "{TESTIMONIALS[activeIndex].quote}"
+              <svg width="48" height="36" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4">
+                <defs>
+                  <linearGradient id="chrome-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity={0.9} />
+                    <stop offset="30%" stopColor="#c0c0c0" stopOpacity={0.85} />
+                    <stop offset="60%" stopColor="#888888" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#d4d4d4" stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <text x="0" y="36" fontSize="56" fontFamily="Georgia, serif" fill="url(#chrome-grad)">&ldquo;</text>
+              </svg>
+              <p className="text-lg md:text-xl text-white/90 mb-3 italic leading-relaxed">
+                {TESTIMONIALS[activeIndex].quote}
               </p>
-              <div className="text-[#677A67] font-semibold text-lg">
-                {TESTIMONIALS[activeIndex].company}
+              <div className="text-[#677A67] font-semibold text-sm mt-2">
+                <span className="text-white/30 mr-2">|</span>{TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
           </AnimatePresence>
         </div>
-        <div className="flex justify-center gap-2 mt-8" role="tablist" aria-label="Testimonial navigation">
+        <div className="flex justify-center gap-1.5 mt-5" role="tablist" aria-label="Testimonial navigation">
           {TESTIMONIALS.map((testimonial, index) => (
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === activeIndex ? "bg-[#677A67] w-8" : "bg-white/30"
+              className={`h-[2px] rounded-full transition-all ${
+                index === activeIndex ? "bg-[#677A67] w-6" : "bg-white/20 w-4"
               }`}
               data-testid={`button-testimonial-${index}`}
               role="tab"
