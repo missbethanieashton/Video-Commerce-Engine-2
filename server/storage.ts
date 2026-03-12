@@ -25,6 +25,8 @@ import {
   type SubscriberIntake, type InsertSubscriberIntake,
   type UserProfile, type InsertUserProfile,
   type CreatorReward, type InsertCreatorReward,
+  type EmbedDeployment, type InsertEmbedDeployment,
+  type CommissionTransaction, type InsertCommissionTransaction,
   insertCreatorInvitationSchema,
   users,
   brands,
@@ -49,6 +51,8 @@ import {
   subscriberIntakes,
   userProfiles,
   creatorRewards,
+  embedDeployments,
+  commissionTransactions,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -205,6 +209,21 @@ export interface IStorage {
   getCreatorRewardsSummary(creatorId: string): Promise<{ totalCredits: number; availableCredits: number; redeemedCredits: number; euroValue: number }>;
   createCreatorReward(reward: InsertCreatorReward): Promise<CreatorReward>;
   redeemCreatorReward(rewardId: string, listingId: string): Promise<CreatorReward | undefined>;
+  
+  // Embed Deployments
+  getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string): Promise<EmbedDeployment | undefined>;
+  getEmbedDeploymentsByAffiliate(affiliateId: string): Promise<EmbedDeployment[]>;
+  createEmbedDeployment(deployment: InsertEmbedDeployment): Promise<EmbedDeployment>;
+  incrementEmbedDeploymentLoads(id: string): Promise<EmbedDeployment | undefined>;
+  
+  // Commission Transactions
+  getCommissionTransactions(affiliateId: string): Promise<CommissionTransaction[]>;
+  getCommissionTransactionsByVideo(videoId: string): Promise<CommissionTransaction[]>;
+  createCommissionTransaction(transaction: InsertCommissionTransaction): Promise<CommissionTransaction>;
+  updateCommissionTransactionStatus(id: string, status: string): Promise<CommissionTransaction | undefined>;
+  
+  // UTM Resolution
+  resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -529,9 +548,12 @@ export class MemStorage implements IStorage {
       videoId: event.videoId,
       eventType: event.eventType,
       productId: event.productId ?? null,
+      affiliateId: event.affiliateId ?? null,
       utmSource: event.utmSource ?? null,
       utmMedium: event.utmMedium ?? null,
       utmCampaign: event.utmCampaign ?? null,
+      utmCode: event.utmCode ?? null,
+      referrerDomain: event.referrerDomain ?? null,
       revenue: event.revenue ?? null,
       country: event.country ?? null,
       device: event.device ?? null,
@@ -1235,6 +1257,76 @@ export class MemStorage implements IStorage {
     this.creatorRewardsMap.set(rewardId, updated);
     return updated;
   }
+
+  // Embed Deployments
+  private embedDeploymentsMap: Map<string, EmbedDeployment> = new Map();
+
+  async getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string): Promise<EmbedDeployment | undefined> {
+    return Array.from(this.embedDeploymentsMap.values()).find(d => d.affiliateId === affiliateId && d.videoId === videoId && d.referrerDomain === referrerDomain);
+  }
+
+  async getEmbedDeploymentsByAffiliate(affiliateId: string): Promise<EmbedDeployment[]> {
+    return Array.from(this.embedDeploymentsMap.values()).filter(d => d.affiliateId === affiliateId);
+  }
+
+  async createEmbedDeployment(deployment: InsertEmbedDeployment): Promise<EmbedDeployment> {
+    const id = randomUUID();
+    const newDeploy: EmbedDeployment = { id, ...deployment, totalLoads: 1, firstSeenAt: new Date(), lastSeenAt: new Date(), referrerUrl: deployment.referrerUrl ?? null };
+    this.embedDeploymentsMap.set(id, newDeploy);
+    return newDeploy;
+  }
+
+  async incrementEmbedDeploymentLoads(id: string): Promise<EmbedDeployment | undefined> {
+    const deploy = this.embedDeploymentsMap.get(id);
+    if (!deploy) return undefined;
+    const updated = { ...deploy, totalLoads: (deploy.totalLoads || 0) + 1, lastSeenAt: new Date() };
+    this.embedDeploymentsMap.set(id, updated);
+    return updated;
+  }
+
+  // Commission Transactions
+  private commissionTransactionsMap: Map<string, CommissionTransaction> = new Map();
+
+  async getCommissionTransactions(affiliateId: string): Promise<CommissionTransaction[]> {
+    return Array.from(this.commissionTransactionsMap.values()).filter(t => t.affiliateId === affiliateId);
+  }
+
+  async getCommissionTransactionsByVideo(videoId: string): Promise<CommissionTransaction[]> {
+    return Array.from(this.commissionTransactionsMap.values()).filter(t => t.videoId === videoId);
+  }
+
+  async createCommissionTransaction(transaction: InsertCommissionTransaction): Promise<CommissionTransaction> {
+    const id = randomUUID();
+    const newTx: CommissionTransaction = {
+      id,
+      affiliateId: transaction.affiliateId,
+      analyticsEventId: transaction.analyticsEventId ?? null,
+      videoId: transaction.videoId,
+      productId: transaction.productId ?? null,
+      saleAmount: transaction.saleAmount,
+      commissionRate: transaction.commissionRate,
+      commissionAmount: transaction.commissionAmount,
+      status: "pending",
+      campaignAffiliateId: transaction.campaignAffiliateId ?? null,
+      licensePurchaseId: transaction.licensePurchaseId ?? null,
+      createdAt: new Date(),
+    };
+    this.commissionTransactionsMap.set(id, newTx);
+    return newTx;
+  }
+
+  async updateCommissionTransactionStatus(id: string, status: string): Promise<CommissionTransaction | undefined> {
+    const tx = this.commissionTransactionsMap.get(id);
+    if (!tx) return undefined;
+    const updated = { ...tx, status: status as "pending" | "approved" | "paid" | "rejected" };
+    this.commissionTransactionsMap.set(id, updated);
+    return updated;
+  }
+
+  // UTM Resolution
+  async resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null> {
+    return null;
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -1741,6 +1833,76 @@ export class DatabaseStorage implements IStorage {
       redeemedAt: new Date(),
     }).where(eq(creatorRewards.id, rewardId)).returning();
     return updated;
+  }
+
+  // Embed Deployments
+  async getEmbedDeployment(affiliateId: string, videoId: string, referrerDomain: string): Promise<EmbedDeployment | undefined> {
+    const [deploy] = await db.select().from(embedDeployments)
+      .where(sql`${embedDeployments.affiliateId} = ${affiliateId} AND ${embedDeployments.videoId} = ${videoId} AND ${embedDeployments.referrerDomain} = ${referrerDomain}`);
+    return deploy;
+  }
+
+  async getEmbedDeploymentsByAffiliate(affiliateId: string): Promise<EmbedDeployment[]> {
+    return db.select().from(embedDeployments).where(eq(embedDeployments.affiliateId, affiliateId));
+  }
+
+  async createEmbedDeployment(deployment: InsertEmbedDeployment): Promise<EmbedDeployment> {
+    const [newDeploy] = await db.insert(embedDeployments).values(deployment).returning();
+    return newDeploy;
+  }
+
+  async incrementEmbedDeploymentLoads(id: string): Promise<EmbedDeployment | undefined> {
+    const [updated] = await db.update(embedDeployments).set({
+      totalLoads: sql`COALESCE(${embedDeployments.totalLoads}, 0) + 1`,
+      lastSeenAt: new Date(),
+    }).where(eq(embedDeployments.id, id)).returning();
+    return updated;
+  }
+
+  // Commission Transactions
+  async getCommissionTransactions(affiliateId: string): Promise<CommissionTransaction[]> {
+    return db.select().from(commissionTransactions).where(eq(commissionTransactions.affiliateId, affiliateId)).orderBy(desc(commissionTransactions.createdAt));
+  }
+
+  async getCommissionTransactionsByVideo(videoId: string): Promise<CommissionTransaction[]> {
+    return db.select().from(commissionTransactions).where(eq(commissionTransactions.videoId, videoId)).orderBy(desc(commissionTransactions.createdAt));
+  }
+
+  async createCommissionTransaction(transaction: InsertCommissionTransaction): Promise<CommissionTransaction> {
+    const [newTx] = await db.insert(commissionTransactions).values(transaction).returning();
+    return newTx;
+  }
+
+  async updateCommissionTransactionStatus(id: string, status: string): Promise<CommissionTransaction | undefined> {
+    const [updated] = await db.update(commissionTransactions).set({ status: status as "pending" | "approved" | "paid" | "rejected" }).where(eq(commissionTransactions.id, id)).returning();
+    return updated;
+  }
+
+  // UTM Resolution - looks up a UTM code across campaignAffiliates and videoLicensePurchases
+  async resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null> {
+    const [caMatch] = await db.select({
+      affiliateId: campaignAffiliates.affiliateId,
+      id: campaignAffiliates.id,
+      videoId: campaignAffiliates.videoId,
+      commissionRate: campaignAffiliates.commissionRate,
+    }).from(campaignAffiliates).where(eq(campaignAffiliates.utmCode, utmCode));
+    if (caMatch) {
+      return { affiliateId: caMatch.affiliateId, campaignAffiliateId: caMatch.id, videoId: caMatch.videoId, commissionRate: caMatch.commissionRate || "10.00" };
+    }
+
+    const [lpMatch] = await db.select({
+      affiliateId: videoLicensePurchases.affiliateId,
+      videoId: globalVideoLibrary.videoId,
+      utmCode: videoLicensePurchases.utmCode,
+    }).from(videoLicensePurchases)
+      .leftJoin(globalVideoLibrary, eq(videoLicensePurchases.globalListingId, globalVideoLibrary.id))
+      .where(eq(videoLicensePurchases.utmCode, utmCode));
+    if (lpMatch && lpMatch.videoId) {
+      const affiliate = await this.getUser(lpMatch.affiliateId);
+      return { affiliateId: lpMatch.affiliateId, campaignAffiliateId: null, videoId: lpMatch.videoId, commissionRate: affiliate?.commissionRate || "10.00" };
+    }
+
+    return null;
   }
 }
 

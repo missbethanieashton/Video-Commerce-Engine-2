@@ -326,12 +326,83 @@ export async function registerRoutes(
   app.post("/api/analytics/events", async (req, res) => {
     try {
       const data = insertAnalyticsEventSchema.parse(req.body);
-      const event = await storage.createAnalyticsEvent(data);
+
+      let affiliateId = data.affiliateId || null;
+      let campaignAffiliateId: string | null = null;
+      let resolvedCommissionRate: string | null = null;
+
+      const utmCode = data.utmCode || data.utmSource || null;
+      if (utmCode && !affiliateId) {
+        const resolved = await storage.resolveUtmToAffiliate(utmCode);
+        if (resolved) {
+          affiliateId = resolved.affiliateId;
+          campaignAffiliateId = resolved.campaignAffiliateId;
+          resolvedCommissionRate = resolved.commissionRate;
+        }
+      }
+
+      const event = await storage.createAnalyticsEvent({ ...data, affiliateId });
+
+      if (affiliateId && data.referrerDomain) {
+        const videoId = data.videoId;
+        const existing = await storage.getEmbedDeployment(affiliateId, videoId, data.referrerDomain);
+        if (existing) {
+          await storage.incrementEmbedDeploymentLoads(existing.id);
+        } else {
+          await storage.createEmbedDeployment({
+            affiliateId,
+            videoId,
+            utmCode: utmCode || "",
+            referrerDomain: data.referrerDomain,
+            referrerUrl: data.referrerDomain,
+          });
+        }
+      }
+
+      if (data.eventType === "purchase" && affiliateId && data.revenue) {
+        const commRate = resolvedCommissionRate || "10.00";
+        const saleAmount = parseFloat(data.revenue);
+        const rate = parseFloat(commRate);
+        const commissionAmount = (saleAmount * rate) / 100;
+
+        await storage.createCommissionTransaction({
+          affiliateId,
+          analyticsEventId: event.id,
+          videoId: data.videoId,
+          productId: data.productId || null,
+          saleAmount: data.revenue,
+          commissionRate: commRate,
+          commissionAmount: commissionAmount.toFixed(2),
+          campaignAffiliateId,
+        });
+
+        if (campaignAffiliateId) {
+          const ca = (await storage.getCampaignAffiliates(data.videoId)).find(c => c.id === campaignAffiliateId);
+          if (ca) {
+            await storage.updateCampaignAffiliateStats(campaignAffiliateId, {
+              totalConversions: (ca.totalConversions || 0) + 1,
+              totalRevenue: ((parseFloat(ca.totalRevenue || "0")) + saleAmount).toFixed(2),
+              totalEarnings: ((parseFloat(ca.totalEarnings || "0")) + commissionAmount).toFixed(2),
+            });
+          }
+        }
+      }
+
+      if (data.eventType === "click" && campaignAffiliateId) {
+        const ca = (await storage.getCampaignAffiliates(data.videoId)).find(c => c.id === campaignAffiliateId);
+        if (ca) {
+          await storage.updateCampaignAffiliateStats(campaignAffiliateId, {
+            totalClicks: (ca.totalClicks || 0) + 1,
+          });
+        }
+      }
+
       res.status(201).json(event);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      console.error("Analytics event error:", error);
       res.status(500).json({ error: "Failed to track event" });
     }
   });
@@ -379,6 +450,26 @@ export async function registerRoutes(
       res.json(sorted);
     } catch (error) {
       res.status(500).json({ error: "Failed to get affiliate publishers analytics" });
+    }
+  });
+
+  // Get commission transactions for an affiliate
+  app.get("/api/commissions/:affiliateId", async (req, res) => {
+    try {
+      const transactions = await storage.getCommissionTransactions(req.params.affiliateId);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get commission transactions" });
+    }
+  });
+
+  // Get embed deployments for an affiliate
+  app.get("/api/embed-deployments/:affiliateId", async (req, res) => {
+    try {
+      const deployments = await storage.getEmbedDeploymentsByAffiliate(req.params.affiliateId);
+      res.json(deployments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get embed deployments" });
     }
   });
 

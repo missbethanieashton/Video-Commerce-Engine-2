@@ -44,6 +44,10 @@ export const rewardStatusEnum = pgEnum("reward_status", [
   "pending", "credited", "redeemed", "expired"
 ]);
 
+export const commissionStatusEnum = pgEnum("commission_status", [
+  "pending", "approved", "paid", "rejected"
+]);
+
 // Users table with role-based access
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -144,9 +148,12 @@ export const analyticsEvents = pgTable("analytics_events", {
   videoId: varchar("video_id").notNull().references(() => videos.id),
   eventType: text("event_type").notNull(), // view, click, purchase
   productId: varchar("product_id").references(() => products.id),
+  affiliateId: varchar("affiliate_id").references(() => users.id),
   utmSource: text("utm_source"),
   utmMedium: text("utm_medium"),
   utmCampaign: text("utm_campaign"),
+  utmCode: text("utm_code"),
+  referrerDomain: text("referrer_domain"),
   revenue: decimal("revenue", { precision: 10, scale: 2 }),
   country: text("country"),
   device: text("device"),
@@ -378,6 +385,35 @@ export const creatorRewards = pgTable("creator_rewards", {
   redeemedAt: timestamp("redeemed_at"),
 });
 
+// Embed Deployments - tracks where affiliate embed codes are deployed
+export const embedDeployments = pgTable("embed_deployments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  affiliateId: varchar("affiliate_id").notNull().references(() => users.id),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  utmCode: text("utm_code").notNull(),
+  referrerDomain: text("referrer_domain").notNull(),
+  referrerUrl: text("referrer_url"),
+  totalLoads: integer("total_loads").default(1),
+  firstSeenAt: timestamp("first_seen_at").default(sql`CURRENT_TIMESTAMP`),
+  lastSeenAt: timestamp("last_seen_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Commission Transactions - line-by-line ledger for affiliate payouts
+export const commissionTransactions = pgTable("commission_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  affiliateId: varchar("affiliate_id").notNull().references(() => users.id),
+  analyticsEventId: varchar("analytics_event_id").references(() => analyticsEvents.id),
+  videoId: varchar("video_id").notNull().references(() => videos.id),
+  productId: varchar("product_id").references(() => products.id),
+  saleAmount: decimal("sale_amount", { precision: 10, scale: 2 }).notNull(),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull(),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
+  status: commissionStatusEnum("status").default("pending"),
+  campaignAffiliateId: varchar("campaign_affiliate_id").references(() => campaignAffiliates.id),
+  licensePurchaseId: varchar("license_purchase_id").references(() => videoLicensePurchases.id),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
@@ -427,6 +463,7 @@ export const brandReferralsRelations = relations(brandReferrals, ({ one }) => ({
 export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => ({
   video: one(videos, { fields: [analyticsEvents.videoId], references: [videos.id] }),
   product: one(products, { fields: [analyticsEvents.productId], references: [products.id] }),
+  affiliate: one(users, { fields: [analyticsEvents.affiliateId], references: [users.id] }),
 }));
 
 export const affiliatePayoutsRelations = relations(affiliatePayouts, ({ one }) => ({
@@ -491,6 +528,19 @@ export const creatorRewardsRelations = relations(creatorRewards, ({ one }) => ({
   brandReferral: one(brandReferrals, { fields: [creatorRewards.brandReferralId], references: [brandReferrals.id] }),
 }));
 
+export const embedDeploymentsRelations = relations(embedDeployments, ({ one }) => ({
+  affiliate: one(users, { fields: [embedDeployments.affiliateId], references: [users.id] }),
+  video: one(videos, { fields: [embedDeployments.videoId], references: [videos.id] }),
+}));
+
+export const commissionTransactionsRelations = relations(commissionTransactions, ({ one }) => ({
+  affiliate: one(users, { fields: [commissionTransactions.affiliateId], references: [users.id] }),
+  video: one(videos, { fields: [commissionTransactions.videoId], references: [videos.id] }),
+  product: one(products, { fields: [commissionTransactions.productId], references: [products.id] }),
+  analyticsEvent: one(analyticsEvents, { fields: [commissionTransactions.analyticsEventId], references: [analyticsEvents.id] }),
+  campaignAffiliate: one(campaignAffiliates, { fields: [commissionTransactions.campaignAffiliateId], references: [campaignAffiliates.id] }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, affiliateTrackingId: true, referralCode: true });
 export const insertBrandSchema = createInsertSchema(brands).omit({ id: true });
@@ -514,6 +564,8 @@ export const insertVideoLicensePurchaseSchema = createInsertSchema(videoLicenseP
 export const insertVideoPublishRecordSchema = createInsertSchema(videoPublishRecords).omit({ id: true, embedCodeMinified: true, baseUtmCode: true, publishedAt: true, isActive: true });
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCreatorRewardSchema = createInsertSchema(creatorRewards).omit({ id: true, earnedAt: true, redeemedAt: true });
+export const insertEmbedDeploymentSchema = createInsertSchema(embedDeployments).omit({ id: true, totalLoads: true, firstSeenAt: true, lastSeenAt: true });
+export const insertCommissionTransactionSchema = createInsertSchema(commissionTransactions).omit({ id: true, status: true, createdAt: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -560,6 +612,10 @@ export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertCreatorReward = z.infer<typeof insertCreatorRewardSchema>;
 export type CreatorReward = typeof creatorRewards.$inferSelect;
+export type InsertEmbedDeployment = z.infer<typeof insertEmbedDeploymentSchema>;
+export type EmbedDeployment = typeof embedDeployments.$inferSelect;
+export type InsertCommissionTransaction = z.infer<typeof insertCommissionTransactionSchema>;
+export type CommissionTransaction = typeof commissionTransactions.$inferSelect;
 
 // Button label options for carousel
 export const BUTTON_LABEL_OPTIONS = [
