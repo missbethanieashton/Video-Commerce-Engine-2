@@ -221,6 +221,7 @@ export interface IStorage {
   getCommissionTransactionsByVideo(videoId: string): Promise<CommissionTransaction[]>;
   createCommissionTransaction(transaction: InsertCommissionTransaction): Promise<CommissionTransaction>;
   updateCommissionTransactionStatus(id: string, status: string): Promise<CommissionTransaction | undefined>;
+  getAffiliateEarningsFromLedger(affiliateId: string): Promise<{ totalSales: number; totalCommission: number; pendingCommission: number; approvedCommission: number; paidCommission: number; transactionCount: number }>;
   
   // UTM Resolution
   resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null>;
@@ -1323,6 +1324,18 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async getAffiliateEarningsFromLedger(affiliateId: string): Promise<{ totalSales: number; totalCommission: number; pendingCommission: number; approvedCommission: number; paidCommission: number; transactionCount: number }> {
+    const txs = Array.from(this.commissionTransactionsMap.values()).filter(t => t.affiliateId === affiliateId);
+    return {
+      totalSales: txs.reduce((sum, t) => sum + parseFloat(t.saleAmount || "0"), 0),
+      totalCommission: txs.reduce((sum, t) => sum + parseFloat(t.commissionAmount || "0"), 0),
+      pendingCommission: txs.filter(t => t.status === "pending").reduce((sum, t) => sum + parseFloat(t.commissionAmount || "0"), 0),
+      approvedCommission: txs.filter(t => t.status === "approved").reduce((sum, t) => sum + parseFloat(t.commissionAmount || "0"), 0),
+      paidCommission: txs.filter(t => t.status === "paid").reduce((sum, t) => sum + parseFloat(t.commissionAmount || "0"), 0),
+      transactionCount: txs.length,
+    };
+  }
+
   // UTM Resolution
   async resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null> {
     const caMatch = Array.from(this.campaignAffiliates.values()).find(ca => ca.utmCode === utmCode);
@@ -1889,6 +1902,18 @@ export class DatabaseStorage implements IStorage {
   async updateCommissionTransactionStatus(id: string, status: string): Promise<CommissionTransaction | undefined> {
     const [updated] = await db.update(commissionTransactions).set({ status: status as "pending" | "approved" | "paid" | "rejected" }).where(eq(commissionTransactions.id, id)).returning();
     return updated;
+  }
+
+  async getAffiliateEarningsFromLedger(affiliateId: string): Promise<{ totalSales: number; totalCommission: number; pendingCommission: number; approvedCommission: number; paidCommission: number; transactionCount: number }> {
+    const [result] = await db.select({
+      totalSales: sql<number>`COALESCE(SUM(${commissionTransactions.saleAmount}), 0)::float`,
+      totalCommission: sql<number>`COALESCE(SUM(${commissionTransactions.commissionAmount}), 0)::float`,
+      pendingCommission: sql<number>`COALESCE(SUM(CASE WHEN ${commissionTransactions.status} = 'pending' THEN ${commissionTransactions.commissionAmount} ELSE 0 END), 0)::float`,
+      approvedCommission: sql<number>`COALESCE(SUM(CASE WHEN ${commissionTransactions.status} = 'approved' THEN ${commissionTransactions.commissionAmount} ELSE 0 END), 0)::float`,
+      paidCommission: sql<number>`COALESCE(SUM(CASE WHEN ${commissionTransactions.status} = 'paid' THEN ${commissionTransactions.commissionAmount} ELSE 0 END), 0)::float`,
+      transactionCount: sql<number>`COUNT(*)::int`,
+    }).from(commissionTransactions).where(eq(commissionTransactions.affiliateId, affiliateId));
+    return result || { totalSales: 0, totalCommission: 0, pendingCommission: 0, approvedCommission: 0, paidCommission: 0, transactionCount: 0 };
   }
 
   // UTM Resolution - looks up a UTM code across campaignAffiliates and videoLicensePurchases

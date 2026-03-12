@@ -464,6 +464,16 @@ export async function registerRoutes(
     }
   });
 
+  // Get affiliate earnings computed from the commission transactions ledger
+  app.get("/api/commissions/:affiliateId/earnings", async (req, res) => {
+    try {
+      const earnings = await storage.getAffiliateEarningsFromLedger(req.params.affiliateId);
+      res.json(earnings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get affiliate earnings" });
+    }
+  });
+
   // Get embed deployments for an affiliate
   app.get("/api/embed-deployments/:affiliateId", async (req, res) => {
     try {
