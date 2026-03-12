@@ -707,7 +707,7 @@ function SignupSection() {
             Join the Revolution
           </h2>
           <p className="text-center text-white/70 mb-12">
-            Create your free account and see how AI is transforming entertainment & building new wealth today
+            Create your free account to see how AI is transforming entertainment & building new wealth today
           </p>
 
           {!selectedRole ? (
