@@ -1065,7 +1065,7 @@ export default function Landing() {
               <SiInstagram className="w-5 h-5" />
             </a>
             <a
-              href="https://linkedin.com/company/materialized"
+              href="https://www.linkedin.com/showcase/join-materialized/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Materialized on LinkedIn"
