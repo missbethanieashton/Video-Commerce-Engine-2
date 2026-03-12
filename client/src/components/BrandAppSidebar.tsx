@@ -88,7 +88,7 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
           <img
             src={materializedLogo}
             alt="Materialized"
-            style={{ height: 28, width: "auto", filter: "invert(1)" }}
+            style={{ height: 140, width: "auto", filter: "invert(1)" }}
           />
         </div>
         
