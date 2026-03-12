@@ -494,7 +494,7 @@ function SignupSection() {
           {!selectedRole ? (
             <div className="grid md:grid-cols-3 gap-4">
               {[
-                { role: "creator" as const, title: "Creator", desc: "Upload videos & earn commissions" },
+                { role: "creator" as const, title: "Creator", desc: "Import your videos, tag brands, and shopify your video assets in seconds" },
                 { role: "brand" as const, title: "Brand", desc: "Connect with creators" },
                 { role: "publisher" as const, title: "Publisher", desc: "License & publish videos" },
               ].map((item) => (
