@@ -801,7 +801,7 @@ export default function Landing() {
                 label: "Integrations",
                 content: (
                   <div className="text-white/60 text-sm leading-relaxed">
-                    <p className="mb-3">Materialized connects with your favourite tools. Creators can link brand products directly in their videos. Brands manage campaigns and track ROI. Publishers deploy shoppable embeds anywhere.</p>
+                    <p className="mb-3">Shoppable videos are exported as embedded code, which can be published on any website or platform. UTM codes provide video performance analytics, and reward the affiliate eco-system. API Keys are used to sync product inventories, that in turn make video imports shoppable.</p>
                     <div className="flex flex-wrap gap-3 mb-3">
                       <Link href="/creator" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-creator">Creator Portal</Link>
                       <Link href="/brand" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-brand">Brand Portal</Link>
