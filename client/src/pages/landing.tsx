@@ -59,7 +59,7 @@ function TypewriterText() {
   }, [charIndex, isDeleting, phraseIndex]);
 
   return (
-    <span className="inline-block min-w-[280px] text-left">
+    <span className="inline-block min-w-[280px] text-center text-[22px]">
       {TYPEWRITER_PHRASES[phraseIndex].slice(0, charIndex)}
       <span className="animate-pulse">|</span>
     </span>
