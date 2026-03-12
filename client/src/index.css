@@ -304,3 +304,11 @@
   width: max-content;
   animation: marquee-scroll 35s linear infinite;
 }
+
+@keyframes blob-spin-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+.blob-spin-ccw {
+  animation: blob-spin-ccw 4s linear infinite;
+}

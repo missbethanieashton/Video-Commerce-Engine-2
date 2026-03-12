@@ -1015,7 +1015,7 @@ export default function Landing() {
                   src="/blob-divider.png"
                   alt=""
                   aria-hidden="true"
-                  className="shrink-0"
+                  className={`shrink-0${i % 2 === 1 ? " blob-spin-ccw" : ""}`}
                   style={{ width: 28, height: 28, objectFit: "contain" }}
                 />
               </span>
