@@ -14,11 +14,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
-import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor, Video, Building2, Share2 } from "lucide-react";
+import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Quote, Smartphone, Monitor, Video } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
+import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
 
 const formSchema = insertSubscriberIntakeSchema;
 type FormData = z.infer<typeof formSchema>;
@@ -694,6 +695,7 @@ export default function Landing() {
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
   const heroScale = useTransform(scrollY, [0, 400], [1, 1.1]);
+  const [openFooterItem, setOpenFooterItem] = useState<string | null>(null);
 
   const scrollToSignup = () => {
     document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
@@ -774,49 +776,69 @@ export default function Landing() {
       <footer className="py-12 px-4 bg-[#202120] border-t border-white/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <div className="text-2xl font-bold bg-gradient-to-r from-[#677A67] to-white bg-clip-text text-transparent mb-4">
-              MTERLIZD
-            </div>
-            <p className="text-white/60 text-sm mb-6">
-              Choose your portal to get started
-            </p>
+            <img src={materializedLogo} alt="Materialized" className="h-8 mx-auto" style={{ filter: "invert(1)" }} />
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
-            <Link href="/creator">
-              <Button 
-                variant="outline" 
-                className="w-full border-[#677A67]/50 text-white hover:bg-[#677A67]/20 rounded-lg py-6"
-                data-testid="button-portal-creator"
-              >
-                <Video className="w-5 h-5 mr-2" />
-                Creator Portal
-              </Button>
-            </Link>
-            <Link href="/brand">
-              <Button 
-                variant="outline" 
-                className="w-full border-[#677A67]/50 text-white hover:bg-[#677A67]/20 rounded-lg py-6"
-                data-testid="button-portal-brand"
-              >
-                <Building2 className="w-5 h-5 mr-2" />
-                Brand Portal
-              </Button>
-            </Link>
-            <Link href="/affiliate">
-              <Button 
-                variant="outline" 
-                className="w-full border-[#677A67]/50 text-white hover:bg-[#677A67]/20 rounded-lg py-6"
-                data-testid="button-portal-affiliate"
-              >
-                <Share2 className="w-5 h-5 mr-2" />
-                Affiliate Portal
-              </Button>
-            </Link>
+
+          <div className="max-w-md mx-auto mb-8 space-y-1">
+            {[
+              {
+                key: "support",
+                label: "Support",
+                content: (
+                  <div className="text-white/60 text-sm leading-relaxed">
+                    <p className="mb-3">Need help? Visit our Help Centre for guides and FAQs, or browse the Creator, Brand, and Publisher dashboards to get started.</p>
+                    <div className="flex flex-wrap gap-3 mb-3">
+                      <Link href="/creator" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-creator">Creator Portal</Link>
+                      <Link href="/brand" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-brand">Brand Portal</Link>
+                      <Link href="/affiliate" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-publisher">Publisher Portal</Link>
+                    </div>
+                    <p>Not registered yet? <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-support-signup">Sign Up &rarr;</a> to access full support resources.</p>
+                  </div>
+                ),
+              },
+              {
+                key: "integrations",
+                label: "Integrations",
+                content: (
+                  <div className="text-white/60 text-sm leading-relaxed">
+                    <p className="mb-3">Materialized connects with your favourite tools. Creators can link brand products directly in their videos. Brands manage campaigns and track ROI. Publishers deploy shoppable embeds anywhere.</p>
+                    <div className="flex flex-wrap gap-3 mb-3">
+                      <Link href="/creator" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-creator">Creator Portal</Link>
+                      <Link href="/brand" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-brand">Brand Portal</Link>
+                      <Link href="/affiliate" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-publisher">Publisher Portal</Link>
+                    </div>
+                    <p>Ready to connect? <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-signup">Sign Up &rarr;</a> to get started.</p>
+                  </div>
+                ),
+              },
+              {
+                key: "contact",
+                label: "Contact",
+                content: (
+                  <div className="text-white/60 text-sm leading-relaxed">
+                    <p>Have a question or partnership enquiry? Reach out via our sign-up form and our team will be in touch. <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-contact-signup">Get Started &rarr;</a> to create your account and connect with us.</p>
+                  </div>
+                ),
+              },
+            ].map((item) => (
+              <div key={item.key} className="border-b border-white/10">
+                <button
+                  onClick={() => setOpenFooterItem(openFooterItem === item.key ? null : item.key)}
+                  className="w-full flex items-center justify-between py-3 text-white text-sm font-medium hover:text-[#677A67] transition-colors"
+                  data-testid={`button-footer-${item.key}`}
+                >
+                  {item.label}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openFooterItem === item.key ? "rotate-180" : ""}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${openFooterItem === item.key ? "max-h-60 pb-4" : "max-h-0"}`}>
+                  {item.content}
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <p className="text-white/40 text-xs text-center">
-            2024 MTERLIZD. All rights reserved.
+
+          <p className="text-white/40 text-xs text-center" data-testid="text-footer-copyright">
+            &copy; 2024 Materialized. All rights reserved.
           </p>
         </div>
       </footer>
