@@ -370,7 +370,7 @@ function VideoOfTheWeekSection() {
                 {/* Video overlay info */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <div className="text-white font-semibold text-sm">Discovery Packs</div>
-                  <div className="text-white/70 text-xs">@mterlizd_official</div>
+                  <div className="text-white/70 text-xs">@join.materialized</div>
                 </div>
               </div>
               {/* Home indicator */}
