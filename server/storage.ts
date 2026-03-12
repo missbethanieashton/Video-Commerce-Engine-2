@@ -1334,8 +1334,7 @@ export class MemStorage implements IStorage {
     if (lpMatch) {
       const listing = Array.from(this.globalVideoLibrary.values()).find(g => g.id === lpMatch.globalListingId);
       if (listing) {
-        const affiliate = this.users.get(lpMatch.affiliateId);
-        return { affiliateId: lpMatch.affiliateId, campaignAffiliateId: null, videoId: listing.videoId, commissionRate: affiliate?.commissionRate || "10.00" };
+        return { affiliateId: lpMatch.affiliateId, campaignAffiliateId: null, videoId: listing.videoId, commissionRate: lpMatch.commissionRate || "10.00" };
       }
     }
 
@@ -1908,12 +1907,12 @@ export class DatabaseStorage implements IStorage {
       affiliateId: videoLicensePurchases.affiliateId,
       videoId: globalVideoLibrary.videoId,
       utmCode: videoLicensePurchases.utmCode,
+      commissionRate: videoLicensePurchases.commissionRate,
     }).from(videoLicensePurchases)
       .leftJoin(globalVideoLibrary, eq(videoLicensePurchases.globalListingId, globalVideoLibrary.id))
       .where(eq(videoLicensePurchases.utmCode, utmCode));
     if (lpMatch && lpMatch.videoId) {
-      const affiliate = await this.getUser(lpMatch.affiliateId);
-      return { affiliateId: lpMatch.affiliateId, campaignAffiliateId: null, videoId: lpMatch.videoId, commissionRate: affiliate?.commissionRate || "10.00" };
+      return { affiliateId: lpMatch.affiliateId, campaignAffiliateId: null, videoId: lpMatch.videoId, commissionRate: lpMatch.commissionRate || "10.00" };
     }
 
     return null;

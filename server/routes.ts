@@ -327,12 +327,12 @@ export async function registerRoutes(
     try {
       const data = insertAnalyticsEventSchema.parse(req.body);
 
-      let affiliateId = data.affiliateId || null;
+      let affiliateId: string | null = null;
       let campaignAffiliateId: string | null = null;
       let resolvedCommissionRate: string | null = null;
 
       const utmCode = data.utmCode || data.utmSource || null;
-      if (utmCode && !affiliateId) {
+      if (utmCode) {
         const resolved = await storage.resolveUtmToAffiliate(utmCode);
         if (resolved) {
           affiliateId = resolved.affiliateId;
