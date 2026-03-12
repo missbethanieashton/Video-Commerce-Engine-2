@@ -141,7 +141,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="px-4 bg-[#43484D]" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
+    <section className="px-4 bg-[#202120]" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -177,7 +177,7 @@ function TestimonialCarousel() {
   }, []);
 
   return (
-    <section className="py-20 px-4 bg-[#43484D]">
+    <section className="py-20 px-4 bg-[#202120]">
       <div className="max-w-4xl mx-auto">
         <div className="relative min-h-[200px]">
           <AnimatePresence mode="wait">
@@ -465,7 +465,7 @@ function SignupSection() {
   };
 
   return (
-    <section id="signup" className="py-20 px-4 bg-[#43484D]">
+    <section id="signup" className="py-20 px-4 bg-[#202120]">
       <div className="max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -760,7 +760,7 @@ export default function Landing() {
       <VideoOfTheWeekSection />
       <SignupSection />
 
-      <footer className="py-12 px-4 bg-[#43484D] border-t border-white/10">
+      <footer className="py-12 px-4 bg-[#202120] border-t border-white/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <div className="text-2xl font-bold bg-gradient-to-r from-[#677A67] to-white bg-clip-text text-transparent mb-4">
