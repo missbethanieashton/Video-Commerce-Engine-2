@@ -34,6 +34,7 @@ import Affiliates from "@/pages/affiliates";
 import Landing from "@/pages/landing";
 import Rewards from "@/pages/rewards";
 import Profile from "@/pages/profile";
+import BrandAuthorize from "@/pages/brand-authorize";
 
 function CreatorRouter() {
   return (
@@ -86,13 +87,21 @@ function AffiliateRouter() {
 
 function Router() {
   const [location] = useLocation();
-  const isBrandRoute = location.startsWith("/brand");
+  const isBrandRoute = location.startsWith("/brand") && !location.startsWith("/brand-authorize");
   const isAffiliateRoute = location.startsWith("/affiliate");
   const isCreatorRoute = location.startsWith("/creator");
   const isLandingRoute = location === "/";
-  
+  const isAuthorizeRoute = location.startsWith("/brand-authorize");
+
   if (isLandingRoute) {
     return <Landing />;
+  }
+  if (isAuthorizeRoute) {
+    return (
+      <Switch>
+        <Route path="/brand-authorize/:token" component={BrandAuthorize} />
+      </Switch>
+    );
   }
   if (isBrandRoute) {
     return <BrandRouter />;
@@ -108,9 +117,18 @@ function Router() {
 
 function AppContent() {
   const [location] = useLocation();
-  const isBrandRoute = location.startsWith("/brand");
+  const isBrandRoute = location.startsWith("/brand") && !location.startsWith("/brand-authorize");
   const isAffiliateRoute = location.startsWith("/affiliate");
   const isLandingRoute = location === "/";
+  const isAuthorizeRoute = location.startsWith("/brand-authorize");
+
+  if (isAuthorizeRoute) {
+    return (
+      <Switch>
+        <Route path="/brand-authorize/:token" component={BrandAuthorize} />
+      </Switch>
+    );
+  }
 
   const getSidebar = () => {
     if (isBrandRoute) return <BrandAppSidebar />;

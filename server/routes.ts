@@ -16,9 +16,11 @@ import {
   insertSubscriberIntakeSchema,
   insertUserProfileSchema,
   insertCreatorRewardSchema,
+  insertBrandOutreachSchema,
   VIDEO_CATEGORY_OPTIONS,
 } from "@shared/schema";
 import { z } from "zod";
+import { sendBrandOutreachEmail, sendBrandAgreementEmail, isEmailConfigured } from "./emailService";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
@@ -267,6 +269,126 @@ export async function registerRoutes(
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: "Failed to create referral" });
+    }
+  });
+
+  // ==================== BRAND OUTREACH ROUTES ====================
+
+  // Create brand outreach (creator sends email to brand PR contact)
+  app.post("/api/brand-outreach", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const data = insertBrandOutreachSchema.parse({
+        ...req.body,
+        creatorId: user.id,
+      });
+
+      const outreach = await storage.createBrandOutreach(data);
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const authorizeUrl = `${baseUrl}/brand-authorize/${outreach.authToken}`;
+      const videoPreviewUrl = data.videoUrl
+        ? `${baseUrl}/creator/my-videos`
+        : `${baseUrl}/creator/my-videos`;
+
+      if (isEmailConfigured()) {
+        await sendBrandOutreachEmail({
+          prContactName: outreach.prContactName,
+          prContactEmail: outreach.prContactEmail,
+          creatorDisplayName: user.displayName,
+          brandName: outreach.brandName,
+          videoTitle: outreach.videoTitle ?? "Video Preview",
+          videoPreviewUrl,
+          authorizeUrl,
+          creatorMessage: outreach.creatorMessage ?? undefined,
+        });
+        await storage.updateBrandOutreachStatus(outreach.id, "email_sent");
+      } else {
+        console.warn("[Brand Outreach] Email not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD env vars.");
+        await storage.updateBrandOutreachStatus(outreach.id, "email_sent");
+      }
+
+      res.status(201).json({ ...outreach, authorizeUrl });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("[Brand Outreach] Failed:", error);
+      res.status(500).json({ error: "Failed to send brand outreach" });
+    }
+  });
+
+  // Get outreach requests for the current creator
+  app.get("/api/brand-outreach", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const outreaches = await storage.getBrandOutreachesByCreator(user.id);
+      res.json(outreaches);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get outreach requests" });
+    }
+  });
+
+  // Public: get outreach details by auth token (brand PR contact's view)
+  app.get("/api/brand-outreach/authorize/:token", async (req, res) => {
+    try {
+      const outreach = await storage.getBrandOutreachByToken(req.params.token);
+      if (!outreach) return res.status(404).json({ error: "Outreach request not found" });
+      if (outreach.status === "authorized" || outreach.status === "agreement_sent" || outreach.status === "completed") {
+        return res.status(410).json({ error: "This link has already been used", status: outreach.status });
+      }
+      // Return safe subset
+      res.json({
+        id: outreach.id,
+        brandName: outreach.brandName,
+        prContactName: outreach.prContactName,
+        videoTitle: outreach.videoTitle,
+        videoUrl: outreach.videoUrl,
+        creatorMessage: outreach.creatorMessage,
+        status: outreach.status,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get outreach details" });
+    }
+  });
+
+  // Public: brand PR contact clicks "Let's Do This!" — authorize and send DocuSign email
+  app.post("/api/brand-outreach/authorize/:token", async (req, res) => {
+    try {
+      const outreach = await storage.getBrandOutreachByToken(req.params.token);
+      if (!outreach) return res.status(404).json({ error: "Outreach request not found" });
+      if (outreach.status !== "pending" && outreach.status !== "email_sent") {
+        return res.status(410).json({ error: "This link has already been used" });
+      }
+
+      await storage.updateBrandOutreachStatus(outreach.id, "authorized", new Date());
+
+      const creator = await storage.getUser(outreach.creatorId);
+      const embedCode = `<script src="https://embed.join.materialized.com/player.js" data-video="${outreach.videoId ?? "pending"}" data-brand="${outreach.brandName}"></script>`;
+      const docuSignUrl = process.env.DOCUSIGN_SIGNING_URL ?? "https://app.docusign.com/templates";
+
+      if (isEmailConfigured()) {
+        await sendBrandAgreementEmail({
+          prContactName: outreach.prContactName,
+          prContactEmail: outreach.prContactEmail,
+          creatorDisplayName: creator?.displayName ?? "The creator",
+          brandName: outreach.brandName,
+          videoTitle: outreach.videoTitle ?? "Video",
+          docuSignUrl,
+          embedCode,
+        });
+        await storage.updateBrandOutreachStatus(outreach.id, "agreement_sent");
+      } else {
+        await storage.updateBrandOutreachStatus(outreach.id, "agreement_sent");
+      }
+
+      res.json({ success: true, message: "Authorization received. Agreement email sent." });
+    } catch (error) {
+      console.error("[Brand Outreach Authorize] Failed:", error);
+      res.status(500).json({ error: "Failed to authorize outreach" });
     }
   });
 

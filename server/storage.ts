@@ -27,6 +27,7 @@ import {
   type CreatorReward, type InsertCreatorReward,
   type EmbedDeployment, type InsertEmbedDeployment,
   type CommissionTransaction, type InsertCommissionTransaction,
+  type BrandOutreach, type InsertBrandOutreach,
   insertCreatorInvitationSchema,
   users,
   brands,
@@ -53,6 +54,7 @@ import {
   creatorRewards,
   embedDeployments,
   commissionTransactions,
+  brandOutreachRequests,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -95,7 +97,14 @@ export interface IStorage {
   getReferral(id: string): Promise<BrandReferral | undefined>;
   createReferral(referral: InsertBrandReferral): Promise<BrandReferral>;
   updateReferralStatus(id: string, status: string): Promise<BrandReferral | undefined>;
-  
+
+  // Brand Outreach
+  createBrandOutreach(outreach: InsertBrandOutreach): Promise<BrandOutreach>;
+  getBrandOutreach(id: string): Promise<BrandOutreach | undefined>;
+  getBrandOutreachByToken(token: string): Promise<BrandOutreach | undefined>;
+  getBrandOutreachesByCreator(creatorId: string): Promise<BrandOutreach[]>;
+  updateBrandOutreachStatus(id: string, status: string, authorizedAt?: Date): Promise<BrandOutreach | undefined>;
+
   // Analytics
   getAnalyticsEvents(videoId?: string): Promise<AnalyticsEvent[]>;
   createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
@@ -530,6 +539,53 @@ export class MemStorage implements IStorage {
     if (!referral) return undefined;
     const updated = { ...referral, status: status as any };
     this.referrals.set(id, updated);
+    return updated;
+  }
+
+  // Brand Outreach
+  private brandOutreachMap: Map<string, BrandOutreach> = new Map();
+
+  async createBrandOutreach(outreach: InsertBrandOutreach): Promise<BrandOutreach> {
+    const id = randomUUID();
+    const token = randomUUID();
+    const newOutreach: BrandOutreach = {
+      id,
+      creatorId: outreach.creatorId,
+      videoId: outreach.videoId ?? null,
+      videoUrl: outreach.videoUrl ?? null,
+      videoTitle: outreach.videoTitle ?? null,
+      brandName: outreach.brandName,
+      prContactName: outreach.prContactName,
+      prContactEmail: outreach.prContactEmail,
+      creatorMessage: outreach.creatorMessage ?? null,
+      authToken: token,
+      status: "pending",
+      authorizedAt: null,
+      createdAt: new Date(),
+    };
+    this.brandOutreachMap.set(id, newOutreach);
+    return newOutreach;
+  }
+
+  async getBrandOutreach(id: string): Promise<BrandOutreach | undefined> {
+    return this.brandOutreachMap.get(id);
+  }
+
+  async getBrandOutreachByToken(token: string): Promise<BrandOutreach | undefined> {
+    return Array.from(this.brandOutreachMap.values()).find((o) => o.authToken === token);
+  }
+
+  async getBrandOutreachesByCreator(creatorId: string): Promise<BrandOutreach[]> {
+    return Array.from(this.brandOutreachMap.values())
+      .filter((o) => o.creatorId === creatorId)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async updateBrandOutreachStatus(id: string, status: string, authorizedAt?: Date): Promise<BrandOutreach | undefined> {
+    const outreach = this.brandOutreachMap.get(id);
+    if (!outreach) return undefined;
+    const updated = { ...outreach, status: status as any, authorizedAt: authorizedAt ?? outreach.authorizedAt };
+    this.brandOutreachMap.set(id, updated);
     return updated;
   }
 
@@ -1491,6 +1547,35 @@ export class DatabaseStorage implements IStorage {
   async updateReferralStatus(id: string, status: string): Promise<BrandReferral | undefined> {
     const validStatus = status as "pending" | "sent" | "accepted" | "declined";
     const [updated] = await db.update(brandReferrals).set({ status: validStatus }).where(eq(brandReferrals.id, id)).returning();
+    return updated;
+  }
+
+  // Brand Outreach
+  async createBrandOutreach(outreach: InsertBrandOutreach): Promise<BrandOutreach> {
+    const [created] = await db.insert(brandOutreachRequests).values(outreach).returning();
+    return created;
+  }
+
+  async getBrandOutreach(id: string): Promise<BrandOutreach | undefined> {
+    const [outreach] = await db.select().from(brandOutreachRequests).where(eq(brandOutreachRequests.id, id));
+    return outreach;
+  }
+
+  async getBrandOutreachByToken(token: string): Promise<BrandOutreach | undefined> {
+    const [outreach] = await db.select().from(brandOutreachRequests).where(eq(brandOutreachRequests.authToken, token));
+    return outreach;
+  }
+
+  async getBrandOutreachesByCreator(creatorId: string): Promise<BrandOutreach[]> {
+    return db.select().from(brandOutreachRequests)
+      .where(eq(brandOutreachRequests.creatorId, creatorId))
+      .orderBy(desc(brandOutreachRequests.createdAt));
+  }
+
+  async updateBrandOutreachStatus(id: string, status: string, authorizedAt?: Date): Promise<BrandOutreach | undefined> {
+    const updateData: any = { status };
+    if (authorizedAt) updateData.authorizedAt = authorizedAt;
+    const [updated] = await db.update(brandOutreachRequests).set(updateData).where(eq(brandOutreachRequests.id, id)).returning();
     return updated;
   }
 

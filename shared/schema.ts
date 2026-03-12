@@ -650,6 +650,34 @@ export const VIDEO_CATEGORY_OPTIONS = [
   { value: "interiors", label: "Interiors" },
 ] as const;
 
+// Brand outreach status
+export const outreachStatusEnum = pgEnum("outreach_status", [
+  "pending", "email_sent", "authorized", "agreement_sent", "completed", "declined"
+]);
+
+// Brand Outreach Requests — creator-initiated outreach to a brand PR contact
+export const brandOutreachRequests = pgTable("brand_outreach_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  videoId: varchar("video_id").references(() => videos.id),
+  videoUrl: text("video_url"),
+  videoTitle: text("video_title"),
+  brandName: text("brand_name").notNull(),
+  prContactName: text("pr_contact_name").notNull(),
+  prContactEmail: text("pr_contact_email").notNull(),
+  creatorMessage: text("creator_message"),
+  authToken: text("auth_token").notNull().unique().default(sql`gen_random_uuid()`),
+  status: outreachStatusEnum("status").default("pending"),
+  authorizedAt: timestamp("authorized_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const insertBrandOutreachSchema = createInsertSchema(brandOutreachRequests).omit({
+  id: true, authToken: true, status: true, authorizedAt: true, createdAt: true,
+});
+export type InsertBrandOutreach = z.infer<typeof insertBrandOutreachSchema>;
+export type BrandOutreach = typeof brandOutreachRequests.$inferSelect;
+
 // Subscriber intake role enum
 export const subscriberRoleEnum = pgEnum("subscriber_role", ["creator", "brand", "publisher"]);
 

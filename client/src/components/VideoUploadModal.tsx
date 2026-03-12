@@ -37,12 +37,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2, Wand2, Settings, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2, Wand2, Settings, ChevronDown, ChevronUp, Save, Mail } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useUpload } from "@/hooks/use-upload";
 import { ProductCarouselEditor, defaultCarouselSettings, type CarouselSettings } from "@/components/ProductCarouselEditor";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import type { Brand } from "@shared/schema";
 
 const videoUploadSchema = z.object({
@@ -184,14 +186,45 @@ export function VideoUploadModal({
     }
   };
 
-  const handleReferralSubmit = async (data: ReferralForm) => {
-    setIsSubmitting(true);
-    try {
-      await onReferBrand(data);
+  const outreachMutation = useMutation({
+    mutationFn: (payload: object) => apiRequest("POST", "/api/brand-outreach", payload),
+    onSuccess: () => {
+      toast({
+        title: "Outreach Sent!",
+        description: "Your message has been sent to the brand's PR contact. They'll receive an email to authorise your video.",
+      });
       setStep("details");
       referralForm.reset();
-    } finally {
-      setIsSubmitting(false);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to Send",
+        description: "Could not send the outreach email. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleReferralSubmit = async (data: ReferralForm) => {
+    if (videoUrl) {
+      const videoTitle = form.getValues("title") || "Untitled Video";
+      outreachMutation.mutate({
+        brandName: data.brandName,
+        prContactName: data.prContactName,
+        prContactEmail: data.prContactEmail,
+        creatorMessage: data.message,
+        videoUrl,
+        videoTitle,
+      });
+    } else {
+      setIsSubmitting(true);
+      try {
+        await onReferBrand(data);
+        setStep("details");
+        referralForm.reset();
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -240,12 +273,15 @@ export function VideoUploadModal({
           <DialogTitle className="text-xl font-bold">
             {step === "upload" && "Upload Video"}
             {step === "details" && "Video Details"}
-            {step === "refer" && "Refer a Brand"}
+            {step === "refer" && (videoUrl ? "Brand Outreach" : "Refer a Brand")}
           </DialogTitle>
           <DialogDescription>
             {step === "upload" && "Upload your video to get started"}
             {step === "details" && "Add details and select featured brands"}
-            {step === "refer" && "Can't find a brand? Refer them to join the platform"}
+            {step === "refer" && (videoUrl
+              ? "Can't find the brand? Send them a direct outreach email with your video"
+              : "Can't find a brand? Refer them to join the platform"
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -556,12 +592,15 @@ export function VideoUploadModal({
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <Send className="h-5 w-5 text-primary" />
+                      {videoUrl ? <Mail className="h-5 w-5 text-primary" /> : <Send className="h-5 w-5 text-primary" />}
                     </div>
                     <div>
-                      <p className="font-medium">Grow Our Network</p>
+                      <p className="font-medium">{videoUrl ? "Direct Brand Outreach" : "Grow Our Network"}</p>
                       <p className="text-sm text-muted-foreground">
-                        Help us bring more brands to the platform. We'll send them an invitation email on your behalf.
+                        {videoUrl
+                          ? "We'll email the brand's PR contact with a preview of your video and a one-click authorisation button."
+                          : "Help us bring more brands to the platform. We'll send them an invitation email on your behalf."
+                        }
                       </p>
                     </div>
                   </div>
@@ -672,11 +711,16 @@ export function VideoUploadModal({
                 >
                   Back to Video
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-full gap-2">
-                  {isSubmitting ? (
+                <Button type="submit" disabled={isSubmitting || outreachMutation.isPending} className="rounded-full gap-2">
+                  {(isSubmitting || outreachMutation.isPending) ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Sending...
+                    </>
+                  ) : videoUrl ? (
+                    <>
+                      <Mail className="h-4 w-4" />
+                      Send Outreach Email
                     </>
                   ) : (
                     <>
