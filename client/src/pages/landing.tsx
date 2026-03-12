@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -405,8 +405,15 @@ function VideoOfTheWeekSection() {
   );
 }
 
+const ROLE_ROUTES: Record<string, string> = {
+  creator: "/creator",
+  brand: "/brand",
+  publisher: "/affiliate",
+};
+
 function SignupSection() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   const form = useForm<FormData>({
@@ -427,13 +434,14 @@ function SignupSection() {
       const response = await apiRequest("POST", "/api/subscriber-intake", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast({
         title: "Welcome aboard!",
-        description: "Your account has been created. We'll be in touch soon.",
+        description: "Your account has been created successfully.",
       });
-      form.reset();
-      setSelectedRole(null);
+      const role = variables.role as string;
+      const destination = ROLE_ROUTES[role] ?? "/creator";
+      setLocation(destination);
     },
     onError: (error: Error) => {
       toast({
