@@ -16,10 +16,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
-import buyTheRunwayImage from "@assets/BUY_THE_RUNWAY_email_header_1767870012968.png";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
+
+const streetStyleVideo = "/street-style-ss26.mp4";
 
 const formSchema = insertSubscriberIntakeSchema;
 type FormData = z.infer<typeof formSchema>;
@@ -462,17 +463,48 @@ function ParallaxImageSection() {
 
   return (
     <section ref={ref} className="relative h-[80vh] overflow-hidden">
+      {/* Parallax video layer */}
       <motion.div
         style={{ y }}
         className="absolute inset-0 w-full h-[140%] -top-[20%]"
       >
-        <img
-          src={buyTheRunwayImage}
-          alt="Buy The Runway"
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
           className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+          aria-label="Street style fashion video"
+        >
+          <source src={streetStyleVideo} type="video/mp4" />
+        </video>
       </motion.div>
+
+      {/* Gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />
+
+      {/* Text overlay */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-4"
+        >
+          Shopifying Creator Content
+        </motion.p>
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.25 }}
+          className="text-white font-bold leading-tight max-w-2xl"
+          style={{ fontFamily: "'Public Pixel', sans-serif", fontSize: "clamp(18px, 4vw, 36px)" }}
+        >
+          Buy directly from your favourite creator content, music videos, or series
+        </motion.h2>
+      </div>
     </section>
   );
 }
