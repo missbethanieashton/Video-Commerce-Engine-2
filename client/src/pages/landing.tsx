@@ -442,17 +442,17 @@ function VideoOrientationSection() {
               <div
                 className="relative rounded-[28px] p-[14px]"
                 style={{
-                  background: "linear-gradient(145deg, #d4d4d4 0%, #b0b0b0 40%, #c8c8c8 100%)",
-                  boxShadow: "0 30px 70px rgba(0,0,0,0.45), 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.15)",
+                  background: "#1a1a1a",
+                  boxShadow: "0 30px 70px rgba(0,0,0,0.45), 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.3)",
                 }}
               >
                 {/* Front camera dot */}
-                <div className="absolute top-[7px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#888] shadow-inner" />
+                <div className="absolute top-[7px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#333] shadow-inner" />
                 {/* Side button (right) */}
-                <div className="absolute right-[-3px] top-[60px] w-[3px] h-8 rounded-r-full bg-[#a0a0a0]" />
+                <div className="absolute right-[-3px] top-[60px] w-[3px] h-8 rounded-r-full bg-[#2a2a2a]" />
                 {/* Volume buttons (left) */}
-                <div className="absolute left-[-3px] top-[50px] w-[3px] h-5 rounded-l-full bg-[#a0a0a0]" />
-                <div className="absolute left-[-3px] top-[78px] w-[3px] h-5 rounded-l-full bg-[#a0a0a0]" />
+                <div className="absolute left-[-3px] top-[50px] w-[3px] h-5 rounded-l-full bg-[#2a2a2a]" />
+                <div className="absolute left-[-3px] top-[78px] w-[3px] h-5 rounded-l-full bg-[#2a2a2a]" />
 
                 {/* Screen */}
                 <div className="relative rounded-[16px] overflow-hidden bg-black" style={{ aspectRatio: "16/10" }}>
