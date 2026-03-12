@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -32,6 +32,8 @@ const settingsItems = [
 ];
 
 export default function More() {
+  const [, navigate] = useLocation();
+
   return (
     <div className="space-y-6 pb-24 md:pb-6">
       <div>
@@ -54,7 +56,13 @@ export default function More() {
               <p className="text-sm text-muted-foreground">content-creator</p>
               <Badge className="mt-2">Creator</Badge>
             </div>
-            <Button variant="outline" size="sm" className="rounded-full">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={() => navigate("/creator/profile")}
+              data-testid="button-edit-profile"
+            >
               Edit Profile
             </Button>
           </div>
