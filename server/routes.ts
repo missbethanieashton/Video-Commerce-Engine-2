@@ -301,24 +301,264 @@ export async function registerRoutes(
       }
 
       const stats = await storage.getVideoStats(user.id);
-      
+
+      const now = new Date();
+      const viewsByDay: { date: string; views: number }[] = [];
+      for (let i = 89; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const base = Math.floor(Math.random() * 120) + 30;
+        const weekday = d.getDay();
+        const multiplier = weekday === 0 || weekday === 6 ? 0.7 : 1.0;
+        viewsByDay.push({ date: dateStr, views: Math.round(base * multiplier) });
+      }
+
+      const viewsByHour: { hour: number; views: number }[] = [];
+      for (let h = 0; h < 24; h++) {
+        let base = 20;
+        if (h >= 8 && h <= 11) base = 60 + Math.floor(Math.random() * 40);
+        else if (h >= 12 && h <= 14) base = 80 + Math.floor(Math.random() * 50);
+        else if (h >= 17 && h <= 21) base = 100 + Math.floor(Math.random() * 60);
+        else if (h >= 22 || h <= 5) base = 10 + Math.floor(Math.random() * 20);
+        else base = 40 + Math.floor(Math.random() * 30);
+        viewsByHour.push({ hour: h, views: base });
+      }
+
+      const ageBreakdown = [
+        { range: "13-17", percentage: 5 },
+        { range: "18-24", percentage: 28 },
+        { range: "25-34", percentage: 35 },
+        { range: "35-44", percentage: 18 },
+        { range: "45-54", percentage: 9 },
+        { range: "55-64", percentage: 3 },
+        { range: "65+", percentage: 2 },
+      ];
+
+      const genderBreakdown = {
+        male: 42,
+        female: 51,
+        other: 7,
+      };
+
+      const totalViewsNum = stats.totalViews || viewsByDay.reduce((s, d) => s + d.views, 0);
+      const totalRevenueNum = stats.totalRevenue || 8452.30;
+      const totalClicksNum = stats.totalClicks || 1840;
+      const salesVolumeUnits = Math.round(totalViewsNum * 0.032);
+      const averageSpend = salesVolumeUnits > 0 ? +(totalRevenueNum / salesVolumeUnits).toFixed(2) : 0;
+      const salesConversionRate = totalClicksNum > 0 ? +((salesVolumeUnits / totalClicksNum) * 100).toFixed(1) : 0;
+      const salesVolumeValue = +(salesVolumeUnits * averageSpend).toFixed(2);
+
       res.json({
         ...stats,
         topCountries: [
-          { country: "United States", views: 5420 },
-          { country: "United Kingdom", views: 2180 },
-          { country: "Canada", views: 1540 },
-          { country: "Australia", views: 890 },
-          { country: "Germany", views: 670 },
+          { country: "United States", views: 5420, avgSpend: 4.85 },
+          { country: "United Kingdom", views: 2180, avgSpend: 5.12 },
+          { country: "Canada", views: 1540, avgSpend: 4.50 },
+          { country: "Australia", views: 890, avgSpend: 5.75 },
+          { country: "Germany", views: 670, avgSpend: 4.20 },
+          { country: "France", views: 520, avgSpend: 3.90 },
+          { country: "Japan", views: 410, avgSpend: 6.10 },
+          { country: "Singapore", views: 320, avgSpend: 5.50 },
         ],
         deviceBreakdown: [
           { device: "Mobile", percentage: 62 },
           { device: "Desktop", percentage: 31 },
           { device: "Tablet", percentage: 7 },
         ],
+        viewsByDay,
+        viewsByHour,
+        ageBreakdown,
+        genderBreakdown,
+        averageSpend,
+        salesConversionRate,
+        salesVolumeUnits,
+        salesVolumeValue,
+        embedTraces: [
+          { utmCode: "UTM-CR-001", videoTitle: "Summer Haul 2026", publisherName: "My Channel", referrerDomain: "mychannel.com", referrerUrl: "https://mychannel.com/summer-haul", totalLoads: 2140, totalClicks: 178, totalConversions: 12, revenue: 890.00 },
+          { utmCode: "UTM-CR-002", videoTitle: "Summer Haul 2026", publisherName: "StylePartner", referrerDomain: "stylepartner.co", referrerUrl: "https://stylepartner.co/collabs/summer", totalLoads: 1560, totalClicks: 124, totalConversions: 8, revenue: 620.00 },
+          { utmCode: "UTM-CR-003", videoTitle: "Tech Review Q1", publisherName: "TechBlogger", referrerDomain: "techblogger.io", referrerUrl: "https://techblogger.io/reviews/gadgets", totalLoads: 980, totalClicks: 76, totalConversions: 5, revenue: 380.00 },
+          { utmCode: "UTM-CR-004", videoTitle: "Skincare Routine", publisherName: "BeautyHub", referrerDomain: "beautyhub.net", referrerUrl: "https://beautyhub.net/featured", totalLoads: 1320, totalClicks: 98, totalConversions: 7, revenue: 510.00 },
+        ],
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to get detailed analytics" });
+    }
+  });
+
+  // Get brand analytics (all videos featuring brand products, with embed traces)
+  app.get("/api/analytics/brand-detailed", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const now = new Date();
+      const viewsByDay: { date: string; views: number }[] = [];
+      for (let i = 89; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const base = Math.floor(Math.random() * 200) + 50;
+        const weekday = d.getDay();
+        const multiplier = weekday === 0 || weekday === 6 ? 0.65 : 1.0;
+        viewsByDay.push({ date: dateStr, views: Math.round(base * multiplier) });
+      }
+
+      const viewsByHour: { hour: number; views: number }[] = [];
+      for (let h = 0; h < 24; h++) {
+        let base = 30;
+        if (h >= 8 && h <= 11) base = 80 + Math.floor(Math.random() * 50);
+        else if (h >= 12 && h <= 14) base = 100 + Math.floor(Math.random() * 60);
+        else if (h >= 17 && h <= 21) base = 130 + Math.floor(Math.random() * 70);
+        else if (h >= 22 || h <= 5) base = 15 + Math.floor(Math.random() * 25);
+        else base = 50 + Math.floor(Math.random() * 40);
+        viewsByHour.push({ hour: h, views: base });
+      }
+
+      const totalViews = 45230;
+      const totalClicks = 3420;
+      const totalRevenue = 12450;
+      const salesVolumeUnits = Math.round(totalViews * 0.035);
+      const averageSpend = salesVolumeUnits > 0 ? +(totalRevenue / salesVolumeUnits).toFixed(2) : 0;
+      const salesConversionRate = totalClicks > 0 ? +((salesVolumeUnits / totalClicks) * 100).toFixed(1) : 0;
+      const salesVolumeValue = +(salesVolumeUnits * averageSpend).toFixed(2);
+
+      const embedTraces = [
+        { utmCode: "UTM-BRAND-NK01", videoTitle: "Summer Collection Lookbook", publisherName: "FashionBlog.com", referrerDomain: "fashionblog.com", referrerUrl: "https://fashionblog.com/summer-styles", totalLoads: 3420, totalClicks: 245, totalConversions: 18, revenue: 1250.00 },
+        { utmCode: "UTM-BRAND-NK02", videoTitle: "Summer Collection Lookbook", publisherName: "StyleMag", referrerDomain: "stylemag.co", referrerUrl: "https://stylemag.co/reviews/nike", totalLoads: 2810, totalClicks: 198, totalConversions: 14, revenue: 980.00 },
+        { utmCode: "UTM-BRAND-NK03", videoTitle: "Running Gear Review 2026", publisherName: "RunnerWorld", referrerDomain: "runnerworld.com", referrerUrl: "https://runnerworld.com/gear", totalLoads: 4150, totalClicks: 312, totalConversions: 28, revenue: 2100.00 },
+        { utmCode: "UTM-BRAND-NK04", videoTitle: "Running Gear Review 2026", publisherName: "FitLife", referrerDomain: "fitlife.io", referrerUrl: "https://fitlife.io/reviews", totalLoads: 1820, totalClicks: 134, totalConversions: 9, revenue: 670.00 },
+        { utmCode: "UTM-BRAND-NK05", videoTitle: "Streetwear Essentials", publisherName: "UrbanStyle", referrerDomain: "urbanstyle.net", referrerUrl: "https://urbanstyle.net/featured", totalLoads: 2560, totalClicks: 189, totalConversions: 12, revenue: 890.00 },
+        { utmCode: "UTM-BRAND-NK06", videoTitle: "Streetwear Essentials", publisherName: "HypeBeast Daily", referrerDomain: "hypebeastdaily.com", referrerUrl: "https://hypebeastdaily.com/drops", totalLoads: 1950, totalClicks: 156, totalConversions: 11, revenue: 780.00 },
+      ];
+
+      res.json({
+        totalViews,
+        totalClicks,
+        totalRevenue,
+        averageCTR: totalClicks > 0 ? +((totalClicks / totalViews) * 100).toFixed(2) : 0,
+        topCountries: [
+          { country: "United States", views: 12500, avgSpend: 5.20 },
+          { country: "United Kingdom", views: 6800, avgSpend: 5.80 },
+          { country: "Germany", views: 4200, avgSpend: 4.60 },
+          { country: "Canada", views: 3900, avgSpend: 4.90 },
+          { country: "Australia", views: 3100, avgSpend: 6.10 },
+          { country: "France", views: 2400, avgSpend: 4.30 },
+          { country: "Japan", views: 1800, avgSpend: 6.50 },
+          { country: "Singapore", views: 1200, avgSpend: 5.90 },
+        ],
+        deviceBreakdown: [
+          { device: "Mobile", percentage: 58 },
+          { device: "Desktop", percentage: 34 },
+          { device: "Tablet", percentage: 8 },
+        ],
+        viewsByDay,
+        viewsByHour,
+        ageBreakdown: [
+          { range: "13-17", percentage: 4 },
+          { range: "18-24", percentage: 22 },
+          { range: "25-34", percentage: 32 },
+          { range: "35-44", percentage: 24 },
+          { range: "45-54", percentage: 11 },
+          { range: "55-64", percentage: 5 },
+          { range: "65+", percentage: 2 },
+        ],
+        genderBreakdown: { male: 46, female: 48, other: 6 },
+        averageSpend,
+        salesConversionRate,
+        salesVolumeUnits,
+        salesVolumeValue,
+        embedTraces,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get brand analytics" });
+    }
+  });
+
+  // Get publisher/affiliate analytics (only their embed codes, not total audience)
+  app.get("/api/analytics/publisher-detailed", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const now = new Date();
+      const viewsByDay: { date: string; views: number }[] = [];
+      for (let i = 89; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const base = Math.floor(Math.random() * 60) + 10;
+        const weekday = d.getDay();
+        const multiplier = weekday === 0 || weekday === 6 ? 0.6 : 1.0;
+        viewsByDay.push({ date: dateStr, views: Math.round(base * multiplier) });
+      }
+
+      const viewsByHour: { hour: number; views: number }[] = [];
+      for (let h = 0; h < 24; h++) {
+        let base = 8;
+        if (h >= 9 && h <= 12) base = 25 + Math.floor(Math.random() * 20);
+        else if (h >= 13 && h <= 15) base = 35 + Math.floor(Math.random() * 25);
+        else if (h >= 18 && h <= 21) base = 45 + Math.floor(Math.random() * 30);
+        else if (h >= 22 || h <= 6) base = 5 + Math.floor(Math.random() * 10);
+        else base = 15 + Math.floor(Math.random() * 15);
+        viewsByHour.push({ hour: h, views: base });
+      }
+
+      const embedTraces = [
+        { utmCode: "UTM-PUB-A01", videoTitle: "Summer Collection Lookbook", publisherName: "My Fashion Blog", referrerDomain: "myfashionblog.com", referrerUrl: "https://myfashionblog.com/summer-2026", totalLoads: 1240, totalClicks: 89, totalConversions: 7, revenue: 485.00 },
+        { utmCode: "UTM-PUB-A02", videoTitle: "Running Gear Review 2026", publisherName: "My Fashion Blog", referrerDomain: "myfashionblog.com", referrerUrl: "https://myfashionblog.com/gear-reviews", totalLoads: 870, totalClicks: 62, totalConversions: 4, revenue: 310.00 },
+        { utmCode: "UTM-PUB-A03", videoTitle: "Streetwear Essentials", publisherName: "Style Newsletter", referrerDomain: "newsletter.myfashionblog.com", referrerUrl: "https://newsletter.myfashionblog.com/issue-42", totalLoads: 650, totalClicks: 48, totalConversions: 3, revenue: 220.00 },
+      ];
+
+      const myTotalViews = embedTraces.reduce((s, e) => s + e.totalLoads, 0);
+      const myTotalClicks = embedTraces.reduce((s, e) => s + e.totalClicks, 0);
+      const myTotalRevenue = embedTraces.reduce((s, e) => s + e.revenue, 0);
+      const myTotalConversions = embedTraces.reduce((s, e) => s + e.totalConversions, 0);
+      const averageSpend = myTotalConversions > 0 ? +(myTotalRevenue / myTotalConversions).toFixed(2) : 0;
+      const salesConversionRate = myTotalClicks > 0 ? +((myTotalConversions / myTotalClicks) * 100).toFixed(1) : 0;
+
+      res.json({
+        totalViews: myTotalViews,
+        totalClicks: myTotalClicks,
+        totalRevenue: myTotalRevenue,
+        averageCTR: myTotalViews > 0 ? +((myTotalClicks / myTotalViews) * 100).toFixed(2) : 0,
+        topCountries: [
+          { country: "United States", views: 1200, avgSpend: 4.50 },
+          { country: "United Kingdom", views: 580, avgSpend: 5.00 },
+          { country: "Canada", views: 340, avgSpend: 4.20 },
+          { country: "Australia", views: 280, avgSpend: 5.30 },
+          { country: "Germany", views: 180, avgSpend: 3.90 },
+        ],
+        deviceBreakdown: [
+          { device: "Mobile", percentage: 65 },
+          { device: "Desktop", percentage: 28 },
+          { device: "Tablet", percentage: 7 },
+        ],
+        viewsByDay,
+        viewsByHour,
+        ageBreakdown: [
+          { range: "13-17", percentage: 6 },
+          { range: "18-24", percentage: 30 },
+          { range: "25-34", percentage: 33 },
+          { range: "35-44", percentage: 17 },
+          { range: "45-54", percentage: 8 },
+          { range: "55-64", percentage: 4 },
+          { range: "65+", percentage: 2 },
+        ],
+        genderBreakdown: { male: 38, female: 55, other: 7 },
+        averageSpend,
+        salesConversionRate,
+        salesVolumeUnits: myTotalConversions,
+        salesVolumeValue: myTotalRevenue,
+        embedTraces,
+        isPublisherView: true,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get publisher analytics" });
     }
   });
 

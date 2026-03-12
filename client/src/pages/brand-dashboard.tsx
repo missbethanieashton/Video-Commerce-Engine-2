@@ -9,6 +9,7 @@ import { BrandAnnouncementBanner } from "@/components/BrandAnnouncementBanner";
 import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Link } from "wouter";
 import type { Brand, User, Product } from "@shared/schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -420,14 +421,20 @@ export default function BrandDashboard() {
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Performance Analytics</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Track how your products perform across creator videos
+              Track how your products perform across creator videos and publishing sources
             </p>
           </CardHeader>
           <CardContent>
             <div className="text-center py-12 text-muted-foreground">
               <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Performance data will appear here</p>
-              <p className="text-sm">Once creators start featuring your products</p>
+              <p>View full audience analytics, demographics, and embed traces</p>
+              <p className="text-sm mb-4">See viewing trends, audience breakdowns, and per-source performance</p>
+              <Link href="/brand/analytics">
+                <Button className="rounded-full gap-2" data-testid="button-view-analytics">
+                  <TrendingUp className="h-4 w-4" />
+                  Open Full Analytics
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

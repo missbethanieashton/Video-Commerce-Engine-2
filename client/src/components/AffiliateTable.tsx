@@ -16,9 +16,11 @@ import type { Video } from "@shared/schema";
 interface AffiliateTableProps {
   videos: Video[];
   isLoading?: boolean;
+  formatMoney?: (usd: number) => string;
 }
 
-export function AffiliateTable({ videos, isLoading }: AffiliateTableProps) {
+export function AffiliateTable({ videos, isLoading, formatMoney }: AffiliateTableProps) {
+  const fmtMoney = formatMoney || ((v: number) => `$${v.toFixed(2)}`);
   const calculateCTR = (clicks: number, views: number) => {
     if (views === 0) return "0.00";
     return ((clicks / views) * 100).toFixed(2);
@@ -142,7 +144,7 @@ export function AffiliateTable({ videos, isLoading }: AffiliateTableProps) {
                   </TableCell>
                   <TableCell>
                     <span className="font-semibold text-green-600">
-                      ${Number(video.totalRevenue || 0).toFixed(2)}
+                      {fmtMoney(Number(video.totalRevenue || 0))}
                     </span>
                   </TableCell>
                   <TableCell>

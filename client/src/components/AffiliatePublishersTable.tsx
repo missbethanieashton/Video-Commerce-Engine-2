@@ -42,7 +42,12 @@ type AffiliatePublisher = {
 
 type SortField = "earnings" | "clicks" | "conversions" | "revenue" | "conversionRate";
 
-export function AffiliatePublishersTable() {
+interface AffiliatePublishersTableProps {
+  formatMoney?: (usd: number) => string;
+}
+
+export function AffiliatePublishersTable({ formatMoney }: AffiliatePublishersTableProps = {}) {
+  const fmtMoney = formatMoney || ((v: number) => `$${v.toFixed(2)}`);
   const [sortBy, setSortBy] = useState<SortField>("earnings");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -182,10 +187,10 @@ export function AffiliatePublishersTable() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className="font-medium">${parseFloat(publisher.totalRevenue).toFixed(2)}</span>
+                    <span className="font-medium">{fmtMoney(parseFloat(publisher.totalRevenue))}</span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className="font-medium text-chart-2">${parseFloat(publisher.totalEarnings).toFixed(2)}</span>
+                    <span className="font-medium text-chart-2">{fmtMoney(parseFloat(publisher.totalEarnings))}</span>
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="outline">{publisher.campaignCount}</Badge>
