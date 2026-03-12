@@ -989,6 +989,49 @@ export default function Landing() {
       <StatsSection />
       <ParallaxImageSection />
       <VideoOrientationSection />
+      {/* Announcement marquee bar */}
+      {(() => {
+        const items = [
+          "documentaries",
+          "music videos",
+          "beauty tutorials",
+          "panels and stage performances",
+          "theatre productions",
+          "advertorials",
+          "fashion runways",
+          "in-flight entertainment",
+          "travel blogs",
+          "fashion week",
+          "creator content",
+        ];
+        const track = (
+          <>
+            {items.map((item, i) => (
+              <span key={i} className="flex items-center shrink-0">
+                <span className="whitespace-nowrap text-white text-sm font-medium tracking-wide uppercase px-4">
+                  {item}
+                </span>
+                <img
+                  src="/blob-divider.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="shrink-0"
+                  style={{ width: 28, height: 28, objectFit: "contain" }}
+                />
+              </span>
+            ))}
+          </>
+        );
+        return (
+          <div className="w-full overflow-hidden bg-[#202120] border-y border-white/10 py-3">
+            <div className="marquee-track">
+              {track}
+              {track}
+            </div>
+          </div>
+        );
+      })()}
+
       <TestimonialCarousel />
       <VideoOfTheWeekSection />
       <SignupSection />
