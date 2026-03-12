@@ -1,16 +1,47 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const [isHovering, setIsHovering] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   const pos = useRef({ x: -200, y: -200 });
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    const move = (e: MouseEvent) => {
+    const SIZE_DEFAULT = 44;
+    const SIZE_HOVER = 56;
+
+    const setSize = (size: number) => {
+      if (!imgRef.current) return;
+      imgRef.current.style.width = `${size}px`;
+      imgRef.current.style.height = `${size}px`;
+      imgRef.current.style.marginLeft = `${-size / 2}px`;
+      imgRef.current.style.marginTop = `${-size / 2}px`;
+    };
+
+    setSize(SIZE_DEFAULT);
+
+    const onMove = (e: MouseEvent) => {
       pos.current = { x: e.clientX, y: e.clientY };
-      if (!visible) setVisible(true);
+      if (cursorRef.current) cursorRef.current.style.opacity = "1";
+    };
+
+    const onOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const interactive =
+        target.closest("a") ||
+        target.closest("button") ||
+        target.closest("input") ||
+        target.closest("textarea") ||
+        target.closest("select") ||
+        target.closest("[role='button']");
+      setSize(interactive ? SIZE_HOVER : SIZE_DEFAULT);
+    };
+
+    const onLeave = () => {
+      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+    };
+    const onEnter = () => {
+      if (cursorRef.current) cursorRef.current.style.opacity = "1";
     };
 
     const loop = () => {
@@ -20,61 +51,35 @@ export function CustomCursor() {
       rafRef.current = requestAnimationFrame(loop);
     };
 
-    const onHoverStart = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.closest("a") ||
-        target.closest("button") ||
-        target.closest("input") ||
-        target.closest("textarea") ||
-        target.closest("select") ||
-        target.closest("[role='button']")
-      ) {
-        setIsHovering(true);
-      } else {
-        setIsHovering(false);
-      }
-    };
-
-    const onLeave = () => setVisible(false);
-    const onEnter = () => setVisible(true);
-
-    window.addEventListener("mousemove", move, { passive: true });
-    window.addEventListener("mouseover", onHoverStart, { passive: true });
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("mouseover", onOver, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeave);
     document.documentElement.addEventListener("mouseenter", onEnter);
     rafRef.current = requestAnimationFrame(loop);
 
     return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseover", onHoverStart);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseover", onOver);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       document.documentElement.removeEventListener("mouseenter", onEnter);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [visible]);
+  }, []);
 
   return (
     <div
       ref={cursorRef}
       aria-hidden="true"
       className="pointer-events-none fixed top-0 left-0 z-[9999] will-change-transform"
-      style={{
-        width: 0,
-        height: 0,
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.2s",
-      }}
+      style={{ width: 0, height: 0, opacity: 0, transition: "opacity 0.2s" }}
     >
       <img
+        ref={imgRef}
         src="/materialized-cursor.png"
         alt=""
         draggable={false}
         style={{
-          width: isHovering ? 56 : 44,
-          height: isHovering ? 56 : 44,
-          marginLeft: isHovering ? -28 : -22,
-          marginTop: isHovering ? -28 : -22,
+          position: "absolute",
           transition: "width 0.18s ease, height 0.18s ease, margin 0.18s ease",
           userSelect: "none",
           filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.35))",
