@@ -414,11 +414,12 @@ const ROLE_ROUTES: Record<string, string> = {
 function SignupSection() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"creator" | "brand" | "publisher" | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      role: "creator",
       firstName: "",
       surname: "",
       email: "",
@@ -439,7 +440,7 @@ function SignupSection() {
         title: "Welcome aboard!",
         description: "Your account has been created successfully.",
       });
-      const role = variables.role as string;
+      const role = (variables.role || selectedRole) as string;
       const destination = ROLE_ROUTES[role] ?? "/creator";
       setLocation(destination);
     },
