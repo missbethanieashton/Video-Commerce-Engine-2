@@ -1,4 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
+import materializedLogo from "@assets/MATERIALIZED_full_logo_1773352270197.png";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -167,9 +168,12 @@ function AppContent() {
           <header className="flex items-center justify-between gap-4 p-4 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="hidden md:flex" data-testid="button-sidebar-toggle" />
-              <div className="md:hidden text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
-                MTERLIZD
-              </div>
+              <img
+                src={materializedLogo}
+                alt="Materialized"
+                className="md:hidden"
+                style={{ height: 32, width: "auto" }}
+              />
             </div>
             <ThemeToggle />
           </header>

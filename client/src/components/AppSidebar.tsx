@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import materializedLogo from "@assets/MATERIALIZED_full_logo_1773352270197.png";
 import {
   LayoutDashboard,
   Video,
@@ -101,9 +102,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
-            MTERLIZD
-          </div>
+          <img
+            src={materializedLogo}
+            alt="Materialized"
+            style={{ height: 40, width: "auto" }}
+          />
         </div>
         
         <div className="flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/50">

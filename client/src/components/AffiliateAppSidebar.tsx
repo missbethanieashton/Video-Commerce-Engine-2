@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import materializedLogo from "@assets/MATERIALIZED_full_logo_1773352270197.png";
 import {
   Sidebar,
   SidebarContent,
@@ -77,15 +78,12 @@ export function AffiliateAppSidebar() {
     <Sidebar className="border-r border-border">
       <SidebarHeader className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-sage to-accent-teal flex items-center justify-center text-white font-bold text-sm">
-            M
-          </div>
-          <div>
-            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-accent-sage to-accent-teal bg-clip-text text-transparent">
-              MTERLIZD
-            </span>
-            <p className="text-xs text-muted-foreground">Affiliate Portal</p>
-          </div>
+          <img
+            src={materializedLogo}
+            alt="Materialized"
+            style={{ height: 40, width: "auto" }}
+          />
+          <p className="text-xs text-muted-foreground">Affiliate Portal</p>
         </div>
       </SidebarHeader>
 
