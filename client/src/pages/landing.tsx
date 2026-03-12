@@ -532,7 +532,7 @@ function ParallaxImageSection() {
           className="text-white font-bold leading-tight max-w-2xl"
           style={{ fontFamily: "'Public Pixel', sans-serif", fontSize: "clamp(18px, 4vw, 36px)" }}
         >
-          Buy directly from creator content, music videos, or series
+          Buy directly from creator content, music videos, or film series
         </motion.h2>
       </div>
     </section>
