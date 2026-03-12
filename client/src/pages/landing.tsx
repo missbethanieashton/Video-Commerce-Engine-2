@@ -496,7 +496,7 @@ function SignupSection() {
               {[
                 { role: "creator" as const, title: "Creator", desc: "Import your videos, tag brands, and shopify your video assets in seconds" },
                 { role: "brand" as const, title: "Brand", desc: "Connect your inventory, import your recorded runways or fashion films and Materialized will deliver shoppable videos for your website" },
-                { role: "publisher" as const, title: "Publisher", desc: "License & publish videos" },
+                { role: "publisher" as const, title: "Publisher", desc: "Save on production costs! Search our global video library for categorized entertainment, curate a playlist of content that suits your niche, publish and generate a new revenue stream from affiliate royalties" },
               ].map((item) => (
                 <motion.button
                   key={item.role}
