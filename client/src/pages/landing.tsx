@@ -495,7 +495,7 @@ function SignupSection() {
             <div className="grid md:grid-cols-3 gap-4">
               {[
                 { role: "creator" as const, title: "Creator", desc: "Import your videos, tag brands, and shopify your video assets in seconds" },
-                { role: "brand" as const, title: "Brand", desc: "Connect with creators" },
+                { role: "brand" as const, title: "Brand", desc: "Connect your inventory, import your recorded runways or fashion films and Materialized will deliver shoppable videos for your website" },
                 { role: "publisher" as const, title: "Publisher", desc: "License & publish videos" },
               ].map((item) => (
                 <motion.button
