@@ -355,7 +355,7 @@ export async function registerRoutes(
             videoId,
             utmCode: utmCode || "",
             referrerDomain: data.referrerDomain,
-            referrerUrl: data.referrerDomain,
+            referrerUrl: (data as any).referrerUrl || data.referrerDomain,
           });
         }
       }
