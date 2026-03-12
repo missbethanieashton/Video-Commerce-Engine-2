@@ -299,6 +299,36 @@ export async function sendSubscriptionNudgeEmail(opts: {
   });
 }
 
+export async function sendContactEnquiryEmail(opts: {
+  firstName: string;
+  surname: string;
+  email: string;
+  role: string;
+  igHandle: string;
+  message: string;
+}): Promise<void> {
+  const roleLabel = opts.role === "creator" ? "Creator" : opts.role === "brand" ? "Brand" : "Publisher";
+  const body = `
+    <h1>New Contact Enquiry</h1>
+    <div class="video-box">
+      <p><strong>Name:</strong> ${opts.firstName} ${opts.surname}</p>
+      <p><strong>Email:</strong> <a href="mailto:${opts.email}">${opts.email}</a></p>
+      <p><strong>Role:</strong> ${roleLabel}</p>
+      <p><strong>Instagram:</strong> @${opts.igHandle.replace(/^@/, "")}</p>
+    </div>
+    <p><strong>Message:</strong></p>
+    <p style="background:#f9f9f9;border-left:3px solid #677A67;padding:12px 16px;border-radius:6px;font-style:italic;color:#444;">${opts.message}</p>
+    <p style="font-size:12px;color:#aaa;">Submitted via the Materialized website contact form.</p>
+  `;
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: "missbethanieashton@gmail.com",
+    replyTo: opts.email,
+    subject: `[Materialized] New ${roleLabel} Enquiry — ${opts.firstName} ${opts.surname}`,
+    html: baseTemplate(body),
+  });
+}
+
 export function isEmailConfigured(): boolean {
   return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }

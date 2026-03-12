@@ -27,6 +27,7 @@ import {
   sendVideoResultsExcitementEmail,
   sendGlobalPitchEmail,
   sendSubscriptionNudgeEmail,
+  sendContactEnquiryEmail,
   isEmailConfigured,
 } from "./emailService";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
@@ -1838,6 +1839,32 @@ export async function registerRoutes(
       res.json(reward);
     } catch (error) {
       res.status(500).json({ error: "Failed to redeem reward" });
+    }
+  });
+
+  // ==================== PUBLIC CONTACT FORM ====================
+
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const schema = z.object({
+        firstName: z.string().min(1).max(100),
+        surname: z.string().min(1).max(100),
+        email: z.string().email(),
+        role: z.enum(["creator", "brand", "publisher"]),
+        igHandle: z.string().min(1).max(60),
+        message: z.string().min(1).max(200),
+      });
+      const data = schema.parse(req.body);
+      if (isEmailConfigured()) {
+        await sendContactEnquiryEmail(data);
+      }
+      res.json({ success: true });
+    } catch (err: any) {
+      if (err?.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid form data", details: err.errors });
+      }
+      console.error("Contact form error:", err);
+      res.status(500).json({ error: "Failed to send enquiry" });
     }
   });
 

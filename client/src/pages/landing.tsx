@@ -24,6 +24,153 @@ import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
 const formSchema = insertSubscriberIntakeSchema;
 type FormData = z.infer<typeof formSchema>;
 
+const contactSchema = z.object({
+  firstName: z.string().min(1, "Required"),
+  surname: z.string().min(1, "Required"),
+  email: z.string().email("Valid email required"),
+  role: z.enum(["creator", "brand", "publisher"], { required_error: "Select a role" }),
+  igHandle: z.string().min(1, "Required"),
+  message: z.string().min(1, "Required").max(200, "Max 200 characters"),
+});
+type ContactData = z.infer<typeof contactSchema>;
+
+function ContactForm() {
+  const { toast } = useToast();
+  const [sent, setSent] = useState(false);
+  const form = useForm<ContactData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: { firstName: "", surname: "", email: "", role: undefined, igHandle: "", message: "" },
+  });
+  const msg = form.watch("message") ?? "";
+
+  const mutation = useMutation({
+    mutationFn: (data: ContactData) => apiRequest("POST", "/api/contact", data),
+    onSuccess: () => {
+      setSent(true);
+      form.reset();
+    },
+    onError: () => toast({ title: "Couldn't send", description: "Please try again shortly.", variant: "destructive" }),
+  });
+
+  if (sent) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-[#677A67] font-semibold text-sm">Message sent!</p>
+        <p className="text-white/50 text-xs mt-1">We'll be in touch soon.</p>
+        <button onClick={() => setSent(false)} className="mt-3 text-xs text-white/40 underline">Send another</button>
+      </div>
+    );
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-3">
+        {/* Name row */}
+        <div className="grid grid-cols-2 gap-2">
+          <FormField control={form.control} name="firstName" render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-white/60 text-xs">First Name *</FormLabel>
+              <FormControl>
+                <input {...field} data-testid="input-contact-firstName" placeholder="Jane"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors" />
+              </FormControl>
+              <FormMessage className="text-xs text-red-400" />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="surname" render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-white/60 text-xs">Surname *</FormLabel>
+              <FormControl>
+                <input {...field} data-testid="input-contact-surname" placeholder="Smith"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors" />
+              </FormControl>
+              <FormMessage className="text-xs text-red-400" />
+            </FormItem>
+          )} />
+        </div>
+
+        {/* Email */}
+        <FormField control={form.control} name="email" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <FormLabel className="text-white/60 text-xs">Email *</FormLabel>
+            <FormControl>
+              <input {...field} type="email" data-testid="input-contact-email" placeholder="you@example.com"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors" />
+            </FormControl>
+            <FormMessage className="text-xs text-red-400" />
+          </FormItem>
+        )} />
+
+        {/* Role radio */}
+        <FormField control={form.control} name="role" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <FormLabel className="text-white/60 text-xs">I am a *</FormLabel>
+            <div className="flex gap-2">
+              {(["creator", "brand", "publisher"] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => field.onChange(r)}
+                  data-testid={`radio-role-${r}`}
+                  className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all ${
+                    field.value === r
+                      ? "border-[#677A67] bg-[#677A67]/20 text-[#8fb08f]"
+                      : "border-white/10 text-white/40 hover:border-white/30 hover:text-white/60"
+                  }`}
+                >
+                  {r === "creator" ? "Creator" : r === "brand" ? "Brand" : "Publisher"}
+                </button>
+              ))}
+            </div>
+            <FormMessage className="text-xs text-red-400" />
+          </FormItem>
+        )} />
+
+        {/* IG handle */}
+        <FormField control={form.control} name="igHandle" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <FormLabel className="text-white/60 text-xs">Instagram Handle *</FormLabel>
+            <FormControl>
+              <div className="flex items-center bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-[#677A67] transition-colors">
+                <span className="px-3 text-white/30 text-sm select-none">@</span>
+                <input {...field} data-testid="input-contact-igHandle" placeholder="yourhandle"
+                  className="flex-1 bg-transparent py-2 pr-3 text-white text-sm placeholder:text-white/30 focus:outline-none"
+                  onChange={e => field.onChange(e.target.value.replace(/^@/, ""))} />
+              </div>
+            </FormControl>
+            <FormMessage className="text-xs text-red-400" />
+          </FormItem>
+        )} />
+
+        {/* Message */}
+        <FormField control={form.control} name="message" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <div className="flex items-center justify-between">
+              <FormLabel className="text-white/60 text-xs">Message *</FormLabel>
+              <span className={`text-xs ${msg.length > 190 ? "text-amber-400" : "text-white/30"}`}>{msg.length}/200</span>
+            </div>
+            <FormControl>
+              <textarea {...field} data-testid="textarea-contact-message" rows={3} maxLength={200}
+                placeholder="Tell us a bit about yourself and what you're looking for..."
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors resize-none" />
+            </FormControl>
+            <FormMessage className="text-xs text-red-400" />
+          </FormItem>
+        )} />
+
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          data-testid="button-contact-submit"
+          className="w-full py-2.5 rounded-full bg-[#677A67] text-white font-semibold text-sm hover:bg-[#556655] transition-colors disabled:opacity-50 mt-1"
+        >
+          {mutation.isPending ? "Sending..." : "Connect"}
+        </button>
+      </form>
+    </Form>
+  );
+}
+
 const TYPEWRITER_PHRASES = [
   "Turn videos into revenue",
   "Connect with brands",
@@ -824,11 +971,7 @@ export default function Landing() {
               {
                 key: "contact",
                 label: "Contact",
-                content: (
-                  <div className="text-white/60 text-sm leading-relaxed">
-                    <p>Have a question or partnership enquiry? Reach out via our sign-up form and our team will be in touch. <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-contact-signup">Get Started &rarr;</a> to create your account and connect with us.</p>
-                  </div>
-                ),
+                content: <ContactForm />,
               },
             ].map((item) => (
               <div key={item.key} className="border-b border-white/10">
@@ -840,7 +983,7 @@ export default function Landing() {
                   {item.label}
                   <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openFooterItem === item.key ? "rotate-180" : ""}`} />
                 </button>
-                <div className={`overflow-hidden transition-all duration-300 ${openFooterItem === item.key ? "max-h-60 pb-4" : "max-h-0"}`}>
+                <div className={`overflow-hidden transition-all duration-300 ${openFooterItem === item.key ? (item.key === "contact" ? "max-h-[700px] pb-4" : "max-h-60 pb-4") : "max-h-0"}`}>
                   {item.content}
                 </div>
               </div>
