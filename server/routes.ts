@@ -122,10 +122,16 @@ export async function registerRoutes(
     }
   });
 
-  // Create product
+  // Create product (auto-resolves brandId from first available brand if not provided)
   app.post("/api/products", async (req, res) => {
     try {
-      const data = insertProductSchema.parse(req.body);
+      let { brandId, ...rest } = req.body;
+      if (!brandId) {
+        const brands = await storage.getBrands();
+        brandId = brands[0]?.id;
+      }
+      if (!brandId) return res.status(400).json({ error: "No brand available" });
+      const data = insertProductSchema.parse({ ...rest, brandId });
       const product = await storage.createProduct(data);
       res.status(201).json(product);
     } catch (error) {

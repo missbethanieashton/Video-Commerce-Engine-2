@@ -92,6 +92,8 @@ export const products = pgTable("products", {
   productUrl: text("product_url"),
   sku: text("sku"),
   category: text("category"),
+  productType: text("product_type"), // "Physical" | "Digital" | "Service" | "Subscription" | "Bundle"
+  thumbnailType: text("thumbnail_type"), // "image" | "video"
   isActive: boolean("is_active").default(true),
 });
 
