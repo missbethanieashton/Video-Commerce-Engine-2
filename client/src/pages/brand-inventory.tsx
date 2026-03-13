@@ -112,7 +112,7 @@ export default function BrandInventory() {
                         onClick={() => setSelectedPlatform(p.id)}
                         data-testid={`button-platform-${p.id}`}
                         title={p.label}
-                        className={`flex flex-col items-center gap-1.5 w-20 py-3 rounded-xl border-2 transition-all ${
+                        className={`flex flex-col items-center gap-1.5 w-28 py-2.5 px-1 rounded-xl border-2 transition-all ${
                           isSelected
                             ? "border-primary bg-primary/5 shadow-sm"
                             : "border-border bg-card hover:border-muted-foreground/40 hover:bg-muted/50"
