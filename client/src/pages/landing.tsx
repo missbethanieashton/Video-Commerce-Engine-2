@@ -701,6 +701,26 @@ function VideoOfTheWeekSection() {
                 >
                   <source src={discoveryPacksVideo} type="video/mp4" />
                 </video>
+                {/* Seasonal Leasing carousel card */}
+                <div className="absolute bottom-[130px] left-0 right-0 px-2.5 z-10">
+                  <div className="bg-black rounded-2xl px-3 py-2.5 border border-white/8">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-white/50 text-[8px] uppercase tracking-widest leading-tight">Lund Group</div>
+                        <div className="text-white text-[10px] font-semibold leading-tight mt-0.5">Luxury Yacht Charters</div>
+                      </div>
+                      <a
+                        href="https://www.lund-group.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white/10 hover:bg-white/20 text-white text-[7.5px] font-black tracking-wider px-2.5 py-1.5 rounded-lg flex-shrink-0 border border-white/20 transition-colors whitespace-nowrap"
+                      >
+                        SEASONAL LEASING
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Product carousel overlay */}
                 <div className="absolute bottom-[62px] left-0 right-0 px-2.5 z-10">
                   <div className="bg-black/30 backdrop-blur-md rounded-2xl p-2.5 border border-white/10">
