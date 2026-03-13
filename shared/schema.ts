@@ -818,6 +818,38 @@ export const insertBrandApiKeySchema = createInsertSchema(brandApiKeys).omit({ i
 export type InsertBrandApiKey = z.infer<typeof insertBrandApiKeySchema>;
 export type BrandApiKey = typeof brandApiKeys.$inferSelect;
 
+// ─── Playlists ────────────────────────────────────────────────────────────────
+
+// Playlists — curated video collections from the Global Video Library
+export const playlists = pgTable("playlists", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// PlaylistItems — individual videos inside a playlist with UTM tracking
+export const playlistItems = pgTable("playlist_items", {
+  id: serial("id").primaryKey(),
+  playlistId: integer("playlist_id").notNull().references(() => playlists.id),
+  listingId: varchar("listing_id").notNull().references(() => globalVideoLibrary.id),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  utmContent: text("utm_content"),
+  utmCode: text("utm_code").default(sql`gen_random_uuid()`),
+  addedAt: timestamp("added_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const insertPlaylistSchema = createInsertSchema(playlists).omit({ id: true, createdAt: true });
+export const insertPlaylistItemSchema = createInsertSchema(playlistItems).omit({ id: true, utmCode: true, addedAt: true });
+
+export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
+export type Playlist = typeof playlists.$inferSelect;
+export type InsertPlaylistItem = z.infer<typeof insertPlaylistItemSchema>;
+export type PlaylistItem = typeof playlistItems.$inferSelect;
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Country list for dropdown

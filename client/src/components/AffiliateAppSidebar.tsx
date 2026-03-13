@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Bell,
   Palette,
+  ListVideo,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,11 @@ const affiliateMenuItems = [
     title: "Video Library",
     url: "/affiliate/library",
     icon: ShoppingBag,
+  },
+  {
+    title: "My Playlists",
+    url: "/affiliate/playlists",
+    icon: ListVideo,
   },
   {
     title: "My Campaigns",

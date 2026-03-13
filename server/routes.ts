@@ -22,6 +22,7 @@ import {
   insertBrandPayoutMethodSchema,
   insertBrandBillingProfileSchema,
   insertBrandApiKeySchema,
+  insertPlaylistSchema,
   VIDEO_CATEGORY_OPTIONS,
 } from "@shared/schema";
 import { z } from "zod";
@@ -1682,6 +1683,110 @@ export async function registerRoutes(
       res.json({ success: true, listing: await storage.getGlobalVideoListing(listing.id) });
     } catch (error) {
       res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // ==================== PLAYLIST ROUTES ====================
+
+  // Get current user's playlists (with item count)
+  app.get("/api/playlists", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const userPlaylists = await storage.getUserPlaylists(user.id);
+      // Attach item counts
+      const withCounts = await Promise.all(userPlaylists.map(async (pl) => {
+        const items = await storage.getPlaylistItems(pl.id);
+        return { ...pl, itemCount: items.length };
+      }));
+      res.json(withCounts);
+    } catch {
+      res.status(500).json({ error: "Failed to get playlists" });
+    }
+  });
+
+  // Create a new playlist
+  app.post("/api/playlists", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const validated = insertPlaylistSchema.parse({ ...req.body, userId: user.id });
+      const pl = await storage.createPlaylist(validated);
+      res.status(201).json(pl);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
+      res.status(500).json({ error: "Failed to create playlist" });
+    }
+  });
+
+  // Get a playlist with enriched items
+  app.get("/api/playlists/:id", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const pl = await storage.getPlaylist(Number(req.params.id));
+      if (!pl || pl.userId !== user.id) return res.status(404).json({ error: "Playlist not found" });
+      const items = await storage.getPlaylistItems(pl.id);
+      const enriched = await Promise.all(items.map(async (item) => {
+        const listing = await storage.getGlobalVideoListing(item.listingId);
+        const video = listing ? await storage.getVideo(listing.videoId) : null;
+        const creator = listing ? await storage.getUser(listing.creatorId) : null;
+        return {
+          ...item,
+          listing: listing ? { ...listing, video, creator: creator ? { displayName: creator.displayName, avatarUrl: creator.avatarUrl } : null } : null,
+        };
+      }));
+      res.json({ ...pl, items: enriched });
+    } catch {
+      res.status(500).json({ error: "Failed to get playlist" });
+    }
+  });
+
+  // Add videos to a playlist
+  app.post("/api/playlists/:id/items", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const pl = await storage.getPlaylist(Number(req.params.id));
+      if (!pl || pl.userId !== user.id) return res.status(404).json({ error: "Playlist not found" });
+      const { listingIds, utmSource, utmMedium, utmCampaign, utmContent } = req.body;
+      if (!Array.isArray(listingIds) || listingIds.length === 0) {
+        return res.status(400).json({ error: "listingIds must be a non-empty array" });
+      }
+      const items = listingIds.map((listingId: string) => ({
+        playlistId: pl.id,
+        listingId,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || "video",
+        utmCampaign: utmCampaign || pl.name,
+        utmContent: utmContent || null,
+      }));
+      const created = await storage.addPlaylistItems(items);
+      res.status(201).json(created);
+    } catch {
+      res.status(500).json({ error: "Failed to add items to playlist" });
+    }
+  });
+
+  // Delete a playlist
+  app.delete("/api/playlists/:id", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      await storage.deletePlaylist(Number(req.params.id), user.id);
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ error: "Failed to delete playlist" });
+    }
+  });
+
+  // Remove a single item from a playlist
+  app.delete("/api/playlists/:id/items/:itemId", async (req, res) => {
+    try {
+      await storage.removePlaylistItem(Number(req.params.itemId));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ error: "Failed to remove item" });
     }
   });
 

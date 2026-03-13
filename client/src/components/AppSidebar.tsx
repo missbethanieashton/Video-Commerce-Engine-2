@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Video,
   Library,
+  ListVideo,
   BarChart3,
   Users,
   HelpCircle,
@@ -38,6 +39,7 @@ const overviewItems = [
 const contentItems = [
   { path: "/creator/my-videos", label: "My Videos", icon: Video },
   { path: "/creator/library", label: "Global Video Library", icon: Library },
+  { path: "/creator/playlists", label: "My Playlists", icon: ListVideo },
 ];
 
 const analyticsItems = [

@@ -67,6 +67,12 @@ import {
   brandPayoutMethods,
   brandBillingProfiles,
   brandApiKeys,
+  playlists,
+  playlistItems,
+  type InsertPlaylist,
+  type Playlist,
+  type InsertPlaylistItem,
+  type PlaylistItem,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -272,6 +278,15 @@ export interface IStorage {
   getBrandApiKeys(userId: string): Promise<BrandApiKey[]>;
   createBrandApiKey(data: InsertBrandApiKey): Promise<BrandApiKey>;
   revokeBrandApiKey(id: number, userId: string): Promise<void>;
+
+  // Playlists
+  getUserPlaylists(userId: string): Promise<Playlist[]>;
+  getPlaylist(id: number): Promise<Playlist | undefined>;
+  createPlaylist(data: InsertPlaylist): Promise<Playlist>;
+  deletePlaylist(id: number, userId: string): Promise<void>;
+  getPlaylistItems(playlistId: number): Promise<PlaylistItem[]>;
+  addPlaylistItems(items: InsertPlaylistItem[]): Promise<PlaylistItem[]>;
+  removePlaylistItem(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1546,6 +1561,42 @@ export class MemStorage implements IStorage {
     const key = this.brandApiKeysList.find(k => k.id === id && k.userId === userId);
     if (key) key.isActive = false;
   }
+
+  // Playlists (in-memory)
+  private playlistsList: Playlist[] = [];
+  private playlistItemsList: PlaylistItem[] = [];
+
+  async getUserPlaylists(userId: string): Promise<Playlist[]> {
+    return this.playlistsList.filter(p => p.userId === userId);
+  }
+  async getPlaylist(id: number): Promise<Playlist | undefined> {
+    return this.playlistsList.find(p => p.id === id);
+  }
+  async createPlaylist(data: InsertPlaylist): Promise<Playlist> {
+    const pl: Playlist = { id: Date.now(), createdAt: new Date(), ...data } as any;
+    this.playlistsList.push(pl);
+    return pl;
+  }
+  async deletePlaylist(id: number, userId: string): Promise<void> {
+    this.playlistsList = this.playlistsList.filter(p => !(p.id === id && p.userId === userId));
+    this.playlistItemsList = this.playlistItemsList.filter(i => i.playlistId !== id);
+  }
+  async getPlaylistItems(playlistId: number): Promise<PlaylistItem[]> {
+    return this.playlistItemsList.filter(i => i.playlistId === playlistId);
+  }
+  async addPlaylistItems(items: InsertPlaylistItem[]): Promise<PlaylistItem[]> {
+    const created = items.map(item => ({
+      id: Date.now() + Math.random(),
+      utmCode: crypto.randomUUID(),
+      addedAt: new Date(),
+      ...item,
+    } as unknown as PlaylistItem));
+    this.playlistItemsList.push(...created);
+    return created;
+  }
+  async removePlaylistItem(id: number): Promise<void> {
+    this.playlistItemsList = this.playlistItemsList.filter(i => i.id !== id);
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -2296,6 +2347,33 @@ export class DatabaseStorage implements IStorage {
   }
   async revokeBrandApiKey(id: number, userId: string): Promise<void> {
     await db.update(brandApiKeys).set({ isActive: false }).where(eq(brandApiKeys.id, id));
+  }
+
+  // Playlists — DatabaseStorage
+  async getUserPlaylists(userId: string): Promise<Playlist[]> {
+    return db.select().from(playlists).where(eq(playlists.userId, userId)).orderBy(playlists.createdAt);
+  }
+  async getPlaylist(id: number): Promise<Playlist | undefined> {
+    const [pl] = await db.select().from(playlists).where(eq(playlists.id, id));
+    return pl;
+  }
+  async createPlaylist(data: InsertPlaylist): Promise<Playlist> {
+    const [pl] = await db.insert(playlists).values(data).returning();
+    return pl;
+  }
+  async deletePlaylist(id: number, userId: string): Promise<void> {
+    await db.delete(playlistItems).where(eq(playlistItems.playlistId, id));
+    await db.delete(playlists).where(and(eq(playlists.id, id), eq(playlists.userId, userId)));
+  }
+  async getPlaylistItems(playlistId: number): Promise<PlaylistItem[]> {
+    return db.select().from(playlistItems).where(eq(playlistItems.playlistId, playlistId)).orderBy(playlistItems.addedAt);
+  }
+  async addPlaylistItems(items: InsertPlaylistItem[]): Promise<PlaylistItem[]> {
+    if (items.length === 0) return [];
+    return db.insert(playlistItems).values(items).returning();
+  }
+  async removePlaylistItem(id: number): Promise<void> {
+    await db.delete(playlistItems).where(eq(playlistItems.id, id));
   }
 }
 

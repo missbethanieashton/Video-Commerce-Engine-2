@@ -4,14 +4,11 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Play, CheckSquare, Square, ListVideo, X, ShoppingBag } from "lucide-react";
+import { ShoppingBag, Play, Search, CheckSquare, Square, ListVideo, X } from "lucide-react";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
 
 type GlobalListing = {
   id: string;
-  videoId: string;
-  creatorId: string;
   licenseFee: string;
   listingTitle: string | null;
   category: string | null;
@@ -41,10 +38,9 @@ const CATEGORY_COLORS: Record<string, string> = {
   interiors:   "bg-stone-500/15 text-stone-600",
 };
 
-export default function Library() {
+export default function BrandLibrary() {
   const [searchQuery, setSearchQuery]             = useState("");
   const [categoryFilter, setCategoryFilter]       = useState("all");
-  const [sortMode, setSortMode]                   = useState("newest");
   const [selectedIds, setSelectedIds]             = useState<Set<string>>(new Set());
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
@@ -52,16 +48,12 @@ export default function Library() {
     queryKey: ["/api/library"],
   });
 
-  const filtered = listings
-    .filter((l) => {
-      const title = (l.listingTitle || l.video?.title || "").toLowerCase();
-      const matchSearch = !searchQuery || title.includes(searchQuery.toLowerCase());
-      const matchCat = categoryFilter === "all" || (l.category ?? "").toLowerCase() === categoryFilter;
-      return matchSearch && matchCat;
-    })
-    .sort((a, b) =>
-      sortMode === "most_licensed" ? (b.totalLicenses ?? 0) - (a.totalLicenses ?? 0) : 0,
-    );
+  const filtered = listings.filter((l) => {
+    const title = (l.listingTitle || l.video?.title || "").toLowerCase();
+    const matchSearch = !searchQuery || title.includes(searchQuery.toLowerCase());
+    const matchCat = categoryFilter === "all" || (l.category ?? "").toLowerCase() === categoryFilter;
+    return matchSearch && matchCat;
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -74,37 +66,28 @@ export default function Library() {
   const clearSelection = () => setSelectedIds(new Set());
 
   return (
-    <div className="space-y-6 pb-28 md:pb-8">
+    <div className="space-y-6 pb-28 md:pb-8 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Global Video Library</h1>
+        <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">Global Video Library</h1>
         <p className="text-muted-foreground mt-1">
-          Discover trending videos — click cards to select, then add to a playlist.
+          Browse creator videos — click to select multiple, then add them to a branded playlist.
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search the library..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-            data-testid="input-search-library"
-          />
-        </div>
-        <Select value={sortMode} onValueChange={setSortMode}>
-          <SelectTrigger className="w-48 h-10 text-sm" data-testid="select-sort-library">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest first</SelectItem>
-            <SelectItem value="most_licensed">Most licensed</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search videos..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+          data-testid="input-search-library"
+        />
       </div>
 
-      <div className="flex flex-wrap gap-2" data-testid="library-category-filters">
+      {/* Category pills */}
+      <div className="flex flex-wrap gap-2" data-testid="brand-library-category-filters">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
@@ -121,8 +104,9 @@ export default function Library() {
         ))}
       </div>
 
+      {/* Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
               <Skeleton className="h-40 w-full rounded-t-lg" />
@@ -140,11 +124,11 @@ export default function Library() {
           <CardDescription>
             {searchQuery || categoryFilter !== "all"
               ? "No videos match your search or filter."
-              : "The library is currently empty. Check back soon!"}
+              : "The library is currently empty."}
           </CardDescription>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((listing) => {
             const isSelected = selectedIds.has(listing.id);
             const cat = (listing.category ?? "").toLowerCase();

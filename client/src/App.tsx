@@ -29,6 +29,8 @@ import BrandCampaigns from "@/pages/brand-campaigns";
 import BrandCampaignDetail from "@/pages/brand-campaign-detail";
 import BrandKit from "@/pages/brand-kit";
 import AffiliateLibrary from "@/pages/affiliate-library";
+import BrandLibrary from "@/pages/brand-library";
+import PlaylistsPage from "@/pages/playlists";
 import AffiliateCampaigns from "@/pages/affiliate-campaigns";
 import AffiliateSettings from "@/pages/affiliate-settings";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
@@ -52,6 +54,7 @@ function CreatorRouter() {
       <Route path="/creator" component={Dashboard} />
       <Route path="/creator/my-videos" component={MyVideos} />
       <Route path="/creator/library" component={Library} />
+      <Route path="/creator/playlists" component={PlaylistsPage} />
       <Route path="/creator/analytics" component={Analytics} />
       <Route path="/creator/crm" component={CRMAnalytics} />
       <Route path="/creator/affiliates" component={Affiliates} />
@@ -84,6 +87,8 @@ function BrandRouter() {
       <Route path="/brand/settings/payout" component={BrandSettingsPayout} />
       <Route path="/brand/settings/billing-address" component={BrandSettingsBillingAddress} />
       <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
+      <Route path="/brand/library" component={BrandLibrary} />
+      <Route path="/brand/playlists" component={PlaylistsPage} />
       <Route path="/brand/brand-kit" component={BrandKit} />
       <Route path="/brand/mailbox" component={Mailbox} />
       <Route path="/brand/help" component={Help} />
@@ -100,6 +105,7 @@ function AffiliateRouter() {
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
       <Route path="/affiliate/settings" component={AffiliateSettings} />
+      <Route path="/affiliate/playlists" component={PlaylistsPage} />
       <Route path="/affiliate/brand-kit" component={BrandKit} />
       <Route path="/affiliate/mailbox" component={Mailbox} />
       <Route path="/affiliate/help" component={Help} />

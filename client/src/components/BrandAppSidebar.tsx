@@ -11,6 +11,8 @@ import {
   Target,
   Bell,
   Palette,
+  Library,
+  ListVideo,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,6 +41,8 @@ const inventoryItems = [
 const creatorsItems = [
   { path: "/brand/creators", label: "Connect Your Creators", icon: Users },
   { path: "/brand/campaigns", label: "Campaigns", icon: Target },
+  { path: "/brand/library", label: "Video Library", icon: Library },
+  { path: "/brand/playlists", label: "My Playlists", icon: ListVideo },
 ];
 
 const analyticsItems = [

@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingBag, Play, Search, DollarSign, Users } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { ShoppingBag, Play, Search, CheckSquare, Square, ListVideo, X, DollarSign, Users } from "lucide-react";
+import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
 
 type GlobalListing = {
   id: string;
@@ -17,15 +17,8 @@ type GlobalListing = {
   listingDescription: string | null;
   category: string | null;
   totalLicenses: number;
-  video: {
-    id: string;
-    title: string;
-    thumbnailUrl: string | null;
-  } | null;
-  creator: {
-    displayName: string;
-    avatarUrl: string | null;
-  } | null;
+  video: { id: string; title: string; thumbnailUrl: string | null } | null;
+  creator: { displayName: string; avatarUrl: string | null } | null;
 };
 
 const CATEGORIES = [
@@ -50,8 +43,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function AffiliateLibrary() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery]             = useState("");
+  const [categoryFilter, setCategoryFilter]       = useState("all");
+  const [selectedIds, setSelectedIds]             = useState<Set<string>>(new Set());
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const { data: listings = [], isLoading } = useQuery<GlobalListing[]>({
     queryKey: ["/api/library"],
@@ -68,14 +63,24 @@ export default function AffiliateLibrary() {
     return matchesSearch && matchesCategory;
   });
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto pb-28 md:pb-8">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">
           Global Video Library
         </h1>
         <p className="text-muted-foreground">
-          Browse and license videos from top creators. Pay once, earn commissions on every sale.
+          Browse and license videos from top creators — click to select, then add to a playlist.
         </p>
       </div>
 
@@ -138,22 +143,33 @@ export default function AffiliateLibrary() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredListings.map((listing) => {
+            const isSelected = selectedIds.has(listing.id);
             const cat = (listing.category ?? "").toLowerCase();
             const badgeClass = CATEGORY_COLORS[cat] ?? "bg-muted text-muted-foreground";
+            const title = listing.listingTitle || listing.video?.title || "Untitled Video";
             return (
-              <Card key={listing.id} className="overflow-hidden" data-testid={`card-listing-${listing.id}`}>
+              <Card
+                key={listing.id}
+                className={`overflow-hidden cursor-pointer transition-all ${
+                  isSelected ? "ring-2 ring-primary shadow-md" : "hover:shadow-md"
+                }`}
+                data-testid={`card-listing-${listing.id}`}
+                onClick={() => toggleSelect(listing.id)}
+              >
                 <div className="relative aspect-video bg-muted">
                   {listing.video?.thumbnailUrl ? (
-                    <img
-                      src={listing.video.thumbnailUrl}
-                      alt={listing.video.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={listing.video.thumbnailUrl} alt={title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Play className="w-12 h-12 text-muted-foreground" />
                     </div>
                   )}
+                  {/* Selection indicator */}
+                  <div className="absolute top-2 left-2">
+                    {isSelected
+                      ? <CheckSquare className="h-5 w-5 text-primary drop-shadow-md" />
+                      : <Square className="h-5 w-5 text-white/80 drop-shadow-md" />}
+                  </div>
                   {listing.category && (
                     <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
                       {CATEGORIES.find((c) => c.value === cat)?.label ?? listing.category}
@@ -161,14 +177,10 @@ export default function AffiliateLibrary() {
                   )}
                 </div>
                 <CardHeader>
-                  <CardTitle className="text-lg line-clamp-1">
-                    {listing.listingTitle || listing.video?.title || "Untitled Video"}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2">
-                    <span>by {listing.creator?.displayName || "Unknown Creator"}</span>
-                  </CardDescription>
+                  <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
+                  <CardDescription>by {listing.creator?.displayName || "Unknown Creator"}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <div className="px-6 pb-4">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Users className="w-4 h-4" />
@@ -179,8 +191,8 @@ export default function AffiliateLibrary() {
                       <span>{listing.licenseFee}</span>
                     </div>
                   </div>
-                </CardContent>
-                <CardFooter>
+                </div>
+                <CardFooter onClick={(e) => e.stopPropagation()}>
                   <Button className="w-full" data-testid={`button-license-${listing.id}`}>
                     License Video
                   </Button>
@@ -190,6 +202,37 @@ export default function AffiliateLibrary() {
           })}
         </div>
       )}
+
+      {/* Floating action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-popover border border-border shadow-xl rounded-full px-5 py-3">
+          <span className="text-sm font-medium whitespace-nowrap">
+            {selectedIds.size} video{selectedIds.size !== 1 ? "s" : ""} selected
+          </span>
+          <Button
+            size="sm"
+            className="rounded-full gap-1.5 h-8"
+            data-testid="button-add-to-playlist"
+            onClick={(e) => { e.stopPropagation(); setShowPlaylistModal(true); }}
+          >
+            <ListVideo className="h-3.5 w-3.5" />
+            Add to Playlist
+          </Button>
+          <button
+            onClick={clearSelection}
+            className="p-1 rounded-full hover:bg-muted text-muted-foreground"
+            data-testid="button-clear-selection"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      <AddToPlaylistModal
+        open={showPlaylistModal}
+        onClose={() => { setShowPlaylistModal(false); clearSelection(); }}
+        selectedListingIds={Array.from(selectedIds)}
+      />
     </div>
   );
 }
