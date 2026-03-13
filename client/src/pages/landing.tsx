@@ -16,6 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
 import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import bagCartImage from "@assets/bag_cart_1773417992382.png";
+import celineBagImage from "@assets/celine_bag_1773420370038.png";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
@@ -1245,6 +1246,57 @@ export default function Landing() {
             className="absolute bottom-8 left-1/2 -translate-x-1/2"
           >
             <ChevronDown className="w-8 h-8 text-white/60 animate-bounce" />
+          </motion.div>
+
+          {/* Floating Celine product card */}
+          <motion.div
+            initial={{ opacity: 0, x: 60, y: 20 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ delay: 1.6, duration: 0.9, ease: "easeOut" }}
+            className="absolute right-4 md:right-14 bottom-20 md:bottom-28 z-30"
+          >
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <a
+                href="https://www.celine.com/en-us/celine-shop-women/handbags/luggage/little-luggage-in-supple-shiny-lambskin-124213GW2.38NO.html?utm_source=google&utm_medium=cpc&utm_content=brand&utm_campaign=Celine_FLG_USA_PLA-ROAS_UNI_MUL_OGOING_EC_SHOP_GSHO_CRD_ENG_USD_NAPP_NAMER&gad_source=1&gad_campaignid=1967889563&gbraid=0AAAAACy3BrUR7lpoRa4RGLZsSi5GjmurM&gclid=CjwKCAjw687NBhB4EiwAQ645du4KCYfGj5HR2GwL_eGWWGT6zv2O2E7stnYZBULz2xtfBQdd7l8RuRoCnCMQAvD_BwE"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block no-underline"
+                style={{ width: "clamp(140px, 18vw, 188px)" }}
+              >
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: "rgba(0,0,0,0.52)",
+                    backdropFilter: "blur(14px)",
+                    border: "1px solid rgba(255,255,255,0.13)",
+                    boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <div className="p-3">
+                    <img
+                      src={celineBagImage}
+                      alt="Celine Little Luggage Lambskin"
+                      className="w-full rounded-xl"
+                      style={{ aspectRatio: "1/1", objectFit: "contain", background: "transparent" }}
+                    />
+                    <div className="mt-2.5 space-y-0.5">
+                      <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">Celine Paris</div>
+                      <div className="text-white text-[11px] font-semibold leading-tight">Little Luggage</div>
+                      <div className="text-white font-bold text-base leading-tight">$3,600</div>
+                    </div>
+                    <div
+                      className="mt-2.5 w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                      style={{ background: "rgba(255,255,255,0.92)" }}
+                    >
+                      BUY NOW
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </motion.div>
           </motion.div>
         </div>
       </section>
