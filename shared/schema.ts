@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, numeric, serial, timestamp, boolean, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -712,6 +712,89 @@ export const subscriberIntakes = pgTable("subscriber_intakes", {
 export const insertSubscriberIntakeSchema = createInsertSchema(subscriberIntakes).omit({ id: true, createdAt: true });
 export type InsertSubscriberIntake = z.infer<typeof insertSubscriberIntakeSchema>;
 export type SubscriberIntake = typeof subscriberIntakes.$inferSelect;
+
+// ─── Brand Billing & Account Tables ─────────────────────────────────────────
+
+// Brand Subscriptions
+export const brandSubscriptions = pgTable("brand_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  plan: text("plan").notNull().default("starter"),
+  status: text("status").notNull().default("active"),
+  subscribedAt: timestamp("subscribed_at").default(sql`CURRENT_TIMESTAMP`),
+  currentPeriodEnd: timestamp("current_period_end"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+});
+export const insertBrandSubscriptionSchema = createInsertSchema(brandSubscriptions).omit({ id: true });
+export type InsertBrandSubscription = z.infer<typeof insertBrandSubscriptionSchema>;
+export type BrandSubscription = typeof brandSubscriptions.$inferSelect;
+
+// Brand Billing Records (invoices + transactions)
+export const brandBillingRecords = pgTable("brand_billing_records", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // "invoice" | "payout" | "payment"
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("EUR"),
+  status: text("status").notNull().default("pending"), // "paid" | "pending" | "failed"
+  description: text("description"),
+  reference: text("reference"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+export const insertBrandBillingRecordSchema = createInsertSchema(brandBillingRecords).omit({ id: true, createdAt: true });
+export type InsertBrandBillingRecord = z.infer<typeof insertBrandBillingRecordSchema>;
+export type BrandBillingRecord = typeof brandBillingRecords.$inferSelect;
+
+// Brand Payout Methods
+export const brandPayoutMethods = pgTable("brand_payout_methods", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  type: text("type").notNull().default("bank_transfer"), // "bank_transfer" | "paypal" | "stripe"
+  bankName: text("bank_name"),
+  accountLast4: text("account_last4"),
+  iban: text("iban"),
+  bic: text("bic"),
+  paypalEmail: text("paypal_email"),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+export const insertBrandPayoutMethodSchema = createInsertSchema(brandPayoutMethods).omit({ id: true, updatedAt: true });
+export type InsertBrandPayoutMethod = z.infer<typeof insertBrandPayoutMethodSchema>;
+export type BrandPayoutMethod = typeof brandPayoutMethods.$inferSelect;
+
+// Brand Billing Profiles (address + business info)
+export const brandBillingProfiles = pgTable("brand_billing_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  companyName: text("company_name"),
+  vatNumber: text("vat_number"),
+  addressLine1: text("address_line1"),
+  addressLine2: text("address_line2"),
+  city: text("city"),
+  state: text("state"),
+  postalCode: text("postal_code"),
+  country: text("country"),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+export const insertBrandBillingProfileSchema = createInsertSchema(brandBillingProfiles).omit({ id: true, updatedAt: true });
+export type InsertBrandBillingProfile = z.infer<typeof insertBrandBillingProfileSchema>;
+export type BrandBillingProfile = typeof brandBillingProfiles.$inferSelect;
+
+// Brand API Keys
+export const brandApiKeys = pgTable("brand_api_keys", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  keyPrefix: text("key_prefix").notNull(),
+  keyHash: text("key_hash").notNull(),
+  isActive: boolean("is_active").default(true),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+export const insertBrandApiKeySchema = createInsertSchema(brandApiKeys).omit({ id: true, createdAt: true, lastUsedAt: true });
+export type InsertBrandApiKey = z.infer<typeof insertBrandApiKeySchema>;
+export type BrandApiKey = typeof brandApiKeys.$inferSelect;
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Country list for dropdown
 export const COUNTRIES = [

@@ -37,6 +37,12 @@ import Rewards from "@/pages/rewards";
 import Profile from "@/pages/profile";
 import BrandAuthorize from "@/pages/brand-authorize";
 import AdminPipeline from "@/pages/admin-pipeline";
+import BrandSettingsSubscription from "@/pages/brand-settings-subscription";
+import BrandSettingsBillingHistory from "@/pages/brand-settings-billing-history";
+import BrandSettingsTransactions from "@/pages/brand-settings-transactions";
+import BrandSettingsPayout from "@/pages/brand-settings-payout";
+import BrandSettingsBillingAddress from "@/pages/brand-settings-billing-address";
+import BrandSettingsApiKey from "@/pages/brand-settings-api-key";
 
 function CreatorRouter() {
   return (
@@ -68,6 +74,12 @@ function BrandRouter() {
       <Route path="/brand/campaigns" component={BrandCampaigns} />
       <Route path="/brand/profile" component={Profile} />
       <Route path="/brand/settings" component={More} />
+      <Route path="/brand/settings/subscription" component={BrandSettingsSubscription} />
+      <Route path="/brand/settings/billing-history" component={BrandSettingsBillingHistory} />
+      <Route path="/brand/settings/transactions" component={BrandSettingsTransactions} />
+      <Route path="/brand/settings/payout" component={BrandSettingsPayout} />
+      <Route path="/brand/settings/billing-address" component={BrandSettingsBillingAddress} />
+      <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
       <Route path="/brand/help" component={Help} />
       <Route component={NotFound} />
     </Switch>

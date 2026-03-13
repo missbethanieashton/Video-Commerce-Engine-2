@@ -17,6 +17,11 @@ import {
   insertUserProfileSchema,
   insertCreatorRewardSchema,
   insertBrandOutreachSchema,
+  insertBrandSubscriptionSchema,
+  insertBrandBillingRecordSchema,
+  insertBrandPayoutMethodSchema,
+  insertBrandBillingProfileSchema,
+  insertBrandApiKeySchema,
   VIDEO_CATEGORY_OPTIONS,
 } from "@shared/schema";
 import { z } from "zod";
@@ -2020,6 +2025,128 @@ export async function registerRoutes(
   app.get("/api/video-categories", async (req, res) => {
     res.json(VIDEO_CATEGORY_OPTIONS);
   });
+
+  // ─── Brand Billing & Account Routes ─────────────────────────────────────────
+
+  // Subscription
+  app.get("/api/brand/subscription", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const sub = await storage.getBrandSubscription(userId);
+      res.json(sub || null);
+    } catch (e) { res.status(500).json({ error: "Failed to fetch subscription" }); }
+  });
+
+  app.put("/api/brand/subscription", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const parsed = insertBrandSubscriptionSchema.parse({ ...req.body, userId });
+      const sub = await storage.upsertBrandSubscription(parsed);
+      res.json(sub);
+    } catch (e) { res.status(400).json({ error: "Invalid data" }); }
+  });
+
+  // Billing records (history + transactions)
+  app.get("/api/brand/billing-records", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const type = req.query.type as string | undefined;
+      const records = await storage.getBrandBillingRecords(userId, type);
+      res.json(records);
+    } catch (e) { res.status(500).json({ error: "Failed to fetch billing records" }); }
+  });
+
+  app.post("/api/brand/billing-records", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const parsed = insertBrandBillingRecordSchema.parse({ ...req.body, userId });
+      const record = await storage.createBrandBillingRecord(parsed);
+      res.json(record);
+    } catch (e) { res.status(400).json({ error: "Invalid data" }); }
+  });
+
+  // Payout method
+  app.get("/api/brand/payout-method", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const method = await storage.getBrandPayoutMethod(userId);
+      res.json(method || null);
+    } catch (e) { res.status(500).json({ error: "Failed to fetch payout method" }); }
+  });
+
+  app.put("/api/brand/payout-method", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const parsed = insertBrandPayoutMethodSchema.parse({ ...req.body, userId });
+      const method = await storage.upsertBrandPayoutMethod(parsed);
+      res.json(method);
+    } catch (e) { res.status(400).json({ error: "Invalid data" }); }
+  });
+
+  // Billing profile (address + business info)
+  app.get("/api/brand/billing-profile", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const profile = await storage.getBrandBillingProfile(userId);
+      res.json(profile || null);
+    } catch (e) { res.status(500).json({ error: "Failed to fetch billing profile" }); }
+  });
+
+  app.put("/api/brand/billing-profile", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const parsed = insertBrandBillingProfileSchema.parse({ ...req.body, userId });
+      const profile = await storage.upsertBrandBillingProfile(parsed);
+      res.json(profile);
+    } catch (e) { res.status(400).json({ error: "Invalid data" }); }
+  });
+
+  // API Keys
+  app.get("/api/brand/api-keys", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const keys = await storage.getBrandApiKeys(userId);
+      res.json(keys);
+    } catch (e) { res.status(500).json({ error: "Failed to fetch API keys" }); }
+  });
+
+  app.post("/api/brand/api-keys", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { name } = req.body;
+      if (!name) return res.status(400).json({ error: "Key name required" });
+      const rawKey = `mat_${crypto.randomUUID().replace(/-/g, "")}`;
+      const prefix = rawKey.slice(0, 12);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(rawKey);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const keyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      const key = await storage.createBrandApiKey({ userId, name, keyPrefix: prefix, keyHash, isActive: true });
+      res.json({ ...key, rawKey });
+    } catch (e) { res.status(400).json({ error: "Failed to create API key" }); }
+  });
+
+  app.delete("/api/brand/api-keys/:id", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      await storage.revokeBrandApiKey(Number(req.params.id), userId);
+      res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Failed to revoke key" }); }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return httpServer;
 }

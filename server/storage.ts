@@ -28,6 +28,11 @@ import {
   type EmbedDeployment, type InsertEmbedDeployment,
   type CommissionTransaction, type InsertCommissionTransaction,
   type BrandOutreach, type InsertBrandOutreach,
+  type BrandSubscription, type InsertBrandSubscription,
+  type BrandBillingRecord, type InsertBrandBillingRecord,
+  type BrandPayoutMethod, type InsertBrandPayoutMethod,
+  type BrandBillingProfile, type InsertBrandBillingProfile,
+  type BrandApiKey, type InsertBrandApiKey,
   insertCreatorInvitationSchema,
   users,
   brands,
@@ -55,6 +60,11 @@ import {
   embedDeployments,
   commissionTransactions,
   brandOutreachRequests,
+  brandSubscriptions,
+  brandBillingRecords,
+  brandPayoutMethods,
+  brandBillingProfiles,
+  brandApiKeys,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -237,6 +247,19 @@ export interface IStorage {
   
   // UTM Resolution
   resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null>;
+
+  // Brand Billing & Account
+  getBrandSubscription(userId: string): Promise<BrandSubscription | undefined>;
+  upsertBrandSubscription(data: InsertBrandSubscription): Promise<BrandSubscription>;
+  getBrandBillingRecords(userId: string, type?: string): Promise<BrandBillingRecord[]>;
+  createBrandBillingRecord(data: InsertBrandBillingRecord): Promise<BrandBillingRecord>;
+  getBrandPayoutMethod(userId: string): Promise<BrandPayoutMethod | undefined>;
+  upsertBrandPayoutMethod(data: InsertBrandPayoutMethod): Promise<BrandPayoutMethod>;
+  getBrandBillingProfile(userId: string): Promise<BrandBillingProfile | undefined>;
+  upsertBrandBillingProfile(data: InsertBrandBillingProfile): Promise<BrandBillingProfile>;
+  getBrandApiKeys(userId: string): Promise<BrandApiKey[]>;
+  createBrandApiKey(data: InsertBrandApiKey): Promise<BrandApiKey>;
+  revokeBrandApiKey(id: number, userId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1438,6 +1461,58 @@ export class MemStorage implements IStorage {
 
     return null;
   }
+
+  // Brand Billing & Account — MemStorage stubs (in-memory maps)
+  private brandSubscriptionsMap: Map<string, BrandSubscription> = new Map();
+  private brandBillingRecordsList: BrandBillingRecord[] = [];
+  private brandPayoutMethodsMap: Map<string, BrandPayoutMethod> = new Map();
+  private brandBillingProfilesMap: Map<string, BrandBillingProfile> = new Map();
+  private brandApiKeysList: BrandApiKey[] = [];
+
+  async getBrandSubscription(userId: string): Promise<BrandSubscription | undefined> {
+    return this.brandSubscriptionsMap.get(userId);
+  }
+  async upsertBrandSubscription(data: InsertBrandSubscription): Promise<BrandSubscription> {
+    const sub: BrandSubscription = { id: Date.now(), ...data } as any;
+    this.brandSubscriptionsMap.set(data.userId, sub);
+    return sub;
+  }
+  async getBrandBillingRecords(userId: string, type?: string): Promise<BrandBillingRecord[]> {
+    return this.brandBillingRecordsList.filter(r => r.userId === userId && (!type || r.type === type));
+  }
+  async createBrandBillingRecord(data: InsertBrandBillingRecord): Promise<BrandBillingRecord> {
+    const record: BrandBillingRecord = { id: Date.now(), createdAt: new Date(), ...data } as any;
+    this.brandBillingRecordsList.push(record);
+    return record;
+  }
+  async getBrandPayoutMethod(userId: string): Promise<BrandPayoutMethod | undefined> {
+    return this.brandPayoutMethodsMap.get(userId);
+  }
+  async upsertBrandPayoutMethod(data: InsertBrandPayoutMethod): Promise<BrandPayoutMethod> {
+    const method: BrandPayoutMethod = { id: Date.now(), updatedAt: new Date(), ...data } as any;
+    this.brandPayoutMethodsMap.set(data.userId, method);
+    return method;
+  }
+  async getBrandBillingProfile(userId: string): Promise<BrandBillingProfile | undefined> {
+    return this.brandBillingProfilesMap.get(userId);
+  }
+  async upsertBrandBillingProfile(data: InsertBrandBillingProfile): Promise<BrandBillingProfile> {
+    const profile: BrandBillingProfile = { id: Date.now(), updatedAt: new Date(), ...data } as any;
+    this.brandBillingProfilesMap.set(data.userId, profile);
+    return profile;
+  }
+  async getBrandApiKeys(userId: string): Promise<BrandApiKey[]> {
+    return this.brandApiKeysList.filter(k => k.userId === userId && k.isActive);
+  }
+  async createBrandApiKey(data: InsertBrandApiKey): Promise<BrandApiKey> {
+    const key: BrandApiKey = { id: Date.now(), createdAt: new Date(), lastUsedAt: null, ...data } as any;
+    this.brandApiKeysList.push(key);
+    return key;
+  }
+  async revokeBrandApiKey(id: number, userId: string): Promise<void> {
+    const key = this.brandApiKeysList.find(k => k.id === id && k.userId === userId);
+    if (key) key.isActive = false;
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -2075,6 +2150,73 @@ export class DatabaseStorage implements IStorage {
     }
 
     return null;
+  }
+
+  // Brand Billing & Account — DatabaseStorage implementations
+  async getBrandSubscription(userId: string): Promise<BrandSubscription | undefined> {
+    const [sub] = await db.select().from(brandSubscriptions).where(eq(brandSubscriptions.userId, userId));
+    return sub;
+  }
+  async upsertBrandSubscription(data: InsertBrandSubscription): Promise<BrandSubscription> {
+    const [existing] = await db.select().from(brandSubscriptions).where(eq(brandSubscriptions.userId, data.userId));
+    if (existing) {
+      const [updated] = await db.update(brandSubscriptions).set(data).where(eq(brandSubscriptions.userId, data.userId)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(brandSubscriptions).values(data).returning();
+    return created;
+  }
+  async getBrandBillingRecords(userId: string, type?: string): Promise<BrandBillingRecord[]> {
+    if (type) {
+      return db.select().from(brandBillingRecords)
+        .where(eq(brandBillingRecords.userId, userId))
+        .orderBy(desc(brandBillingRecords.createdAt));
+    }
+    return db.select().from(brandBillingRecords)
+      .where(eq(brandBillingRecords.userId, userId))
+      .orderBy(desc(brandBillingRecords.createdAt));
+  }
+  async createBrandBillingRecord(data: InsertBrandBillingRecord): Promise<BrandBillingRecord> {
+    const [record] = await db.insert(brandBillingRecords).values(data).returning();
+    return record;
+  }
+  async getBrandPayoutMethod(userId: string): Promise<BrandPayoutMethod | undefined> {
+    const [method] = await db.select().from(brandPayoutMethods).where(eq(brandPayoutMethods.userId, userId));
+    return method;
+  }
+  async upsertBrandPayoutMethod(data: InsertBrandPayoutMethod): Promise<BrandPayoutMethod> {
+    const [existing] = await db.select().from(brandPayoutMethods).where(eq(brandPayoutMethods.userId, data.userId));
+    if (existing) {
+      const [updated] = await db.update(brandPayoutMethods).set({ ...data, updatedAt: new Date() }).where(eq(brandPayoutMethods.userId, data.userId)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(brandPayoutMethods).values(data).returning();
+    return created;
+  }
+  async getBrandBillingProfile(userId: string): Promise<BrandBillingProfile | undefined> {
+    const [profile] = await db.select().from(brandBillingProfiles).where(eq(brandBillingProfiles.userId, userId));
+    return profile;
+  }
+  async upsertBrandBillingProfile(data: InsertBrandBillingProfile): Promise<BrandBillingProfile> {
+    const [existing] = await db.select().from(brandBillingProfiles).where(eq(brandBillingProfiles.userId, data.userId));
+    if (existing) {
+      const [updated] = await db.update(brandBillingProfiles).set({ ...data, updatedAt: new Date() }).where(eq(brandBillingProfiles.userId, data.userId)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(brandBillingProfiles).values(data).returning();
+    return created;
+  }
+  async getBrandApiKeys(userId: string): Promise<BrandApiKey[]> {
+    return db.select().from(brandApiKeys)
+      .where(eq(brandApiKeys.userId, userId))
+      .orderBy(desc(brandApiKeys.createdAt));
+  }
+  async createBrandApiKey(data: InsertBrandApiKey): Promise<BrandApiKey> {
+    const [key] = await db.insert(brandApiKeys).values(data).returning();
+    return key;
+  }
+  async revokeBrandApiKey(id: number, userId: string): Promise<void> {
+    await db.update(brandApiKeys).set({ isActive: false }).where(eq(brandApiKeys.id, id));
   }
 }
 
