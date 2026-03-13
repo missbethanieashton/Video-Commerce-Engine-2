@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
@@ -291,7 +292,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="px-4 bg-[#202120]" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
+    <section className="relative px-4 bg-[#202120]" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -312,6 +313,24 @@ function StatsSection() {
           Shoppable video has existed for more than a decade. Materialized has built an affiliate eco-system that rewards reposts, where content provides multi-layered revenues and impact
         </motion.p>
       </div>
+
+      {/* Star icon — bottom right corner */}
+      <motion.img
+        src={starIcon}
+        alt="Materialized star"
+        initial={{ opacity: 0, scale: 0.7, rotate: -15 }}
+        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+        whileHover={{
+          scale: 1.15,
+          rotate: 20,
+          filter: "drop-shadow(0 0 18px rgba(200,200,200,0.6))",
+          transition: { duration: 0.3, ease: "easeInOut" },
+        }}
+        className="absolute bottom-6 right-6 md:bottom-10 md:right-10 w-20 h-20 md:w-28 md:h-28 object-contain cursor-pointer select-none"
+        style={{ mixBlendMode: "screen" }}
+      />
     </section>
   );
 }
