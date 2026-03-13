@@ -1,47 +1,42 @@
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import type { User } from "@shared/schema";
 import {
-  Users,
-  BarChart3,
-  Target,
-  HelpCircle,
-  Settings,
+  UserPen,
+  CalendarDays,
+  Receipt,
+  ArrowLeftRight,
+  Wallet,
+  Building2,
+  KeyRound,
   LogOut,
   ChevronRight,
-  Bell,
-  Shield,
-  CreditCard,
-  Moon,
 } from "lucide-react";
 
-const brandMenuItems = [
-  { path: "/brand/campaigns", label: "Campaigns", icon: Target },
-  { path: "/brand/analytics", label: "Analytics", icon: BarChart3 },
-  { path: "/brand/creators", label: "Creator Network", icon: Users },
-  { path: "/brand/help", label: "Help Center", icon: HelpCircle },
+// ─── Hardcoded Brand Profile menu sections ────────────────────────────────────
+const profileSection = [
+  { label: "Edit Profile",                icon: UserPen,          path: "/brand/profile" },
 ];
 
-const creatorMenuItems = [
-  { path: "/creator/crm", label: "CRM Analytics", icon: BarChart3 },
-  { path: "/creator/referrals", label: "Brand Referrals", icon: Target },
-  { path: "/creator/help", label: "Help Center", icon: HelpCircle },
+const billingSection = [
+  { label: "Subscription Information",    icon: CalendarDays,     path: "/brand/settings/subscription" },
+  { label: "Billing History",             icon: Receipt,          path: "/brand/settings/billing-history" },
+  { label: "Transaction History",         icon: ArrowLeftRight,   path: "/brand/settings/transactions" },
+  { label: "Payout Method",              icon: Wallet,           path: "/brand/settings/payout" },
+  { label: "Billing Address & Business",  icon: Building2,        path: "/brand/settings/billing-address" },
 ];
 
-const settingsItems = [
-  { label: "Notifications", icon: Bell },
-  { label: "Privacy & Security", icon: Shield },
-  { label: "Billing & Payments", icon: CreditCard },
-  { label: "Account Settings", icon: Settings },
+const developerSection = [
+  { label: "API Key",                     icon: KeyRound,         path: "/brand/settings/api-key" },
 ];
+// ─────────────────────────────────────────────────────────────────────────────
 
 function getInitials(name?: string): string {
-  if (!name) return "U";
+  if (!name) return "B";
   return name
     .split(/\s+/)
     .map((w) => w[0])
@@ -50,30 +45,35 @@ function getInitials(name?: string): string {
     .slice(0, 2);
 }
 
-function getRoleLabel(role?: string): string {
-  switch (role) {
-    case "brand":
-      return "Brand";
-    case "creator":
-      return "Creator";
-    case "affiliate":
-      return "Publisher";
-    default:
-      return "User";
-  }
-}
-
-function getProfilePath(role?: string): string {
-  switch (role) {
-    case "brand":
-      return "/brand/profile";
-    case "creator":
-      return "/creator/profile";
-    case "affiliate":
-      return "/affiliate/profile";
-    default:
-      return "/brand/profile";
-  }
+function MenuRow({
+  label,
+  icon: Icon,
+  path,
+  testId,
+  last = false,
+}: {
+  label: string;
+  icon: React.ElementType;
+  path: string;
+  testId: string;
+  last?: boolean;
+}) {
+  return (
+    <Link href={path}>
+      <div
+        className={`flex items-center gap-4 px-4 py-3.5 hover-elevate cursor-pointer ${
+          !last ? "border-b border-border" : ""
+        }`}
+        data-testid={testId}
+      >
+        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <span className="flex-1 text-sm font-medium">{label}</span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </div>
+    </Link>
+  );
 }
 
 export default function More() {
@@ -84,20 +84,19 @@ export default function More() {
   });
 
   const displayName = user?.displayName || "Demo Brand";
-  const username = user?.username || "brand-account";
-  const role = user?.role || "brand";
-  const initials = getInitials(displayName);
-  const menuItems = role === "brand" ? brandMenuItems : creatorMenuItems;
+  const username    = user?.username    || "brand-account";
+  const initials    = getInitials(displayName);
 
   return (
-    <div className="space-y-6 pb-24 md:pb-6">
+    <div className="space-y-6 pb-24 md:pb-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-settings-title">Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your account and preferences
-        </p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-settings-title">
+          Profile &amp; Settings
+        </h1>
+        <p className="text-muted-foreground mt-1">Manage your account, billing, and developer access</p>
       </div>
 
+      {/* ── Profile card ── */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
@@ -107,16 +106,22 @@ export default function More() {
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg" data-testid="text-display-name">{displayName}</h3>
-              <p className="text-sm text-muted-foreground" data-testid="text-username">{username}</p>
-              <Badge className="mt-2" data-testid="badge-role">{getRoleLabel(role)}</Badge>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg leading-tight truncate" data-testid="text-display-name">
+                {displayName}
+              </h3>
+              <p className="text-sm text-muted-foreground truncate" data-testid="text-username">
+                {username}
+              </p>
+              <Badge className="mt-2 bg-chart-2 hover:bg-chart-2/90" data-testid="badge-role">
+                Brand
+              </Badge>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full"
-              onClick={() => navigate(getProfilePath(role))}
+              className="rounded-full shrink-0"
+              onClick={() => navigate("/brand/profile")}
               data-testid="button-edit-profile"
             >
               Edit Profile
@@ -125,55 +130,75 @@ export default function More() {
         </CardContent>
       </Card>
 
+      {/* ── Profile section ── */}
       <Card>
-        <CardContent className="p-0">
-          {menuItems.map((item, index) => (
-            <Link key={item.path} href={item.path}>
-              <div
-                className={`flex items-center gap-4 p-4 hover-elevate cursor-pointer ${
-                  index !== menuItems.length - 1 ? "border-b border-border" : ""
-                }`}
-                data-testid={`link-menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                  <item.icon className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <span className="flex-1 font-medium">{item.label}</span>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </Link>
+        <CardHeader className="px-4 pt-4 pb-1">
+          <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+            Profile
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 pb-1">
+          {profileSection.map((item, i) => (
+            <MenuRow
+              key={item.path}
+              label={item.label}
+              icon={item.icon}
+              path={item.path}
+              testId={`link-profile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+              last={i === profileSection.length - 1}
+            />
           ))}
         </CardContent>
       </Card>
 
+      {/* ── Billing & Subscription section ── */}
       <Card>
-        <CardContent className="p-0">
-          <div className="flex items-center gap-4 p-4 border-b border-border">
-            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-              <Moon className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <span className="flex-1 font-medium">Dark Mode</span>
-            <ThemeToggle />
-          </div>
-          
-          {settingsItems.map((item, index) => (
-            <div 
-              key={item.label}
-              className={`flex items-center gap-4 p-4 hover-elevate cursor-pointer ${
-                index !== settingsItems.length - 1 ? "border-b border-border" : ""
-              }`}
-            >
-              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                <item.icon className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <span className="flex-1 font-medium">{item.label}</span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
+        <CardHeader className="px-4 pt-4 pb-1">
+          <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+            Billing &amp; Subscription
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 pb-1">
+          {billingSection.map((item, i) => (
+            <MenuRow
+              key={item.path}
+              label={item.label}
+              icon={item.icon}
+              path={item.path}
+              testId={`link-billing-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+              last={i === billingSection.length - 1}
+            />
           ))}
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" data-testid="button-sign-out">
+      {/* ── Developer section ── */}
+      <Card>
+        <CardHeader className="px-4 pt-4 pb-1">
+          <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+            Developer
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 pb-1">
+          {developerSection.map((item, i) => (
+            <MenuRow
+              key={item.path}
+              label={item.label}
+              icon={item.icon}
+              path={item.path}
+              testId={`link-dev-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+              last={i === developerSection.length - 1}
+            />
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* ── Sign out ── */}
+      <Button
+        variant="outline"
+        className="w-full gap-2 text-destructive hover:text-destructive"
+        data-testid="button-sign-out"
+      >
         <LogOut className="h-4 w-4" />
         Sign Out
       </Button>
