@@ -820,12 +820,19 @@ export type BrandApiKey = typeof brandApiKeys.$inferSelect;
 
 // ─── Playlists ────────────────────────────────────────────────────────────────
 
+export const playlistStatusEnum = pgEnum("playlist_status", ["draft", "pending_payment", "published"]);
+
 // Playlists — curated video collections from the Global Video Library
 export const playlists = pgTable("playlists", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  status: playlistStatusEnum("status").default("draft"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  licenseFeeTotal: decimal("license_fee_total", { precision: 10, scale: 2 }),
+  embedCode: text("embed_code"),
+  publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -842,7 +849,7 @@ export const playlistItems = pgTable("playlist_items", {
   addedAt: timestamp("added_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const insertPlaylistSchema = createInsertSchema(playlists).omit({ id: true, createdAt: true });
+export const insertPlaylistSchema = createInsertSchema(playlists).omit({ id: true, status: true, stripePaymentIntentId: true, licenseFeeTotal: true, embedCode: true, publishedAt: true, createdAt: true });
 export const insertPlaylistItemSchema = createInsertSchema(playlistItems).omit({ id: true, utmCode: true, addedAt: true });
 
 export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;

@@ -1790,6 +1790,85 @@ export async function registerRoutes(
     }
   });
 
+  // ── Playlist checkout (create Stripe payment intent) ──────────────────
+  app.post("/api/playlists/:id/checkout", async (req, res) => {
+    try {
+      const user = req.session?.userId
+        ? await storage.getUser(req.session.userId)
+        : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const playlistId = Number(req.params.id);
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist) return res.status(404).json({ error: "Playlist not found" });
+      if (playlist.userId !== user.id) return res.status(403).json({ error: "Forbidden" });
+      if (playlist.status === "published") return res.status(400).json({ error: "Playlist already published" });
+
+      const items = await storage.getPlaylistItems(playlistId);
+      if (items.length === 0) return res.status(400).json({ error: "Playlist has no videos" });
+
+      const LICENSE_FEE_PER_VIDEO = 4500; // €45.00 in cents
+      const totalCents = items.length * LICENSE_FEE_PER_VIDEO;
+
+      const paymentIntent = await stripeService.createPaymentIntent(totalCents, "eur", {
+        playlistId: String(playlistId),
+        userId: user.id,
+        videoCount: String(items.length),
+      });
+
+      const updated = await storage.updatePlaylist(playlistId, {
+        status: "pending_payment",
+        stripePaymentIntentId: paymentIntent.id,
+        licenseFeeTotal: (totalCents / 100).toFixed(2),
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        totalCents,
+        totalEur: (totalCents / 100).toFixed(2),
+        videoCount: items.length,
+        playlist: updated,
+      });
+    } catch (err) {
+      console.error("Playlist checkout error:", err);
+      res.status(500).json({ error: "Failed to create payment intent" });
+    }
+  });
+
+  // ── Confirm playlist payment → publish + generate embed code ──────────
+  app.post("/api/playlists/:id/confirm-payment", async (req, res) => {
+    try {
+      const user = req.session?.userId
+        ? await storage.getUser(req.session.userId)
+        : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const playlistId = Number(req.params.id);
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist) return res.status(404).json({ error: "Playlist not found" });
+      if (playlist.userId !== user.id) return res.status(403).json({ error: "Forbidden" });
+      if (playlist.status === "published") return res.status(400).json({ error: "Already published" });
+
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : "https://your-app.replit.dev";
+
+      const embedCode = `<div id="mat-playlist-${playlistId}" data-playlist="${playlistId}" data-user="${user.id}"></div>\n<script src="${baseUrl}/embed/playlist.js" async></script>`;
+
+      const updated = await storage.updatePlaylist(playlistId, {
+        status: "published",
+        embedCode,
+        publishedAt: new Date(),
+      });
+
+      res.json({ playlist: updated, embedCode });
+    } catch (err) {
+      console.error("Confirm payment error:", err);
+      res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
   // ==================== VIDEO LICENSE PURCHASE ROUTES ====================
 
   // Purchase license for a video from global library

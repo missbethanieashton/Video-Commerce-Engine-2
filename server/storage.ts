@@ -283,6 +283,7 @@ export interface IStorage {
   getUserPlaylists(userId: string): Promise<Playlist[]>;
   getPlaylist(id: number): Promise<Playlist | undefined>;
   createPlaylist(data: InsertPlaylist): Promise<Playlist>;
+  updatePlaylist(id: number, data: Partial<Playlist>): Promise<Playlist | undefined>;
   deletePlaylist(id: number, userId: string): Promise<void>;
   getPlaylistItems(playlistId: number): Promise<PlaylistItem[]>;
   addPlaylistItems(items: InsertPlaylistItem[]): Promise<PlaylistItem[]>;
@@ -1573,9 +1574,15 @@ export class MemStorage implements IStorage {
     return this.playlistsList.find(p => p.id === id);
   }
   async createPlaylist(data: InsertPlaylist): Promise<Playlist> {
-    const pl: Playlist = { id: Date.now(), createdAt: new Date(), ...data } as any;
+    const pl: Playlist = { id: Date.now(), createdAt: new Date(), status: "draft", stripePaymentIntentId: null, licenseFeeTotal: null, embedCode: null, publishedAt: null, ...data } as any;
     this.playlistsList.push(pl);
     return pl;
+  }
+  async updatePlaylist(id: number, data: Partial<Playlist>): Promise<Playlist | undefined> {
+    const idx = this.playlistsList.findIndex(p => p.id === id);
+    if (idx === -1) return undefined;
+    this.playlistsList[idx] = { ...this.playlistsList[idx], ...data };
+    return this.playlistsList[idx];
   }
   async deletePlaylist(id: number, userId: string): Promise<void> {
     this.playlistsList = this.playlistsList.filter(p => !(p.id === id && p.userId === userId));
@@ -2359,6 +2366,10 @@ export class DatabaseStorage implements IStorage {
   }
   async createPlaylist(data: InsertPlaylist): Promise<Playlist> {
     const [pl] = await db.insert(playlists).values(data).returning();
+    return pl;
+  }
+  async updatePlaylist(id: number, data: Partial<Playlist>): Promise<Playlist | undefined> {
+    const [pl] = await db.update(playlists).set(data).where(eq(playlists.id, id)).returning();
     return pl;
   }
   async deletePlaylist(id: number, userId: string): Promise<void> {
