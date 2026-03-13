@@ -314,22 +314,18 @@ function StatsSection() {
         </motion.p>
       </div>
 
-      {/* Star icon — bottom right corner */}
+      {/* Star icon — straddles StatsSection + TestimonialCarousel */}
       <motion.img
         src={starIcon}
         alt="Materialized star"
-        initial={{ opacity: 0, scale: 0.7, rotate: -15 }}
-        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-        whileHover={{
-          scale: 1.15,
-          rotate: 20,
-          filter: "drop-shadow(0 0 18px rgba(200,200,200,0.6))",
-          transition: { duration: 0.3, ease: "easeInOut" },
+        animate={{ y: [0, -22, 0] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-6 md:right-14 w-40 h-40 md:w-56 md:h-56 object-contain select-none pointer-events-none"
+        style={{
+          bottom: "-5rem",
+          zIndex: 20,
+          mixBlendMode: "screen",
         }}
-        className="absolute bottom-6 right-6 md:bottom-10 md:right-10 w-20 h-20 md:w-28 md:h-28 object-contain cursor-pointer select-none"
-        style={{ mixBlendMode: "screen" }}
       />
     </section>
   );
