@@ -47,6 +47,7 @@ import BrandSettingsPayout from "@/pages/brand-settings-payout";
 import BrandSettingsBillingAddress from "@/pages/brand-settings-billing-address";
 import BrandSettingsApiKey from "@/pages/brand-settings-api-key";
 import Mailbox from "@/pages/mailbox";
+import WishlistPage from "@/pages/wishlist";
 
 function CreatorRouter() {
   return (
@@ -55,6 +56,7 @@ function CreatorRouter() {
       <Route path="/creator/my-videos" component={MyVideos} />
       <Route path="/creator/library" component={Library} />
       <Route path="/creator/playlists" component={PlaylistsPage} />
+      <Route path="/creator/wishlist" component={WishlistPage} />
       <Route path="/creator/analytics" component={Analytics} />
       <Route path="/creator/crm" component={CRMAnalytics} />
       <Route path="/creator/affiliates" component={Affiliates} />
@@ -89,6 +91,7 @@ function BrandRouter() {
       <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
       <Route path="/brand/library" component={BrandLibrary} />
       <Route path="/brand/playlists" component={PlaylistsPage} />
+      <Route path="/brand/wishlist" component={WishlistPage} />
       <Route path="/brand/brand-kit" component={BrandKit} />
       <Route path="/brand/mailbox" component={Mailbox} />
       <Route path="/brand/help" component={Help} />
@@ -106,6 +109,7 @@ function AffiliateRouter() {
       <Route path="/affiliate/analytics" component={Analytics} />
       <Route path="/affiliate/settings" component={AffiliateSettings} />
       <Route path="/affiliate/playlists" component={PlaylistsPage} />
+      <Route path="/affiliate/wishlist" component={WishlistPage} />
       <Route path="/affiliate/brand-kit" component={BrandKit} />
       <Route path="/affiliate/mailbox" component={Mailbox} />
       <Route path="/affiliate/help" component={Help} />

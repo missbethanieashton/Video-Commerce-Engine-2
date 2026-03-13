@@ -2492,6 +2492,56 @@ Identify which products from the catalog are most likely to appear or be feature
     } catch (e) { res.status(500).json({ error: "Failed to revoke key" }); }
   });
 
+  // ==================== WISHLIST ROUTES ====================
+
+  app.get("/api/wishlist", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const items = await storage.getUserWishlist(userId);
+      const allListings = await storage.getGlobalVideoListings();
+      const listingMap = new Map(allListings.map(l => [l.id, l]));
+      const enriched = await Promise.all(items.map(async (item) => {
+        const listing = listingMap.get(item.globalListingId);
+        if (!listing) return null;
+        const video = listing.videoId ? await storage.getVideo(listing.videoId) : null;
+        const creator = listing.creatorId ? await storage.getUser(listing.creatorId) : null;
+        return {
+          wishlistId: item.id,
+          globalListingId: item.globalListingId,
+          addedAt: item.createdAt,
+          listing: {
+            ...listing,
+            video: video ? { id: video.id, title: video.title, thumbnailUrl: video.thumbnailUrl } : null,
+            creator: creator ? { displayName: creator.displayName, avatarUrl: creator.avatarUrl } : null,
+          },
+        };
+      }));
+      res.json(enriched.filter(Boolean));
+    } catch (e) { res.status(500).json({ error: "Failed to get wishlist" }); }
+  });
+
+  app.post("/api/wishlist/:listingId", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { listingId } = req.params;
+      const already = await storage.isInWishlist(userId, listingId);
+      if (already) return res.json({ wishlisted: true });
+      const entry = await storage.addToWishlist({ userId, globalListingId: listingId });
+      res.status(201).json(entry);
+    } catch (e) { res.status(500).json({ error: "Failed to add to wishlist" }); }
+  });
+
+  app.delete("/api/wishlist/:listingId", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      await storage.removeFromWishlist(userId, req.params.listingId);
+      res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Failed to remove from wishlist" }); }
+  });
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return httpServer;

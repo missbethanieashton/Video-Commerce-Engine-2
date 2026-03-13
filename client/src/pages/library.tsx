@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Play, CheckSquare, Square, ListVideo, X, ShoppingBag } from "lucide-react";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
+import { WishlistHeart } from "@/components/WishlistHeart";
 
 type GlobalListing = {
   id: string;
@@ -19,6 +20,8 @@ type GlobalListing = {
   video: { id: string; title: string; thumbnailUrl: string | null } | null;
   creator: { displayName: string; avatarUrl: string | null } | null;
 };
+
+type WishlistEntry = { globalListingId: string };
 
 const CATEGORIES = [
   { value: "all",         label: "All" },
@@ -51,6 +54,12 @@ export default function Library() {
   const { data: listings = [], isLoading } = useQuery<GlobalListing[]>({
     queryKey: ["/api/library"],
   });
+
+  const { data: wishlistItems = [] } = useQuery<WishlistEntry[]>({
+    queryKey: ["/api/wishlist"],
+  });
+
+  const wishlistedIds = new Set(wishlistItems.map((w) => w.globalListingId));
 
   const filtered = listings
     .filter((l) => {
@@ -122,7 +131,7 @@ export default function Library() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
               <Skeleton className="h-40 w-full rounded-t-lg" />
@@ -144,48 +153,50 @@ export default function Library() {
           </CardDescription>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
           {filtered.map((listing) => {
             const isSelected = selectedIds.has(listing.id);
             const cat = (listing.category ?? "").toLowerCase();
             const badgeClass = CATEGORY_COLORS[cat] ?? "bg-muted/50 text-muted-foreground";
             const title = listing.listingTitle || listing.video?.title || "Untitled Video";
             return (
-              <Card
-                key={listing.id}
-                data-testid={`card-listing-${listing.id}`}
-                onClick={() => toggleSelect(listing.id)}
-                className={`overflow-hidden cursor-pointer transition-all ${
-                  isSelected ? "ring-2 ring-primary shadow-md" : "hover:shadow-md"
-                }`}
-              >
-                <div className="relative aspect-video bg-muted">
-                  {listing.video?.thumbnailUrl ? (
-                    <img src={listing.video.thumbnailUrl} alt={title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Play className="w-10 h-10 text-muted-foreground" />
+              <div key={listing.id} className="relative">
+                <Card
+                  data-testid={`card-listing-${listing.id}`}
+                  onClick={() => toggleSelect(listing.id)}
+                  className={`overflow-hidden cursor-pointer transition-all ${
+                    isSelected ? "ring-2 ring-primary shadow-md" : "hover:shadow-md"
+                  }`}
+                >
+                  <div className="relative aspect-video bg-muted">
+                    {listing.video?.thumbnailUrl ? (
+                      <img src={listing.video.thumbnailUrl} alt={title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Play className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      {isSelected
+                        ? <CheckSquare className="h-5 w-5 text-primary drop-shadow-md" />
+                        : <Square className="h-5 w-5 text-white/80 drop-shadow-md" />}
                     </div>
-                  )}
-                  <div className="absolute top-2 left-2">
-                    {isSelected
-                      ? <CheckSquare className="h-5 w-5 text-primary drop-shadow-md" />
-                      : <Square className="h-5 w-5 text-white/80 drop-shadow-md" />}
+                    {listing.category && (
+                      <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${badgeClass}`}>
+                        {CATEGORIES.find((c) => c.value === cat)?.label ?? listing.category}
+                      </span>
+                    )}
                   </div>
-                  {listing.category && (
-                    <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${badgeClass}`}>
-                      {CATEGORIES.find((c) => c.value === cat)?.label ?? listing.category}
-                    </span>
-                  )}
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm line-clamp-1">{title}</CardTitle>
-                  <CardDescription>by {listing.creator?.displayName ?? "Unknown Creator"}</CardDescription>
-                </CardHeader>
-                <CardFooter className="pt-0 text-xs text-muted-foreground">
-                  {listing.totalLicenses} licenses · €{listing.licenseFee}
-                </CardFooter>
-              </Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm line-clamp-1">{title}</CardTitle>
+                    <CardDescription>by {listing.creator?.displayName ?? "Unknown Creator"}</CardDescription>
+                  </CardHeader>
+                  <CardFooter className="pt-0 text-xs text-muted-foreground">
+                    {listing.totalLicenses} licenses · €{listing.licenseFee}
+                  </CardFooter>
+                </Card>
+                <WishlistHeart listingId={listing.id} wishlisted={wishlistedIds.has(listing.id)} />
+              </div>
             );
           })}
         </div>

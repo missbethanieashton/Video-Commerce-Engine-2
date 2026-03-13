@@ -23,6 +23,7 @@ import {
   Bell,
   Palette,
   ListVideo,
+  Heart,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,11 @@ const affiliateMenuItems = [
     title: "My Playlists",
     url: "/affiliate/playlists",
     icon: ListVideo,
+  },
+  {
+    title: "Wishlist",
+    url: "/affiliate/wishlist",
+    icon: Heart,
   },
   {
     title: "My Campaigns",

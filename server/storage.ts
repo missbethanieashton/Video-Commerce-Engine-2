@@ -73,6 +73,9 @@ import {
   type Playlist,
   type InsertPlaylistItem,
   type PlaylistItem,
+  wishlists,
+  type Wishlist,
+  type InsertWishlist,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -288,6 +291,10 @@ export interface IStorage {
   getPlaylistItems(playlistId: number): Promise<PlaylistItem[]>;
   addPlaylistItems(items: InsertPlaylistItem[]): Promise<PlaylistItem[]>;
   removePlaylistItem(id: number): Promise<void>;
+  getUserWishlist(userId: string): Promise<Wishlist[]>;
+  addToWishlist(data: InsertWishlist): Promise<Wishlist>;
+  removeFromWishlist(userId: string, globalListingId: string): Promise<void>;
+  isInWishlist(userId: string, globalListingId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -1604,6 +1611,28 @@ export class MemStorage implements IStorage {
   async removePlaylistItem(id: number): Promise<void> {
     this.playlistItemsList = this.playlistItemsList.filter(i => i.id !== id);
   }
+
+  private wishlistItems: Wishlist[] = [];
+
+  async getUserWishlist(userId: string): Promise<Wishlist[]> {
+    return this.wishlistItems.filter(w => w.userId === userId);
+  }
+
+  async addToWishlist(data: InsertWishlist): Promise<Wishlist> {
+    const entry: Wishlist = { id: randomUUID(), createdAt: new Date(), ...data };
+    this.wishlistItems.push(entry);
+    return entry;
+  }
+
+  async removeFromWishlist(userId: string, globalListingId: string): Promise<void> {
+    this.wishlistItems = this.wishlistItems.filter(
+      w => !(w.userId === userId && w.globalListingId === globalListingId)
+    );
+  }
+
+  async isInWishlist(userId: string, globalListingId: string): Promise<boolean> {
+    return this.wishlistItems.some(w => w.userId === userId && w.globalListingId === globalListingId);
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -2385,6 +2414,28 @@ export class DatabaseStorage implements IStorage {
   }
   async removePlaylistItem(id: number): Promise<void> {
     await db.delete(playlistItems).where(eq(playlistItems.id, id));
+  }
+
+  async getUserWishlist(userId: string): Promise<Wishlist[]> {
+    return db.select().from(wishlists).where(eq(wishlists.userId, userId));
+  }
+
+  async addToWishlist(data: InsertWishlist): Promise<Wishlist> {
+    const [entry] = await db.insert(wishlists).values(data).returning();
+    return entry;
+  }
+
+  async removeFromWishlist(userId: string, globalListingId: string): Promise<void> {
+    await db.delete(wishlists).where(
+      and(eq(wishlists.userId, userId), eq(wishlists.globalListingId, globalListingId))
+    );
+  }
+
+  async isInWishlist(userId: string, globalListingId: string): Promise<boolean> {
+    const [entry] = await db.select().from(wishlists).where(
+      and(eq(wishlists.userId, userId), eq(wishlists.globalListingId, globalListingId))
+    );
+    return !!entry;
   }
 }
 

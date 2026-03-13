@@ -857,6 +857,18 @@ export type Playlist = typeof playlists.$inferSelect;
 export type InsertPlaylistItem = z.infer<typeof insertPlaylistItemSchema>;
 export type PlaylistItem = typeof playlistItems.$inferSelect;
 
+// Wishlists — users save global library listings for later
+export const wishlists = pgTable("wishlists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  globalListingId: varchar("global_listing_id").notNull().references(() => globalVideoLibrary.id),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const insertWishlistSchema = createInsertSchema(wishlists).omit({ id: true, createdAt: true });
+export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
+export type Wishlist = typeof wishlists.$inferSelect;
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Country list for dropdown

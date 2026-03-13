@@ -15,6 +15,7 @@ import {
   Gift,
   UserCircle,
   Bell,
+  Heart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const contentItems = [
   { path: "/creator/my-videos", label: "My Videos", icon: Video },
   { path: "/creator/library", label: "Global Video Library", icon: Library },
   { path: "/creator/playlists", label: "My Playlists", icon: ListVideo },
+  { path: "/creator/wishlist", label: "Wishlist", icon: Heart },
 ];
 
 const analyticsItems = [

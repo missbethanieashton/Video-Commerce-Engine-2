@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { ShoppingBag, Play, Search, CheckSquare, Square, ListVideo, X, DollarSign, Users } from "lucide-react";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
+import { WishlistHeart } from "@/components/WishlistHeart";
 
 type GlobalListing = {
   id: string;
@@ -20,6 +21,8 @@ type GlobalListing = {
   video: { id: string; title: string; thumbnailUrl: string | null } | null;
   creator: { displayName: string; avatarUrl: string | null } | null;
 };
+
+type WishlistEntry = { globalListingId: string };
 
 const CATEGORIES = [
   { value: "all",         label: "All" },
@@ -51,6 +54,12 @@ export default function AffiliateLibrary() {
   const { data: listings = [], isLoading } = useQuery<GlobalListing[]>({
     queryKey: ["/api/library"],
   });
+
+  const { data: wishlistItems = [] } = useQuery<WishlistEntry[]>({
+    queryKey: ["/api/wishlist"],
+  });
+
+  const wishlistedIds = new Set(wishlistItems.map((w) => w.globalListingId));
 
   const filteredListings = listings.filter((listing) => {
     const matchesSearch =
@@ -116,7 +125,7 @@ export default function AffiliateLibrary() {
 
       {/* Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
               <Skeleton className="h-40 w-full rounded-t-lg" />
@@ -141,63 +150,64 @@ export default function AffiliateLibrary() {
           </CardDescription>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
           {filteredListings.map((listing) => {
             const isSelected = selectedIds.has(listing.id);
             const cat = (listing.category ?? "").toLowerCase();
             const badgeClass = CATEGORY_COLORS[cat] ?? "bg-muted text-muted-foreground";
             const title = listing.listingTitle || listing.video?.title || "Untitled Video";
             return (
-              <Card
-                key={listing.id}
-                className={`overflow-hidden cursor-pointer transition-all ${
-                  isSelected ? "ring-2 ring-primary shadow-md" : "hover:shadow-md"
-                }`}
-                data-testid={`card-listing-${listing.id}`}
-                onClick={() => toggleSelect(listing.id)}
-              >
-                <div className="relative aspect-video bg-muted">
-                  {listing.video?.thumbnailUrl ? (
-                    <img src={listing.video.thumbnailUrl} alt={title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Play className="w-12 h-12 text-muted-foreground" />
+              <div key={listing.id} className="relative">
+                <Card
+                  className={`overflow-hidden cursor-pointer transition-all ${
+                    isSelected ? "ring-2 ring-primary shadow-md" : "hover:shadow-md"
+                  }`}
+                  data-testid={`card-listing-${listing.id}`}
+                  onClick={() => toggleSelect(listing.id)}
+                >
+                  <div className="relative aspect-video bg-muted">
+                    {listing.video?.thumbnailUrl ? (
+                      <img src={listing.video.thumbnailUrl} alt={title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Play className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      {isSelected
+                        ? <CheckSquare className="h-5 w-5 text-primary drop-shadow-md" />
+                        : <Square className="h-5 w-5 text-white/80 drop-shadow-md" />}
                     </div>
-                  )}
-                  {/* Selection indicator */}
-                  <div className="absolute top-2 left-2">
-                    {isSelected
-                      ? <CheckSquare className="h-5 w-5 text-primary drop-shadow-md" />
-                      : <Square className="h-5 w-5 text-white/80 drop-shadow-md" />}
+                    {listing.category && (
+                      <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
+                        {CATEGORIES.find((c) => c.value === cat)?.label ?? listing.category}
+                      </span>
+                    )}
                   </div>
-                  {listing.category && (
-                    <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
-                      {CATEGORIES.find((c) => c.value === cat)?.label ?? listing.category}
-                    </span>
-                  )}
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
-                  <CardDescription>by {listing.creator?.displayName || "Unknown Creator"}</CardDescription>
-                </CardHeader>
-                <div className="px-6 pb-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      <span>{listing.totalLicenses} licenses sold</span>
-                    </div>
-                    <div className="flex items-center gap-1 font-semibold text-accent-gold">
-                      <DollarSign className="w-4 h-4" />
-                      <span>{listing.licenseFee}</span>
+                  <CardHeader>
+                    <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
+                    <CardDescription>by {listing.creator?.displayName || "Unknown Creator"}</CardDescription>
+                  </CardHeader>
+                  <div className="px-6 pb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Users className="w-4 h-4" />
+                        <span>{listing.totalLicenses} licenses sold</span>
+                      </div>
+                      <div className="flex items-center gap-1 font-semibold text-accent-gold">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{listing.licenseFee}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <CardFooter onClick={(e) => e.stopPropagation()}>
-                  <Button className="w-full" data-testid={`button-license-${listing.id}`}>
-                    License Video
-                  </Button>
-                </CardFooter>
-              </Card>
+                  <CardFooter onClick={(e) => e.stopPropagation()}>
+                    <Button className="w-full" data-testid={`button-license-${listing.id}`}>
+                      License Video
+                    </Button>
+                  </CardFooter>
+                </Card>
+                <WishlistHeart listingId={listing.id} wishlisted={wishlistedIds.has(listing.id)} />
+              </div>
             );
           })}
         </div>
