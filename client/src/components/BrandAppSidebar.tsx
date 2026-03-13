@@ -83,37 +83,36 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3 mb-4">
+      <SidebarHeader className="px-4 pt-4 pb-3">
+        <div className="flex items-center justify-center mb-5">
           <img
             src={materializedLogo}
             alt="Materialized"
-            style={{ height: 40, width: "auto" }}
+            style={{ height: 200, width: "auto", filter: "invert(1)" }}
           />
         </div>
-        
+
         <div className="flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/50">
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={user?.avatarUrl} />
-            <AvatarFallback className="bg-primary/20 text-primary">
+            <AvatarFallback className="bg-primary/20 text-primary text-sm">
               {user?.displayName?.charAt(0) || "B"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
+            <p className="text-sm font-medium truncate leading-tight">
               {user?.displayName || "Demo Brand"}
             </p>
             <p className="text-xs text-muted-foreground truncate">
               {user?.username || "brand-account"}
             </p>
           </div>
+          <Badge className="shrink-0 bg-chart-2 hover:bg-chart-2/90 text-[10px] px-2 py-0.5">
+            Brand
+          </Badge>
         </div>
-        
-        <Badge className="mt-3 w-fit bg-chart-2 hover:bg-chart-2/90">
-          Brand
-        </Badge>
-        
-        <div className="relative mt-4">
+
+        <div className="relative mt-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search menu..."
