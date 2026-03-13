@@ -439,25 +439,20 @@ function VideoOrientationSection() {
                       <source src={verticalDemoVideo} type="video/mp4" />
                     </video>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    {/* Bag product carousel */}
-                    <div className="absolute bottom-[56px] left-0 right-0 px-2 z-10">
-                      <div className="bg-black/30 backdrop-blur-md rounded-xl p-2 border border-white/10">
+                    {/* Bag product carousel — mid-screen, compact */}
+                    <div className="absolute left-2 right-2 z-10" style={{ top: "52%" }}>
+                      <div className="bg-black/40 backdrop-blur-md rounded-lg px-2 py-1.5 border border-white/10">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-9 h-9 rounded-lg bg-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                          <div className="w-7 h-7 rounded-md bg-white/10 flex-shrink-0 overflow-hidden">
                             <img src={bagCartImage} alt="Metallic Chain Handbag" className="w-full h-full object-contain" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-white/80 text-[8px] leading-tight truncate">Metallic Chain Bag</div>
-                            <div className="text-white font-bold text-xs leading-tight">€720</div>
+                            <div className="text-white/70 text-[7px] leading-tight truncate">Metallic Chain Bag</div>
+                            <div className="text-white font-bold text-[10px] leading-tight">€720</div>
                           </div>
-                          <button className="bg-white text-[#43484D] text-[7px] font-black tracking-wide px-2 py-1 rounded-md flex-shrink-0">
+                          <button className="bg-white/90 text-[#43484D] text-[6.5px] font-black tracking-wide px-1.5 py-1 rounded flex-shrink-0">
                             BUY NOW
                           </button>
-                        </div>
-                        <div className="flex justify-center gap-1 mt-1">
-                          <div className="w-2.5 h-[2px] bg-white rounded-full" />
-                          <div className="w-[2px] h-[2px] bg-white/35 rounded-full" />
-                          <div className="w-[2px] h-[2px] bg-white/35 rounded-full" />
                         </div>
                       </div>
                     </div>
@@ -510,7 +505,7 @@ function VideoOrientationSection() {
                   {/* Subtle screen glare */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                   {/* Seasonal Leasing carousel card */}
-                  <div className="absolute bottom-10 left-3 right-3 z-10">
+                  <div className="absolute left-3 right-3 z-10" style={{ top: "55%" }}>
                     <div className="bg-black rounded-xl px-3 py-2 border border-white/10">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
