@@ -439,6 +439,28 @@ function VideoOrientationSection() {
                       <source src={verticalDemoVideo} type="video/mp4" />
                     </video>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    {/* Bag product carousel */}
+                    <div className="absolute bottom-[56px] left-0 right-0 px-2 z-10">
+                      <div className="bg-black/30 backdrop-blur-md rounded-xl p-2 border border-white/10">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-9 h-9 rounded-lg bg-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            <img src={bagCartImage} alt="Metallic Chain Handbag" className="w-full h-full object-contain" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white/80 text-[8px] leading-tight truncate">Metallic Chain Bag</div>
+                            <div className="text-white font-bold text-xs leading-tight">€720</div>
+                          </div>
+                          <button className="bg-white text-[#43484D] text-[7px] font-black tracking-wide px-2 py-1 rounded-md flex-shrink-0">
+                            BUY NOW
+                          </button>
+                        </div>
+                        <div className="flex justify-center gap-1 mt-1">
+                          <div className="w-2.5 h-[2px] bg-white rounded-full" />
+                          <div className="w-[2px] h-[2px] bg-white/35 rounded-full" />
+                          <div className="w-[2px] h-[2px] bg-white/35 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
                     <div className="absolute bottom-4 left-4 right-4">
                       <div className="text-white font-semibold text-sm">Vertical / Reels</div>
                       <div className="text-white/70 text-xs">9:16 Format</div>
@@ -487,6 +509,25 @@ function VideoOrientationSection() {
                   </video>
                   {/* Subtle screen glare */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                  {/* Seasonal Leasing carousel card */}
+                  <div className="absolute bottom-10 left-3 right-3 z-10">
+                    <div className="bg-black rounded-xl px-3 py-2 border border-white/10">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-white/50 text-[8px] uppercase tracking-widest leading-tight">Lund Group</div>
+                          <div className="text-white text-[11px] font-semibold leading-tight mt-0.5">Luxury Yacht Charters</div>
+                        </div>
+                        <a
+                          href="https://www.lund-group.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white/10 hover:bg-white/20 text-white text-[8px] font-black tracking-wider px-3 py-1.5 rounded-lg flex-shrink-0 border border-white/20 transition-colors whitespace-nowrap"
+                        >
+                          SEASONAL LEASING
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                   <div className="absolute bottom-3 left-4 right-4">
                     <div className="text-white font-semibold text-sm drop-shadow">Horizontal / YouTube</div>
                     <div className="text-white/70 text-xs drop-shadow">16:9 Format</div>
@@ -701,54 +742,6 @@ function VideoOfTheWeekSection() {
                 >
                   <source src={discoveryPacksVideo} type="video/mp4" />
                 </video>
-                {/* Seasonal Leasing carousel card */}
-                <div className="absolute bottom-[130px] left-0 right-0 px-2.5 z-10">
-                  <div className="bg-black rounded-2xl px-3 py-2.5 border border-white/8">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="text-white/50 text-[8px] uppercase tracking-widest leading-tight">Lund Group</div>
-                        <div className="text-white text-[10px] font-semibold leading-tight mt-0.5">Luxury Yacht Charters</div>
-                      </div>
-                      <a
-                        href="https://www.lund-group.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white/10 hover:bg-white/20 text-white text-[7.5px] font-black tracking-wider px-2.5 py-1.5 rounded-lg flex-shrink-0 border border-white/20 transition-colors whitespace-nowrap"
-                      >
-                        SEASONAL LEASING
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Product carousel overlay */}
-                <div className="absolute bottom-[62px] left-0 right-0 px-2.5 z-10">
-                  <div className="bg-black/30 backdrop-blur-md rounded-2xl p-2.5 border border-white/10">
-                    <div className="flex items-center gap-2">
-                      <div className="w-[46px] h-[46px] rounded-xl bg-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={bagCartImage}
-                          alt="Metallic Chain Handbag"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white/80 text-[9px] leading-tight truncate">Metallic Chain Bag</div>
-                        <div className="text-white font-bold text-sm leading-tight">€720</div>
-                      </div>
-                      <button className="bg-white text-[#43484D] text-[8px] font-black tracking-wide px-2.5 py-1.5 rounded-lg flex-shrink-0">
-                        BUY NOW
-                      </button>
-                    </div>
-                    {/* Carousel dots */}
-                    <div className="flex justify-center gap-1 mt-1.5">
-                      <div className="w-3 h-[3px] bg-white rounded-full" />
-                      <div className="w-[3px] h-[3px] bg-white/35 rounded-full" />
-                      <div className="w-[3px] h-[3px] bg-white/35 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Video overlay info */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <div className="text-white font-semibold text-sm">Discovery Packs</div>
