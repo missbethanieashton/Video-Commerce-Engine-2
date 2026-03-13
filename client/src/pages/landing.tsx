@@ -564,12 +564,60 @@ function VideoOfTheWeekSection() {
     { label: "ROI", value: "420%", bottom: "10%", right: "10%", delay: 1.5, size: 85 },
   ];
 
-  const chromeBlobs: Array<{ size: number; top?: string; bottom?: string; left?: string; right?: string; duration: number; dir: number }> = [
-    { size: 230, top: "0%",   left: "1%",  duration: 22, dir:  1 },
-    { size: 200, bottom: "0%", right: "0%", duration: 28, dir: -1 },
-    { size: 155, top: "38%",  left: "3%",  duration: 14, dir:  1 },
-    { size: 135, top: "8%",   right: "4%", duration: 18, dir: -1 },
-    { size:  88, top: "2%",   left: "38%", duration:  9, dir:  1 },
+  const chromeBlobs: Array<{
+    size: number;
+    anchor: { top?: string; bottom?: string; left?: string; right?: string };
+    travelX: number[];
+    travelY: number[];
+    travelDuration: number;
+    rotateDuration: number;
+    dir: number;
+  }> = [
+    {
+      size: 230,
+      anchor: { top: "5%", left: "1%" },
+      travelX: [0, 140, 80, -70, 40, 0],
+      travelY: [0, 100, -80, 70, -45, 0],
+      travelDuration: 20,
+      rotateDuration: 8,
+      dir: 1,
+    },
+    {
+      size: 200,
+      anchor: { bottom: "5%", right: "1%" },
+      travelX: [0, -120, -65, 50, -30, 0],
+      travelY: [0, -90, 70, -65, 35, 0],
+      travelDuration: 26,
+      rotateDuration: 11,
+      dir: -1,
+    },
+    {
+      size: 155,
+      anchor: { top: "40%", left: "2%" },
+      travelX: [0, 100, 55, -75, 25, 0],
+      travelY: [0, -65, 55, 35, -35, 0],
+      travelDuration: 15,
+      rotateDuration: 6,
+      dir: 1,
+    },
+    {
+      size: 135,
+      anchor: { top: "10%", right: "2%" },
+      travelX: [0, -85, -45, 65, -15, 0],
+      travelY: [0, 55, 95, -55, 25, 0],
+      travelDuration: 19,
+      rotateDuration: 7,
+      dir: -1,
+    },
+    {
+      size: 88,
+      anchor: { top: "2%", left: "40%" },
+      travelX: [0, 75, -55, 45, -20, 0],
+      travelY: [0, 55, 85, 45, 20, 0],
+      travelDuration: 11,
+      rotateDuration: 4,
+      dir: 1,
+    },
   ];
 
   return (
@@ -593,28 +641,45 @@ function VideoOfTheWeekSection() {
           viewport={{ once: true }}
           className="relative flex justify-center"
         >
-          {/* Chrome blobs — behind phone frame and stat bubbles */}
+          {/* Chrome blobs — travel diagonally, spin independently, behind phone + bubbles */}
           {chromeBlobs.map((blob, i) => (
-            <motion.img
+            <motion.div
               key={i}
-              src={chromeBlobIcon}
-              alt=""
-              aria-hidden="true"
-              animate={{ rotate: [0, blob.dir * 360] }}
-              transition={{ duration: blob.duration, repeat: Infinity, ease: "linear" }}
+              animate={{ x: blob.travelX, y: blob.travelY }}
+              transition={{
+                duration: blob.travelDuration,
+                repeat: Infinity,
+                ease: "easeInOut",
+                repeatType: "loop",
+              }}
               className="absolute pointer-events-none select-none"
               style={{
-                width: blob.size,
-                height: blob.size,
-                top: blob.top,
-                bottom: blob.bottom,
-                left: blob.left,
-                right: blob.right,
-                opacity: 0.18,
-                mixBlendMode: "multiply",
+                top: blob.anchor.top,
+                bottom: blob.anchor.bottom,
+                left: blob.anchor.left,
+                right: blob.anchor.right,
                 zIndex: 0,
               }}
-            />
+            >
+              <motion.img
+                src={chromeBlobIcon}
+                alt=""
+                aria-hidden="true"
+                animate={{ rotate: [0, blob.dir * 360] }}
+                transition={{
+                  duration: blob.rotateDuration,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{
+                  width: blob.size,
+                  height: blob.size,
+                  opacity: 0.22,
+                  mixBlendMode: "multiply",
+                  display: "block",
+                }}
+              />
+            </motion.div>
           ))}
 
           {/* Mobile Phone Frame */}
