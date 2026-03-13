@@ -84,6 +84,7 @@ function BrandRouter() {
       <Route path="/brand/settings/payout" component={BrandSettingsPayout} />
       <Route path="/brand/settings/billing-address" component={BrandSettingsBillingAddress} />
       <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
+      <Route path="/brand/brand-kit" component={BrandKit} />
       <Route path="/brand/mailbox" component={Mailbox} />
       <Route path="/brand/help" component={Help} />
       <Route component={NotFound} />
@@ -99,6 +100,7 @@ function AffiliateRouter() {
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
       <Route path="/affiliate/settings" component={AffiliateSettings} />
+      <Route path="/affiliate/brand-kit" component={BrandKit} />
       <Route path="/affiliate/mailbox" component={Mailbox} />
       <Route path="/affiliate/help" component={Help} />
       <Route component={NotFound} />

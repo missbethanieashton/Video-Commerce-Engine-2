@@ -10,6 +10,7 @@ import {
   Settings,
   Target,
   Bell,
+  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,10 @@ const creatorsItems = [
 
 const analyticsItems = [
   { path: "/brand/analytics", label: "Analytics", icon: BarChart3 },
+];
+
+const brandingItems = [
+  { path: "/brand/brand-kit", label: "Brand Kit", icon: Palette },
 ];
 
 const communicationItems = [
@@ -161,6 +166,15 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(analyticsItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Branding
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(brandingItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 

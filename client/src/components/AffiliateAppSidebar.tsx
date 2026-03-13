@@ -21,6 +21,7 @@ import {
   LogOut,
   TrendingUp,
   Bell,
+  Palette,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,11 @@ const affiliateMenuItems = [
     title: "Analytics",
     url: "/affiliate/analytics",
     icon: TrendingUp,
+  },
+  {
+    title: "Brand Kit",
+    url: "/affiliate/brand-kit",
+    icon: Palette,
   },
   {
     title: "Mailbox",
