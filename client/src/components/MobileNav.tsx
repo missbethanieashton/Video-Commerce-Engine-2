@@ -1,11 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Video, Library, BarChart3, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, Video, Library, Bell, MoreHorizontal } from "lucide-react";
 
 const navItems = [
   { path: "/creator", label: "Dashboard", icon: LayoutDashboard },
   { path: "/creator/my-videos", label: "Videos", icon: Video },
   { path: "/creator/library", label: "Library", icon: Library },
-  { path: "/creator/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/creator/mailbox", label: "Mailbox", icon: Bell },
   { path: "/creator/more", label: "More", icon: MoreHorizontal },
 ];
 

@@ -44,6 +44,7 @@ import BrandSettingsTransactions from "@/pages/brand-settings-transactions";
 import BrandSettingsPayout from "@/pages/brand-settings-payout";
 import BrandSettingsBillingAddress from "@/pages/brand-settings-billing-address";
 import BrandSettingsApiKey from "@/pages/brand-settings-api-key";
+import Mailbox from "@/pages/mailbox";
 
 function CreatorRouter() {
   return (
@@ -59,6 +60,7 @@ function CreatorRouter() {
       <Route path="/creator/rewards" component={Rewards} />
       <Route path="/creator/profile" component={Profile} />
       <Route path="/creator/help" component={Help} />
+      <Route path="/creator/mailbox" component={Mailbox} />
       <Route path="/creator/more" component={More} />
       <Route component={NotFound} />
     </Switch>
@@ -82,6 +84,7 @@ function BrandRouter() {
       <Route path="/brand/settings/payout" component={BrandSettingsPayout} />
       <Route path="/brand/settings/billing-address" component={BrandSettingsBillingAddress} />
       <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
+      <Route path="/brand/mailbox" component={Mailbox} />
       <Route path="/brand/help" component={Help} />
       <Route component={NotFound} />
     </Switch>
@@ -96,6 +99,7 @@ function AffiliateRouter() {
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
       <Route path="/affiliate/settings" component={AffiliateSettings} />
+      <Route path="/affiliate/mailbox" component={Mailbox} />
       <Route path="/affiliate/help" component={Help} />
       <Route component={NotFound} />
     </Switch>

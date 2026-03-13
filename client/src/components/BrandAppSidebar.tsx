@@ -9,6 +9,7 @@ import {
   Search,
   Settings,
   Target,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,6 +42,10 @@ const creatorsItems = [
 
 const analyticsItems = [
   { path: "/brand/analytics", label: "Analytics", icon: BarChart3 },
+];
+
+const communicationItems = [
+  { path: "/brand/mailbox", label: "Mailbox", icon: Bell },
 ];
 
 const otherItems = [
@@ -156,6 +161,15 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(analyticsItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Communication
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(communicationItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 

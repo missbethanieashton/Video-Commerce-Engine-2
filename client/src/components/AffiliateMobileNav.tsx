@@ -3,8 +3,8 @@ import {
   LayoutDashboard, 
   ShoppingBag, 
   Video, 
+  Bell,
   Settings,
-  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ const navItems = [
   { href: "/affiliate", icon: LayoutDashboard, label: "Home" },
   { href: "/affiliate/library", icon: ShoppingBag, label: "Library" },
   { href: "/affiliate/campaigns", icon: Video, label: "Campaigns" },
-  { href: "/affiliate/analytics", icon: TrendingUp, label: "Analytics" },
+  { href: "/affiliate/mailbox", icon: Bell, label: "Mailbox" },
   { href: "/affiliate/settings", icon: Settings, label: "Settings" },
 ];
 

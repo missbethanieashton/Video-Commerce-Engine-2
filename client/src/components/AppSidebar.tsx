@@ -13,6 +13,7 @@ import {
   UserPlus,
   Gift,
   UserCircle,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,10 @@ const rewardsItems = [
 
 const accountItems = [
   { path: "/creator/profile", label: "Personal Details", icon: UserCircle },
+];
+
+const communicationItems = [
+  { path: "/creator/mailbox", label: "Mailbox", icon: Bell },
 ];
 
 const otherItems = [
@@ -192,6 +197,15 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(rewardsItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Communication
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(communicationItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 

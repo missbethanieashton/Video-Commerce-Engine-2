@@ -1,11 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Package, Users, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, Package, Users, Bell, Settings } from "lucide-react";
 
 const navItems = [
   { path: "/brand", label: "Dashboard", icon: LayoutDashboard },
   { path: "/brand/inventory", label: "Inventory", icon: Package },
-  { path: "/brand/creators", label: "Creators", icon: Users },
-  { path: "/brand/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/brand/campaigns", label: "Campaigns", icon: Users },
+  { path: "/brand/mailbox", label: "Mailbox", icon: Bell },
   { path: "/brand/settings", label: "Settings", icon: Settings },
 ];
 
