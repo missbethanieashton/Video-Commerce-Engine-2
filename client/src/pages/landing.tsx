@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
 import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
+import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
@@ -700,6 +701,34 @@ function VideoOfTheWeekSection() {
                 >
                   <source src={discoveryPacksVideo} type="video/mp4" />
                 </video>
+                {/* Product carousel overlay */}
+                <div className="absolute bottom-[62px] left-0 right-0 px-2.5 z-10">
+                  <div className="bg-black/30 backdrop-blur-md rounded-2xl p-2.5 border border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-[46px] h-[46px] rounded-xl bg-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={bagCartImage}
+                          alt="Metallic Chain Handbag"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white/80 text-[9px] leading-tight truncate">Metallic Chain Bag</div>
+                        <div className="text-white font-bold text-sm leading-tight">€720</div>
+                      </div>
+                      <button className="bg-white text-[#43484D] text-[8px] font-black tracking-wide px-2.5 py-1.5 rounded-lg flex-shrink-0">
+                        BUY NOW
+                      </button>
+                    </div>
+                    {/* Carousel dots */}
+                    <div className="flex justify-center gap-1 mt-1.5">
+                      <div className="w-3 h-[3px] bg-white rounded-full" />
+                      <div className="w-[3px] h-[3px] bg-white/35 rounded-full" />
+                      <div className="w-[3px] h-[3px] bg-white/35 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Video overlay info */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <div className="text-white font-semibold text-sm">Discovery Packs</div>
