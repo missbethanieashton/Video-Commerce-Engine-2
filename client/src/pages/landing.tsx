@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
+import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
@@ -563,6 +564,14 @@ function VideoOfTheWeekSection() {
     { label: "ROI", value: "420%", bottom: "10%", right: "10%", delay: 1.5, size: 85 },
   ];
 
+  const chromeBlobs: Array<{ size: number; top?: string; bottom?: string; left?: string; right?: string; duration: number; dir: number }> = [
+    { size: 230, top: "0%",   left: "1%",  duration: 22, dir:  1 },
+    { size: 200, bottom: "0%", right: "0%", duration: 28, dir: -1 },
+    { size: 155, top: "38%",  left: "3%",  duration: 14, dir:  1 },
+    { size: 135, top: "8%",   right: "4%", duration: 18, dir: -1 },
+    { size:  88, top: "2%",   left: "38%", duration:  9, dir:  1 },
+  ];
+
   return (
     <section className="py-20 px-4 bg-white dark:bg-[#1a1a1a]">
       <div className="max-w-4xl mx-auto">
@@ -584,8 +593,32 @@ function VideoOfTheWeekSection() {
           viewport={{ once: true }}
           className="relative flex justify-center"
         >
+          {/* Chrome blobs — behind phone frame and stat bubbles */}
+          {chromeBlobs.map((blob, i) => (
+            <motion.img
+              key={i}
+              src={chromeBlobIcon}
+              alt=""
+              aria-hidden="true"
+              animate={{ rotate: [0, blob.dir * 360] }}
+              transition={{ duration: blob.duration, repeat: Infinity, ease: "linear" }}
+              className="absolute pointer-events-none select-none"
+              style={{
+                width: blob.size,
+                height: blob.size,
+                top: blob.top,
+                bottom: blob.bottom,
+                left: blob.left,
+                right: blob.right,
+                opacity: 0.18,
+                mixBlendMode: "multiply",
+                zIndex: 0,
+              }}
+            />
+          ))}
+
           {/* Mobile Phone Frame */}
-          <div className="relative w-[280px] md:w-[320px]">
+          <div className="relative w-[280px] md:w-[320px]" style={{ zIndex: 1 }}>
             {/* Phone bezel */}
             <div className="relative bg-[#1a1a1a] rounded-[3rem] p-3 shadow-2xl">
               {/* Notch */}
@@ -640,6 +673,7 @@ function VideoOfTheWeekSection() {
                 width: bubble.size,
                 height: bubble.size,
                 borderRadius: "50%",
+                zIndex: 2,
               }}
             >
               <div className="text-base font-bold text-[#43484D] leading-tight">{bubble.value}</div>
