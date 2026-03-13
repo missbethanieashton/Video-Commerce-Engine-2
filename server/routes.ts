@@ -1197,6 +1197,96 @@ export async function registerRoutes(
     }
   });
 
+  // Campaign detail with publisher list
+  app.get("/api/campaigns/:id/detail", async (req, res) => {
+    try {
+      const detail = await storage.getCampaignDetail(req.params.id);
+      if (!detail) return res.status(404).json({ error: "Campaign not found" });
+      res.json(detail);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get campaign detail" });
+    }
+  });
+
+  // Disable a publisher from a campaign
+  app.post("/api/campaigns/:id/publishers/:caId/disable", async (req, res) => {
+    try {
+      const updated = await storage.disableCampaignPublisher(req.params.caId);
+      if (!updated) return res.status(404).json({ error: "Publisher link not found" });
+      // Create notification for the publisher
+      const { message, campaignName } = req.body;
+      await storage.createPublisherNotification({
+        affiliateId: updated.affiliateId,
+        campaignAffiliateId: updated.id,
+        campaignName: campaignName || req.params.id,
+        type: "deactivation",
+        message: message || "Your publishing access for this campaign has been paused.",
+        isRead: false,
+        actionTaken: null,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to disable publisher" });
+    }
+  });
+
+  // Grant 48-hour grace extension to a publisher
+  app.post("/api/campaigns/:id/publishers/:caId/extend", async (req, res) => {
+    try {
+      const updated = await storage.extendCampaignPublisher(req.params.caId, 48);
+      if (!updated) return res.status(404).json({ error: "Publisher link not found" });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to extend publisher" });
+    }
+  });
+
+  // Publisher Notification routes
+  app.get("/api/publisher/notifications", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const notes = await storage.getPublisherNotifications(user.id);
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get notifications" });
+    }
+  });
+  app.get("/api/publisher/notifications/unread-count", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      const count = await storage.getUnreadNotificationCount(user.id);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get count" });
+    }
+  });
+  app.patch("/api/publisher/notifications/:id/read", async (req, res) => {
+    try {
+      await storage.markPublisherNotificationRead(Number(req.params.id));
+      res.json({ ok: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark read" });
+    }
+  });
+  app.post("/api/publisher/notifications/:id/extend", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      await storage.markPublisherNotificationRead(Number(req.params.id));
+      // Find the campaignAffiliateId from the notification and extend
+      const notes = await storage.getPublisherNotifications(user.id);
+      const note = notes.find(n => n.id === Number(req.params.id));
+      if (note?.campaignAffiliateId) {
+        await storage.extendCampaignPublisher(note.campaignAffiliateId, 48);
+      }
+      res.json({ ok: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to request extension" });
+    }
+  });
+
   // Create a new campaign
   app.post("/api/campaigns", async (req, res) => {
     try {

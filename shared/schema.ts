@@ -193,6 +193,9 @@ export const campaigns = pgTable("campaigns", {
   actualRevenue: decimal("actual_revenue", { precision: 10, scale: 2 }).default("0.00"),
   productIds: text("product_ids"), // JSON array of product IDs included in campaign
   creatorIds: text("creator_ids"), // JSON array of creator IDs participating
+  videoId: varchar("video_id").references(() => videos.id), // primary featured video
+  repostCount: integer("repost_count").default(0),
+  totalDays: integer("total_days").default(60),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -311,6 +314,9 @@ export const campaignAffiliates = pgTable("campaign_affiliates", {
   totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0.00"),
   totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0.00"),
   notifiedAt: timestamp("notified_at"),
+  isDisabled: boolean("is_disabled").default(false),
+  disabledAt: timestamp("disabled_at"),
+  graceUntil: timestamp("grace_until"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -712,6 +718,22 @@ export const subscriberIntakes = pgTable("subscriber_intakes", {
 export const insertSubscriberIntakeSchema = createInsertSchema(subscriberIntakes).omit({ id: true, createdAt: true });
 export type InsertSubscriberIntake = z.infer<typeof insertSubscriberIntakeSchema>;
 export type SubscriberIntake = typeof subscriberIntakes.$inferSelect;
+
+// Publisher Notifications — sent when a brand disables a publisher
+export const publisherNotifications = pgTable("publisher_notifications", {
+  id: serial("id").primaryKey(),
+  affiliateId: varchar("affiliate_id").notNull().references(() => users.id),
+  campaignAffiliateId: varchar("campaign_affiliate_id").references(() => campaignAffiliates.id),
+  campaignName: text("campaign_name"),
+  type: text("type").notNull().default("performance_warning"), // "performance_warning" | "deactivation"
+  message: text("message"),
+  isRead: boolean("is_read").default(false),
+  actionTaken: text("action_taken"), // "extended_48h" | null
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+export const insertPublisherNotificationSchema = createInsertSchema(publisherNotifications).omit({ id: true, createdAt: true });
+export type InsertPublisherNotification = z.infer<typeof insertPublisherNotificationSchema>;
+export type PublisherNotification = typeof publisherNotifications.$inferSelect;
 
 // ─── Brand Billing & Account Tables ─────────────────────────────────────────
 

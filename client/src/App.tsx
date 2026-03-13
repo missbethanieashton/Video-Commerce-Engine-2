@@ -26,6 +26,7 @@ import BrandDashboard from "@/pages/brand-dashboard";
 import BrandInventory from "@/pages/brand-inventory";
 import BrandCreators from "@/pages/brand-creators";
 import BrandCampaigns from "@/pages/brand-campaigns";
+import BrandCampaignDetail from "@/pages/brand-campaign-detail";
 import BrandKit from "@/pages/brand-kit";
 import AffiliateLibrary from "@/pages/affiliate-library";
 import AffiliateCampaigns from "@/pages/affiliate-campaigns";
@@ -71,6 +72,7 @@ function BrandRouter() {
       <Route path="/brand/inventory" component={BrandInventory} />
       <Route path="/brand/creators" component={BrandCreators} />
       <Route path="/brand/analytics" component={Analytics} />
+      <Route path="/brand/campaigns/:id" component={BrandCampaignDetail} />
       <Route path="/brand/campaigns" component={BrandCampaigns} />
       <Route path="/brand/profile" component={Profile} />
       <Route path="/brand/settings" component={More} />

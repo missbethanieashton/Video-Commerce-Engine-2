@@ -1,647 +1,250 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { format, differenceInDays, addDays } from "date-fns";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { StatCard } from "@/components/StatCard";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Target,
-  Plus,
-  DollarSign,
-  TrendingUp,
-  Eye,
-  MousePointer,
-  Calendar,
-  MoreVertical,
-  Play,
-  Pause,
-  Trash2,
-  BarChart3,
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import type { Campaign, Brand, Product } from "@shared/schema";
-import { format } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CampaignROIDashboard } from "@/components/CampaignROIDashboard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Play, ChevronRight, Video, TrendingUp, Users, DollarSign, RefreshCw } from "lucide-react";
+import type { Campaign } from "@shared/schema";
 
-const campaignSchema = z.object({
-  name: z.string().min(1, "Campaign name is required"),
-  description: z.string().optional(),
-  budget: z.string().min(1, "Budget is required"),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  targetViews: z.string().optional(),
-  targetClicks: z.string().optional(),
-  targetConversions: z.string().optional(),
-  targetRevenue: z.string().optional(),
-});
+const CAMPAIGN_TOTAL_DAYS = 60;
 
-type CampaignFormData = z.infer<typeof campaignSchema>;
+function daysRemaining(campaign: Campaign): number {
+  if (!campaign.startDate) return CAMPAIGN_TOTAL_DAYS;
+  const totalDays = (campaign as any).totalDays ?? CAMPAIGN_TOTAL_DAYS;
+  const end = addDays(new Date(campaign.startDate), totalDays);
+  return Math.max(0, differenceInDays(end, new Date()));
+}
 
-export default function BrandCampaigns() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { toast } = useToast();
+function affiliateFees(campaign: Campaign): number {
+  return parseFloat((campaign as any).affiliateFeesDue ?? campaign.spentAmount ?? "0");
+}
 
-  const { data: brands = [] } = useQuery<Brand[]>({
-    queryKey: ["/api/brands"],
-  });
+function netValue(campaign: Campaign): number {
+  return parseFloat(campaign.actualRevenue ?? "0") - affiliateFees(campaign);
+}
 
-  const selectedBrandId = brands[0]?.id;
-
-  const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
-    queryKey: ["/api/campaigns", { brandId: selectedBrandId }],
-    queryFn: async () => {
-      if (!selectedBrandId) return [];
-      const res = await fetch(`/api/campaigns?brandId=${selectedBrandId}`);
-      if (!res.ok) throw new Error("Failed to fetch campaigns");
-      return res.json();
-    },
-    enabled: !!selectedBrandId,
-  });
-
-  const { data: stats } = useQuery<{
-    totalCampaigns: number;
-    activeCampaigns: number;
-    totalBudget: number;
-    totalSpent: number;
-    totalRevenue: number;
-    averageROI: number;
-  }>({
-    queryKey: ["/api/campaigns/stats", { brandId: selectedBrandId }],
-    queryFn: async () => {
-      if (!selectedBrandId) return null;
-      const res = await fetch(`/api/campaigns/stats?brandId=${selectedBrandId}`);
-      if (!res.ok) throw new Error("Failed to fetch stats");
-      return res.json();
-    },
-    enabled: !!selectedBrandId,
-  });
-
-  const form = useForm<CampaignFormData>({
-    resolver: zodResolver(campaignSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      budget: "",
-      startDate: "",
-      endDate: "",
-      targetViews: "",
-      targetClicks: "",
-      targetConversions: "",
-      targetRevenue: "",
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: CampaignFormData) => {
-      return apiRequest("POST", "/api/campaigns", {
-        brandId: selectedBrandId,
-        name: data.name,
-        description: data.description || null,
-        budget: data.budget,
-        startDate: data.startDate ? new Date(data.startDate).toISOString() : null,
-        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
-        targetViews: data.targetViews ? parseInt(data.targetViews) : null,
-        targetClicks: data.targetClicks ? parseInt(data.targetClicks) : null,
-        targetConversions: data.targetConversions ? parseInt(data.targetConversions) : null,
-        targetRevenue: data.targetRevenue || null,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/stats"] });
-      toast({
-        title: "Campaign Created",
-        description: "Your new campaign has been created successfully.",
-      });
-      setIsCreateDialogOpen(false);
-      form.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Creation Failed",
-        description: "There was an error creating the campaign.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return apiRequest("PATCH", `/api/campaigns/${id}`, { status });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/stats"] });
-      toast({
-        title: "Status Updated",
-        description: "Campaign status has been updated.",
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/campaigns/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns/stats"] });
-      toast({
-        title: "Campaign Deleted",
-        description: "The campaign has been removed.",
-      });
-    },
-  });
-
-  const onSubmit = (data: CampaignFormData) => {
-    createMutation.mutate(data);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Active</Badge>;
-      case "paused":
-        return <Badge variant="secondary">Paused</Badge>;
-      case "completed":
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">Completed</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">Draft</Badge>;
-    }
-  };
-
-  const calculateProgress = (actual: number, target: number | null) => {
-    if (!target || target === 0) return 0;
-    return Math.min(100, (actual / target) * 100);
-  };
-
-  const defaultStats = {
-    totalCampaigns: 0,
-    activeCampaigns: 0,
-    totalBudget: 0,
-    totalSpent: 0,
-    totalRevenue: 0,
-    averageROI: 0,
-  };
-
-  const currentStats = stats || defaultStats;
+function CampaignCard({ campaign, onClick }: { campaign: Campaign; onClick: () => void }) {
+  const rem = daysRemaining(campaign);
+  const total = (campaign as any).totalDays ?? CAMPAIGN_TOTAL_DAYS;
+  const pct = Math.max(0, Math.min(100, ((total - rem) / total) * 100));
+  const isExpired = campaign.status === "completed" || campaign.status === "cancelled" || rem === 0;
+  const gross = parseFloat(campaign.actualRevenue ?? "0");
+  const fees = affiliateFees(campaign);
+  const net = gross - fees;
 
   return (
-    <div className="space-y-6 pb-24 md:pb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Campaign Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Create and track marketing campaigns with ROI analytics
-          </p>
+    <div
+      data-testid={`card-campaign-${campaign.id}`}
+      onClick={onClick}
+      className="bg-[#1a1c1b] border border-white/10 rounded-2xl p-5 cursor-pointer hover:border-[#677A67]/60 hover:bg-[#1e201f] transition-all group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#677A67]/20 flex items-center justify-center shrink-0">
+            <Video size={18} className="text-[#677A67]" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white text-sm leading-tight">{campaign.name}</h3>
+            <p className="text-xs text-white/40 mt-0.5">
+              {campaign.startDate
+                ? `Launched ${format(new Date(campaign.startDate), "d MMM yyyy")}`
+                : "Not started"}
+            </p>
+          </div>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-full gap-2" data-testid="button-create-campaign">
-              <Plus className="h-4 w-4" />
-              New Campaign
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Campaign</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Campaign Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Summer Sale 2026"
-                          {...field}
-                          data-testid="input-campaign-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Campaign description..."
-                          className="resize-none"
-                          {...field}
-                          data-testid="input-campaign-description"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="budget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Budget ($)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="10000"
-                          {...field}
-                          data-testid="input-campaign-budget"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            data-testid="input-campaign-start-date"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            data-testid="input-campaign-end-date"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium mb-3">Target Goals (Optional)</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="targetViews"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Views</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="50000"
-                              {...field}
-                              data-testid="input-target-views"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="targetClicks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Clicks</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="5000"
-                              {...field}
-                              data-testid="input-target-clicks"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="targetConversions"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Conversions</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="500"
-                              {...field}
-                              data-testid="input-target-conversions"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="targetRevenue"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Revenue ($)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="25000"
-                              {...field}
-                              data-testid="input-target-revenue"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsCreateDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                    data-testid="button-submit-campaign"
-                  >
-                    {createMutation.isPending ? "Creating..." : "Create Campaign"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <Badge
+            className={`text-[10px] px-2 py-0.5 rounded-full border-0 font-medium ${
+              isExpired ? "bg-white/10 text-white/50" : "bg-[#677A67]/20 text-[#677A67]"
+            }`}
+          >
+            {isExpired ? "Expired" : "Active"}
+          </Badge>
+          <ChevronRight size={16} className="text-white/30 group-hover:text-white/60 transition-colors" />
+        </div>
       </div>
 
-      <Tabs defaultValue="campaigns" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="campaigns" data-testid="tab-campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="analytics" data-testid="tab-analytics">ROI Analytics</TabsTrigger>
+      {/* Days progress bar */}
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[11px] text-white/40">Day {total - rem} of {total}</span>
+          <span className="text-[11px] font-medium text-white/70">
+            {rem > 0 ? `${rem} days remaining` : "Ended"}
+          </span>
+        </div>
+        <Progress
+          value={pct}
+          className="h-1.5 bg-white/10"
+          data-testid={`progress-campaign-${campaign.id}`}
+        />
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-white/5 rounded-xl p-3 flex items-center gap-2">
+          <RefreshCw size={12} className="text-white/30 shrink-0" />
+          <div>
+            <div className="text-xs font-semibold text-white">{(campaign as any).repostCount ?? 0}</div>
+            <div className="text-[10px] text-white/40">Reposts</div>
+          </div>
+        </div>
+        <div className="bg-white/5 rounded-xl p-3 flex items-center gap-2">
+          <TrendingUp size={12} className="text-white/30 shrink-0" />
+          <div>
+            <div className="text-xs font-semibold text-white">{campaign.actualConversions ?? 0}</div>
+            <div className="text-[10px] text-white/40">Units Sold</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Financial triptych */}
+      <div className="border-t border-white/8 pt-3 grid grid-cols-3 gap-2">
+        <div className="flex flex-col items-center text-center">
+          <span className="text-sm font-semibold text-white/80">€{gross.toFixed(2)}</span>
+          <span className="text-[10px] text-white/35 mt-0.5">Gross Value</span>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <span className="text-sm font-semibold text-red-400">€{fees.toFixed(2)}</span>
+          <span className="text-[10px] text-white/35 mt-0.5">Affiliate Fees</span>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <span className="text-sm font-semibold text-emerald-400">€{Math.abs(net).toFixed(2)}</span>
+          <span className="text-[10px] text-white/35 mt-0.5">Net Earned</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+        <Play size={24} className="text-white/20" />
+      </div>
+      <p className="text-white/40 text-sm">{label}</p>
+    </div>
+  );
+}
+
+export default function BrandCampaigns() {
+  const [, navigate] = useLocation();
+  const [tab, setTab] = useState<"active" | "expired">("active");
+
+  const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
+    queryKey: ["/api/campaigns"],
+  });
+
+  const active = campaigns.filter(
+    (c) => c.status === "active" || c.status === "paused" || c.status === "draft"
+  );
+  const expired = campaigns.filter(
+    (c) => c.status === "completed" || c.status === "cancelled"
+  );
+  const totalNet = campaigns.reduce((s, c) => s + netValue(c), 0);
+
+  return (
+    <div className="min-h-screen bg-[#111211] text-white">
+      {/* Header */}
+      <div className="px-5 pt-8 pb-4">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-2xl font-bold tracking-tight">Campaigns</h1>
+          <Button
+            data-testid="button-new-campaign"
+            size="sm"
+            onClick={() => navigate("/brand/campaigns/new")}
+            className="bg-[#677A67] hover:bg-[#5a6b5a] text-white text-xs px-4 h-8 rounded-full"
+          >
+            + New
+          </Button>
+        </div>
+        <p className="text-sm text-white/40">Video-linked campaigns with publisher performance</p>
+      </div>
+
+      {/* Summary strip */}
+      {!isLoading && (
+        <div className="px-5 mb-5">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white/5 border border-white/8 rounded-2xl p-3 flex flex-col gap-1">
+              <div className="flex items-center gap-1.5 text-white/40">
+                <Play size={14} />
+                <span className="text-[10px]">Active</span>
+              </div>
+              <span className="text-lg font-bold text-white">{active.length}</span>
+            </div>
+            <div className="bg-white/5 border border-white/8 rounded-2xl p-3 flex flex-col gap-1">
+              <div className="flex items-center gap-1.5 text-white/40">
+                <Users size={14} />
+                <span className="text-[10px]">Total</span>
+              </div>
+              <span className="text-lg font-bold text-white">{campaigns.length}</span>
+            </div>
+            <div className="bg-white/5 border border-white/8 rounded-2xl p-3 flex flex-col gap-1">
+              <div className="flex items-center gap-1.5 text-white/40">
+                <DollarSign size={14} />
+                <span className="text-[10px]">Net Earned</span>
+              </div>
+              <span className="text-lg font-bold text-white">€{totalNet.toFixed(0)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "active" | "expired")} className="px-5">
+        <TabsList
+          className="bg-white/5 border border-white/10 rounded-2xl p-1 mb-5 w-full h-10"
+          data-testid="tabs-campaign-status"
+        >
+          <TabsTrigger
+            value="active"
+            data-testid="tab-active"
+            className="flex-1 rounded-xl text-xs data-[state=active]:bg-[#677A67] data-[state=active]:text-white text-white/50 transition-all"
+          >
+            Active <span className="ml-1.5 opacity-60">({active.length})</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="expired"
+            data-testid="tab-expired"
+            className="flex-1 rounded-xl text-xs data-[state=active]:bg-white/15 data-[state=active]:text-white text-white/50 transition-all"
+          >
+            Expired <span className="ml-1.5 opacity-60">({expired.length})</span>
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="campaigns" className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Total Campaigns"
-              value={currentStats.totalCampaigns.toString()}
-              subtitle={`${currentStats.activeCampaigns} active`}
-              icon={Target}
-            />
-            <StatCard
-              title="Total Budget"
-              value={`$${currentStats.totalBudget.toLocaleString()}`}
-              subtitle={`$${currentStats.totalSpent.toLocaleString()} spent`}
-              icon={DollarSign}
-            />
-            <StatCard
-              title="Total Revenue"
-              value={`$${currentStats.totalRevenue.toLocaleString()}`}
-              subtitle="From all campaigns"
-              icon={TrendingUp}
-            />
-            <StatCard
-              title="Average ROI"
-              value={`${currentStats.averageROI.toFixed(1)}%`}
-              subtitle="Return on investment"
-              icon={BarChart3}
-              trend={currentStats.averageROI > 0 ? { value: currentStats.averageROI, isPositive: true } : undefined}
-            />
-          </div>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg font-semibold">Active Campaigns</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Track performance and manage your marketing campaigns
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))}
-                </div>
-              ) : campaigns.length === 0 ? (
-                <div className="text-center py-12">
-                  <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No campaigns yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Create your first campaign to start tracking performance
-                  </p>
-                  <Button
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    className="rounded-full gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create Campaign
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {campaigns.map((campaign) => (
-                    <Card key={campaign.id} className="overflow-visible" data-testid={`card-campaign-${campaign.id}`}>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="font-semibold truncate">{campaign.name}</h3>
-                              {getStatusBadge(campaign.status || "draft")}
-                            </div>
-                            {campaign.description && (
-                              <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
-                                {campaign.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                              <span className="flex items-center gap-1">
-                                <DollarSign className="h-3 w-3" />
-                                Budget: ${Number(campaign.budget).toLocaleString()}
-                              </span>
-                              {campaign.startDate && (
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {format(new Date(campaign.startDate), "MMM d, yyyy")}
-                                  {campaign.endDate && ` - ${format(new Date(campaign.endDate), "MMM d, yyyy")}`}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" data-testid={`button-campaign-menu-${campaign.id}`}>
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {campaign.status !== "active" && (
-                                <DropdownMenuItem
-                                  onClick={() => updateStatusMutation.mutate({ id: campaign.id, status: "active" })}
-                                >
-                                  <Play className="h-4 w-4 mr-2" />
-                                  Activate
-                                </DropdownMenuItem>
-                              )}
-                              {campaign.status === "active" && (
-                                <DropdownMenuItem
-                                  onClick={() => updateStatusMutation.mutate({ id: campaign.id, status: "paused" })}
-                                >
-                                  <Pause className="h-4 w-4 mr-2" />
-                                  Pause
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => deleteMutation.mutate(campaign.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t">
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-muted-foreground">Views</span>
-                              <span className="font-medium">
-                                {campaign.actualViews?.toLocaleString() || 0}
-                                {campaign.targetViews && (
-                                  <span className="text-muted-foreground"> / {campaign.targetViews.toLocaleString()}</span>
-                                )}
-                              </span>
-                            </div>
-                            <Progress value={calculateProgress(campaign.actualViews || 0, campaign.targetViews)} className="h-1.5" />
-                          </div>
-
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-muted-foreground">Clicks</span>
-                              <span className="font-medium">
-                                {campaign.actualClicks?.toLocaleString() || 0}
-                                {campaign.targetClicks && (
-                                  <span className="text-muted-foreground"> / {campaign.targetClicks.toLocaleString()}</span>
-                                )}
-                              </span>
-                            </div>
-                            <Progress value={calculateProgress(campaign.actualClicks || 0, campaign.targetClicks)} className="h-1.5" />
-                          </div>
-
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-muted-foreground">Conversions</span>
-                              <span className="font-medium">
-                                {campaign.actualConversions?.toLocaleString() || 0}
-                                {campaign.targetConversions && (
-                                  <span className="text-muted-foreground"> / {campaign.targetConversions.toLocaleString()}</span>
-                                )}
-                              </span>
-                            </div>
-                            <Progress value={calculateProgress(campaign.actualConversions || 0, campaign.targetConversions)} className="h-1.5" />
-                          </div>
-
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-muted-foreground">Revenue</span>
-                              <span className="font-medium">
-                                ${Number(campaign.actualRevenue || 0).toLocaleString()}
-                                {campaign.targetRevenue && (
-                                  <span className="text-muted-foreground"> / ${Number(campaign.targetRevenue).toLocaleString()}</span>
-                                )}
-                              </span>
-                            </div>
-                            <Progress value={calculateProgress(Number(campaign.actualRevenue || 0), campaign.targetRevenue ? Number(campaign.targetRevenue) : null)} className="h-1.5" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="active" className="space-y-4">
+          {isLoading ? (
+            <>
+              <Skeleton className="h-52 rounded-2xl bg-white/5" />
+              <Skeleton className="h-52 rounded-2xl bg-white/5" />
+            </>
+          ) : active.length === 0 ? (
+            <EmptyState label="No active campaigns yet. Launch one to get started." />
+          ) : (
+            active.map((c) => (
+              <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/brand/campaigns/${c.id}`)} />
+            ))
+          )}
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-6">
-          <CampaignROIDashboard campaigns={campaigns} stats={currentStats} />
+        <TabsContent value="expired" className="space-y-4">
+          {isLoading ? (
+            <Skeleton className="h-52 rounded-2xl bg-white/5" />
+          ) : expired.length === 0 ? (
+            <EmptyState label="No expired campaigns yet." />
+          ) : (
+            expired.map((c) => (
+              <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/brand/campaigns/${c.id}`)} />
+            ))
+          )}
         </TabsContent>
       </Tabs>
+
+      <div className="h-24" />
     </div>
   );
 }

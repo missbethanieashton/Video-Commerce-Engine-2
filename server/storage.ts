@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { db } from "./db";
 import {
   type User, type InsertUser,
@@ -28,6 +28,7 @@ import {
   type EmbedDeployment, type InsertEmbedDeployment,
   type CommissionTransaction, type InsertCommissionTransaction,
   type BrandOutreach, type InsertBrandOutreach,
+  type PublisherNotification, type InsertPublisherNotification,
   type BrandSubscription, type InsertBrandSubscription,
   type BrandBillingRecord, type InsertBrandBillingRecord,
   type BrandPayoutMethod, type InsertBrandPayoutMethod,
@@ -60,6 +61,7 @@ import {
   embedDeployments,
   commissionTransactions,
   brandOutreachRequests,
+  publisherNotifications,
   brandSubscriptions,
   brandBillingRecords,
   brandPayoutMethods,
@@ -247,6 +249,16 @@ export interface IStorage {
   
   // UTM Resolution
   resolveUtmToAffiliate(utmCode: string): Promise<{ affiliateId: string; campaignAffiliateId: string | null; videoId: string; commissionRate: string } | null>;
+
+  // Publisher Notifications
+  getPublisherNotifications(affiliateId: string): Promise<PublisherNotification[]>;
+  createPublisherNotification(data: InsertPublisherNotification): Promise<PublisherNotification>;
+  markPublisherNotificationRead(id: number): Promise<void>;
+  getUnreadNotificationCount(affiliateId: string): Promise<number>;
+  // Campaign Publisher Management
+  getCampaignDetail(campaignId: string): Promise<any>;
+  disableCampaignPublisher(campaignAffiliateId: string): Promise<CampaignAffiliate | undefined>;
+  extendCampaignPublisher(campaignAffiliateId: string, hours: number): Promise<CampaignAffiliate | undefined>;
 
   // Brand Billing & Account
   getBrandSubscription(userId: string): Promise<BrandSubscription | undefined>;
@@ -1462,6 +1474,27 @@ export class MemStorage implements IStorage {
     return null;
   }
 
+  // Publisher Notifications & Publisher Management — MemStorage stubs
+  private publisherNotificationsList: PublisherNotification[] = [];
+  async getPublisherNotifications(affiliateId: string): Promise<PublisherNotification[]> {
+    return this.publisherNotificationsList.filter(n => n.affiliateId === affiliateId).sort((a, b) => +new Date(b.createdAt!) - +new Date(a.createdAt!));
+  }
+  async createPublisherNotification(data: InsertPublisherNotification): Promise<PublisherNotification> {
+    const n: PublisherNotification = { id: Date.now(), createdAt: new Date(), ...data } as any;
+    this.publisherNotificationsList.push(n);
+    return n;
+  }
+  async markPublisherNotificationRead(id: number): Promise<void> {
+    const n = this.publisherNotificationsList.find(x => x.id === id);
+    if (n) n.isRead = true;
+  }
+  async getUnreadNotificationCount(affiliateId: string): Promise<number> {
+    return this.publisherNotificationsList.filter(n => n.affiliateId === affiliateId && !n.isRead).length;
+  }
+  async getCampaignDetail(campaignId: string): Promise<any> { return null; }
+  async disableCampaignPublisher(campaignAffiliateId: string): Promise<CampaignAffiliate | undefined> { return undefined; }
+  async extendCampaignPublisher(campaignAffiliateId: string, hours: number): Promise<CampaignAffiliate | undefined> { return undefined; }
+
   // Brand Billing & Account — MemStorage stubs (in-memory maps)
   private brandSubscriptionsMap: Map<string, BrandSubscription> = new Map();
   private brandBillingRecordsList: BrandBillingRecord[] = [];
@@ -2150,6 +2183,52 @@ export class DatabaseStorage implements IStorage {
     }
 
     return null;
+  }
+
+  // Publisher Notifications — DatabaseStorage implementations
+  async getPublisherNotifications(affiliateId: string): Promise<PublisherNotification[]> {
+    return db.select().from(publisherNotifications)
+      .where(eq(publisherNotifications.affiliateId, affiliateId))
+      .orderBy(desc(publisherNotifications.createdAt));
+  }
+  async createPublisherNotification(data: InsertPublisherNotification): Promise<PublisherNotification> {
+    const [n] = await db.insert(publisherNotifications).values(data).returning();
+    return n;
+  }
+  async markPublisherNotificationRead(id: number): Promise<void> {
+    await db.update(publisherNotifications).set({ isRead: true }).where(eq(publisherNotifications.id, id));
+  }
+  async getUnreadNotificationCount(affiliateId: string): Promise<number> {
+    const [{ count }] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(publisherNotifications)
+      .where(and(eq(publisherNotifications.affiliateId, affiliateId), eq(publisherNotifications.isRead, false)));
+    return count;
+  }
+  async getCampaignDetail(campaignId: string): Promise<any> {
+    const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, campaignId));
+    if (!campaign) return null;
+    const affiliateRows = await db.select().from(campaignAffiliates).where(eq(campaignAffiliates.videoId, campaign.videoId ?? ""));
+    // Enrich affiliates with user info
+    const enriched = await Promise.all(affiliateRows.map(async (ca) => {
+      const [user] = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(eq(users.id, ca.affiliateId));
+      return { ...ca, user };
+    }));
+    return { ...campaign, affiliates: enriched };
+  }
+  async disableCampaignPublisher(campaignAffiliateId: string): Promise<CampaignAffiliate | undefined> {
+    const [updated] = await db.update(campaignAffiliates)
+      .set({ isDisabled: true, disabledAt: new Date() })
+      .where(eq(campaignAffiliates.id, campaignAffiliateId))
+      .returning();
+    return updated;
+  }
+  async extendCampaignPublisher(campaignAffiliateId: string, hours: number): Promise<CampaignAffiliate | undefined> {
+    const graceUntil = new Date(Date.now() + hours * 60 * 60 * 1000);
+    const [updated] = await db.update(campaignAffiliates)
+      .set({ isDisabled: false, graceUntil })
+      .where(eq(campaignAffiliates.id, campaignAffiliateId))
+      .returning();
+    return updated;
   }
 
   // Brand Billing & Account — DatabaseStorage implementations
