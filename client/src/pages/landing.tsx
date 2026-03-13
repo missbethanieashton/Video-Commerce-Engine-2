@@ -594,6 +594,57 @@ function ParallaxImageSection() {
 }
 
 function VideoOfTheWeekSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [activeProduct, setActiveProduct] = useState<number | null>(null);
+
+  const sceneProducts = [
+    {
+      id: 0,
+      name: "Aesop",
+      detail: "Hand & Body Wash",
+      price: "€33",
+      cta: "BUY NOW",
+      href: null,
+      color: "#c8a97e",
+      windows: [{ start: 1, end: 9 }, { start: 25, end: 33 }, { start: 49, end: 57 }],
+    },
+    {
+      id: 1,
+      name: "High Stay Paris",
+      detail: "Corporate Leasing",
+      price: null,
+      cta: "BOOK NOW",
+      href: "https://www.highstay.com",
+      color: "#677A67",
+      windows: [{ start: 9, end: 17 }, { start: 33, end: 41 }, { start: 57, end: 65 }],
+    },
+    {
+      id: 2,
+      name: "GHD Air Wrap",
+      detail: "Professional Styler",
+      price: "€649",
+      cta: "BUY NOW",
+      href: null,
+      color: "#8a7090",
+      windows: [{ start: 17, end: 25 }, { start: 41, end: 49 }, { start: 65, end: 73 }],
+    },
+  ];
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const handleTimeUpdate = () => {
+      const t = video.currentTime;
+      let found: number | null = null;
+      for (const p of sceneProducts) {
+        if (p.windows.some(w => t >= w.start && t < w.end)) { found = p.id; break; }
+      }
+      setActiveProduct(prev => prev !== found ? found : prev);
+    };
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, []);
+
   const engagementBubbles = [
     { label: "Clicks", value: "12.4K", top: "10%", left: "5%", delay: 0, size: 90 },
     { label: "Sales", value: "$8,200", top: "30%", right: "5%", delay: 0.5, size: 100 },
@@ -728,6 +779,7 @@ function VideoOfTheWeekSection() {
               {/* Screen */}
               <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
                 <video
+                  ref={videoRef}
                   autoPlay
                   loop
                   muted
@@ -737,6 +789,66 @@ function VideoOfTheWeekSection() {
                 >
                   <source src={discoveryPacksVideo} type="video/mp4" />
                 </video>
+
+                {/* Timed product bubbles */}
+                <AnimatePresence mode="wait">
+                  {activeProduct !== null && (() => {
+                    const p = sceneProducts[activeProduct];
+                    return (
+                      <motion.div
+                        key={p.id}
+                        initial={{ opacity: 0, y: 18, scale: 0.92 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                        className="absolute left-2.5 right-2.5 z-10"
+                        style={{ bottom: "68px" }}
+                      >
+                        <div
+                          className="rounded-2xl px-3 py-2 flex items-center gap-2.5"
+                          style={{
+                            background: "rgba(0,0,0,0.55)",
+                            backdropFilter: "blur(12px)",
+                            border: `1px solid ${p.color}55`,
+                            boxShadow: `0 0 12px ${p.color}33`,
+                          }}
+                        >
+                          {/* Colour dot */}
+                          <div
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: p.color }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white font-semibold text-[10px] leading-tight truncate">{p.name}</div>
+                            <div className="text-white/55 text-[8px] leading-tight">{p.detail}</div>
+                          </div>
+                          {p.price && (
+                            <div className="text-white font-bold text-xs flex-shrink-0">{p.price}</div>
+                          )}
+                          {p.href ? (
+                            <a
+                              href={p.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white"
+                              style={{ background: p.color }}
+                            >
+                              {p.cta}
+                            </a>
+                          ) : (
+                            <button
+                              className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white"
+                              style={{ background: p.color }}
+                            >
+                              {p.cta}
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+                </AnimatePresence>
+
                 {/* Video overlay info */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <div className="text-white font-semibold text-sm">Discovery Packs</div>
