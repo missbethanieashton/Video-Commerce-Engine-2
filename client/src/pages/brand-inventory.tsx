@@ -10,22 +10,38 @@ import { Package, Link2, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 
+const PLATFORMS = [
+  { id: "shopify",     label: "Shopify",      placeholder: "shpat_xxxxxxxxxxxxxxxxxxxx" },
+  { id: "woocommerce", label: "WooCommerce",  placeholder: "ck_xxxxxxxxxxxxxxxxxxxxxxxx" },
+  { id: "bigcommerce", label: "BigCommerce",  placeholder: "your BigCommerce API key" },
+  { id: "magento",     label: "Magento",      placeholder: "your Magento integration token" },
+  { id: "custom",      label: "Custom API",   placeholder: "your custom API key or token" },
+] as const;
+
+type PlatformId = (typeof PLATFORMS)[number]["id"];
+
 export default function BrandInventory() {
   const [apiKeyInput, setApiKeyInput] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformId | null>(null);
   const [isApiConnected, setIsApiConnected] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
+
+  const activePlatform = PLATFORMS.find((p) => p.id === selectedPlatform);
+  const inputPlaceholder = activePlatform
+    ? `${activePlatform.label} API key — e.g. ${activePlatform.placeholder}`
+    : "Select a platform above, then enter your API key";
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
   const handleConnectApi = () => {
-    if (apiKeyInput.trim()) {
+    if (selectedPlatform && apiKeyInput.trim()) {
       setIsApiConnected(true);
       toast({
-        title: "API Connected!",
-        description: "Your product inventory is now syncing.",
+        title: `${activePlatform?.label ?? "API"} Connected!`,
+        description: "Your product inventory is now syncing automatically.",
       });
     }
   };
@@ -84,30 +100,44 @@ export default function BrandInventory() {
           {!isApiConnected ? (
             <>
               <div className="space-y-2">
+                <Label>Select your platform</Label>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPlatform(p.id)}
+                      data-testid={`button-platform-${p.id}`}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                        selectedPlatform === p.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-transparent text-foreground border-border hover:border-primary/50 hover:bg-muted"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="api-key">API Key</Label>
                 <Input
                   id="api-key"
                   type="password"
-                  placeholder="Enter your Shopify, WooCommerce, or custom API key"
+                  placeholder={inputPlaceholder}
                   value={apiKeyInput}
                   onChange={(e) => setApiKeyInput(e.target.value)}
+                  disabled={!selectedPlatform}
                   data-testid="input-inventory-api-key"
                 />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">Shopify</Badge>
-                <Badge variant="outline">WooCommerce</Badge>
-                <Badge variant="outline">BigCommerce</Badge>
-                <Badge variant="outline">Magento</Badge>
-                <Badge variant="outline">Custom API</Badge>
               </div>
               <Button 
                 onClick={handleConnectApi}
                 className="rounded-full"
-                disabled={!apiKeyInput.trim()}
+                disabled={!selectedPlatform || !apiKeyInput.trim()}
                 data-testid="button-connect-inventory-api"
               >
-                Connect API
+                Connect {activePlatform?.label ?? "API"}
               </Button>
             </>
           ) : (
