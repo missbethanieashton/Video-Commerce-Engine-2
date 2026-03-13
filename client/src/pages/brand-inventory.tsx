@@ -6,16 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Link2, Plus, RefreshCw } from "lucide-react";
+import { Package, Link2, Plus, RefreshCw, Code2 } from "lucide-react";
+import { SiShopify, SiWoocommerce, SiBigcommerce, SiMagento } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 
 const PLATFORMS = [
-  { id: "shopify",     label: "Shopify",      placeholder: "shpat_xxxxxxxxxxxxxxxxxxxx" },
-  { id: "woocommerce", label: "WooCommerce",  placeholder: "ck_xxxxxxxxxxxxxxxxxxxxxxxx" },
-  { id: "bigcommerce", label: "BigCommerce",  placeholder: "your BigCommerce API key" },
-  { id: "magento",     label: "Magento",      placeholder: "your Magento integration token" },
-  { id: "custom",      label: "Custom API",   placeholder: "your custom API key or token" },
+  { id: "shopify",     label: "Shopify",      placeholder: "shpat_xxxxxxxxxxxxxxxxxxxx",        Icon: SiShopify,     color: "#96bf48" },
+  { id: "woocommerce", label: "WooCommerce",  placeholder: "ck_xxxxxxxxxxxxxxxxxxxxxxxx",       Icon: SiWoocommerce, color: "#7f54b3" },
+  { id: "bigcommerce", label: "BigCommerce",  placeholder: "your BigCommerce API key",          Icon: SiBigcommerce, color: "#121118" },
+  { id: "magento",     label: "Magento",      placeholder: "your Magento integration token",    Icon: SiMagento,     color: "#ee672f" },
+  { id: "custom",      label: "Custom API",   placeholder: "your custom API key or token",      Icon: Code2,         color: "#677A67" },
 ] as const;
 
 type PlatformId = (typeof PLATFORMS)[number]["id"];
@@ -101,22 +102,32 @@ export default function BrandInventory() {
             <>
               <div className="space-y-2">
                 <Label>Select your platform</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PLATFORMS.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setSelectedPlatform(p.id)}
-                      data-testid={`button-platform-${p.id}`}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                        selectedPlatform === p.id
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-transparent text-foreground border-border hover:border-primary/50 hover:bg-muted"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                <div className="flex flex-wrap gap-3">
+                  {PLATFORMS.map((p) => {
+                    const isSelected = selectedPlatform === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedPlatform(p.id)}
+                        data-testid={`button-platform-${p.id}`}
+                        title={p.label}
+                        className={`flex flex-col items-center gap-1.5 w-20 py-3 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-card hover:border-muted-foreground/40 hover:bg-muted/50"
+                        }`}
+                      >
+                        <p.Icon
+                          style={{ color: isSelected ? p.color : undefined }}
+                          className={`h-7 w-7 transition-colors ${!isSelected ? "text-muted-foreground" : ""}`}
+                        />
+                        <span className={`text-[10px] font-medium leading-tight text-center ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
+                          {p.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="space-y-2">
