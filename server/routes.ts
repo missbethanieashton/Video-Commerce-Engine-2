@@ -38,6 +38,7 @@ import {
 } from "./emailService";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
+import { ai } from "./replit_integrations/detection/client";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
@@ -1347,36 +1348,101 @@ export async function registerRoutes(
     }
   });
 
-  // Create detection job for a video
+  // Create detection job for a video — runs Gemini AI product detection
   app.post("/api/videos/:id/detections", async (req, res) => {
     try {
-      const { brandIds } = req.body;
-      
+      const { brandIds, videoTitle, videoDescription } = req.body;
+
       const job = await storage.createDetectionJob({
         videoId: req.params.id,
         selectedBrandIds: JSON.stringify(brandIds || []),
         frameSamplingRate: 1,
       });
 
-      // Simulate processing (in real implementation, this would be async worker)
-      setTimeout(async () => {
-        await storage.updateDetectionJob(job.id, { 
-          status: "processing",
-          startedAt: new Date(),
-        });
-        
-        // Simulate completion after 5 seconds
-        setTimeout(async () => {
-          await storage.updateDetectionJob(job.id, { 
+      // Return immediately so the client can start polling
+      res.status(201).json(job);
+
+      // Run Gemini detection asynchronously
+      (async () => {
+        try {
+          await storage.updateDetectionJob(job.id, {
+            status: "processing",
+            startedAt: new Date(),
+          });
+
+          // Gather product catalog from selected brands
+          const allProducts: Array<{ id: string; name: string; description: string | null; category: string | null; brandId: string; brandName: string }> = [];
+          for (const brandId of (brandIds || [])) {
+            const brand = await storage.getBrand(brandId);
+            const products = await storage.getProducts(brandId);
+            for (const product of products) {
+              allProducts.push({
+                id: product.id,
+                name: product.name,
+                description: product.description || null,
+                category: product.category || null,
+                brandId: product.brandId || brandId,
+                brandName: brand?.name || "Unknown Brand",
+              });
+            }
+          }
+
+          let detectedProducts: Array<{ productId: string; confidence: number }> = [];
+
+          if (allProducts.length > 0) {
+            const catalogJson = JSON.stringify(allProducts.map(p => ({
+              id: p.id, name: p.name, category: p.category, description: p.description, brand: p.brandName,
+            })));
+            const prompt = `You are a video product placement analyst. Given a video with the following metadata:
+Title: "${videoTitle || "Untitled Video"}"
+Description: "${videoDescription || "No description provided"}"
+
+And the following product catalog:
+${catalogJson}
+
+Identify which products from the catalog are most likely to appear or be featured in this video. Return a JSON array with objects like: { "productId": "<id>", "confidence": <0.0-1.0> }. Only include products with confidence > 0.5. Return ONLY valid JSON, no explanation.`;
+
+            const result = await ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+            });
+
+            const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+            const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              detectedProducts = JSON.parse(jsonMatch[0]);
+            }
+          }
+
+          // Store detection results
+          for (const det of detectedProducts) {
+            const product = allProducts.find(p => p.id === det.productId);
+            if (product) {
+              await storage.createDetectionResult({
+                jobId: job.id,
+                videoId: req.params.id,
+                productId: det.productId,
+                brandId: product.brandId,
+                confidence: det.confidence.toString(),
+                frameTimestamp: "0",
+                startTime: "0",
+                endTime: "0",
+                boundingBox: null,
+              });
+            }
+          }
+
+          await storage.updateDetectionJob(job.id, {
             status: "completed",
             completedAt: new Date(),
             totalFrames: 30,
             processedFrames: 30,
           });
-        }, 5000);
-      }, 1000);
-
-      res.status(201).json(job);
+        } catch (err) {
+          console.error("Gemini detection error:", err);
+          await storage.updateDetectionJob(job.id, { status: "failed" } as any).catch(() => {});
+        }
+      })();
     } catch (error) {
       res.status(500).json({ error: "Failed to start detection" });
     }

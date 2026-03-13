@@ -6,7 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { BrandDashboardTabs } from "@/components/BrandDashboardTabs";
 import { BrandAnnouncementBanner } from "@/components/BrandAnnouncementBanner";
-import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings } from "lucide-react";
+import { VideoUploadModal } from "@/components/VideoUploadModal";
+import { defaultCarouselSettings } from "@/components/ProductCarouselEditor";
+import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -40,6 +42,7 @@ export default function BrandDashboard() {
   const [activeTab, setActiveTab] = useState("stats");
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [isApiConnected, setIsApiConnected] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
@@ -48,6 +51,10 @@ export default function BrandDashboard() {
 
   const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+  });
+
+  const { data: brands = [] } = useQuery<Brand[]>({
+    queryKey: ["/api/brands"],
   });
 
   const { data: stats } = useQuery<{
@@ -105,6 +112,52 @@ export default function BrandDashboard() {
     creatorInviteMutation.mutate(data);
   };
 
+  const videoMutation = useMutation({
+    mutationFn: async (data: { title: string; description?: string; videoUrl: string; brandIds: string[] }) => {
+      return apiRequest("POST", "/api/videos", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+      toast({ title: "Video Published!", description: "Your video is now being processed for product detection." });
+    },
+    onError: () => {
+      toast({ title: "Upload Failed", description: "There was an error uploading your video.", variant: "destructive" });
+    },
+  });
+
+  const referralMutation = useMutation({
+    mutationFn: async (data: { brandName: string; prContactName: string; prContactEmail: string; productCategory?: string; message?: string }) => {
+      return apiRequest("POST", "/api/brand-referrals", data);
+    },
+    onSuccess: () => {
+      toast({ title: "Referral Sent!", description: "Your brand referral has been submitted." });
+    },
+  });
+
+  const handleVideoUpload = async (data: {
+    title: string;
+    description?: string;
+    videoUrl: string;
+    selectedBrands: string[];
+  }) => {
+    await videoMutation.mutateAsync({
+      title: data.title,
+      description: data.description,
+      videoUrl: data.videoUrl,
+      brandIds: data.selectedBrands,
+    });
+  };
+
+  const handleReferBrand = async (data: {
+    brandName: string;
+    prContactName: string;
+    prContactEmail: string;
+    productCategory?: string;
+    message?: string;
+  }) => {
+    await referralMutation.mutateAsync(data);
+  };
+
   const brandStats = stats || {
     totalViews: 45230,
     totalClicks: 3420,
@@ -126,13 +179,24 @@ export default function BrandDashboard() {
             Manage your products and connect with creators
           </p>
         </div>
-        <Button 
-          className="rounded-full gap-2 w-full sm:w-auto"
-          data-testid="button-add-product"
-        >
-          <Package className="h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            onClick={() => setUploadModalOpen(true)}
+            className="rounded-full gap-2 flex-1 sm:flex-none"
+            data-testid="button-upload-video"
+          >
+            <Upload className="h-4 w-4" />
+            Upload Video
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full gap-2 flex-1 sm:flex-none"
+            data-testid="button-add-product"
+          >
+            <Package className="h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <BrandDashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -517,6 +581,14 @@ export default function BrandDashboard() {
           </CardContent>
         </Card>
       )}
+
+      <VideoUploadModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        brands={brands}
+        onUpload={handleVideoUpload}
+        onReferBrand={handleReferBrand}
+      />
     </div>
   );
 }
