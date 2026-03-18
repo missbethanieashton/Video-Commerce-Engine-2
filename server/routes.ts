@@ -41,7 +41,7 @@ import { registerDetectionRoutes } from "./replit_integrations/detection/routes"
 import { ai } from "./replit_integrations/detection/client";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { stripeService } from "./stripeService";
-import { getStripePublishableKey } from "./stripeClient";
+import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -132,7 +132,7 @@ export async function registerRoutes(
         { userId, plan },
       );
 
-      res.json({ url: session.url });
+      res.json({ url: session.url, sessionId: session.id });
     } catch (e: any) {
       console.error("Creator checkout error:", e);
       res.status(500).json({ error: e?.message ?? "Failed to create checkout session" });
@@ -2592,7 +2592,7 @@ Identify which products from the catalog are most likely to appear or be feature
         { userId, plan },
       );
 
-      res.json({ url: session.url });
+      res.json({ url: session.url, sessionId: session.id });
     } catch (e: any) {
       console.error("Subscription checkout error:", e);
       res.status(500).json({ error: e?.message ?? "Failed to create checkout session" });
@@ -2801,6 +2801,39 @@ Identify which products from the catalog are most likely to appear or be feature
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
+
+  // Dev/test-only: retrieve Stripe checkout session internals for integration tests
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/dev/stripe/checkout-session/:sessionId", async (req, res) => {
+      try {
+        const stripe = await getUncachableStripeClient();
+        const session = await stripe.checkout.sessions.retrieve(req.params.sessionId, {
+          expand: ["line_items", "line_items.data.price.product"],
+        });
+        res.json({
+          id: session.id,
+          mode: session.mode,
+          status: session.status,
+          currency: session.currency,
+          metadata: session.metadata,
+          line_items: session.line_items?.data.map((item) => ({
+            amount_total: item.amount_total,
+            currency: item.currency,
+            quantity: item.quantity,
+            price: {
+              id: item.price?.id,
+              unit_amount: item.price?.unit_amount,
+              currency: item.price?.currency,
+              recurring: item.price?.recurring,
+              metadata: item.price?.metadata,
+            },
+          })),
+        });
+      } catch (e: any) {
+        res.status(500).json({ error: e?.message ?? "Failed to retrieve session" });
+      }
+    });
+  }
 
   return httpServer;
 }

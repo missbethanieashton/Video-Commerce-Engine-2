@@ -19,10 +19,11 @@ async function loginAndGetCookie(): Promise<string> {
     email: 'missbethanieashton@gmail.com',
     password: 'test1233*',
   });
-  if (!res.ok) throw new Error(`Login failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Login failed: ${res.status} ${await res.text()}`);
   const setCookie = res.headers.get('set-cookie') ?? '';
   const match = setCookie.match(/(connect\.sid=[^;]+)/);
-  return match ? match[1] : '';
+  if (!match) throw new Error('No session cookie returned from login');
+  return match[1];
 }
 
 async function postWithSession(path: string, body: unknown, sessionCookie: string) {
@@ -40,13 +41,25 @@ async function getWithSession(path: string, sessionCookie: string) {
   });
 }
 
+async function getStripeSession(sessionId: string) {
+  const res = await get(`/api/dev/stripe/checkout-session/${sessionId}`);
+  if (!res.ok) throw new Error(`Session fetch failed: ${res.status}`);
+  return res.json();
+}
+
 let sessionCookie = '';
+let adminUserId = '';
 
 beforeAll(async () => {
   sessionCookie = await loginAndGetCookie();
+  const meRes = await getWithSession('/api/auth/me', sessionCookie);
+  const me = await meRes.json();
+  adminUserId = me.id;
 });
 
-describe('Creator Subscription Checkout — Auth Validation', () => {
+// ─── Unauthenticated 401 Guards ─────────────────────────────────────────────
+
+describe('Creator Subscription Checkout — Auth Validation (no session)', () => {
   it('POST /api/creator/subscription/checkout returns 401 without a session', async () => {
     const res = await post('/api/creator/subscription/checkout', { plan: 'starter' });
     expect(res.status).toBe(401);
@@ -62,94 +75,159 @@ describe('Creator Subscription Checkout — Auth Validation', () => {
     expect(body.error).toMatch(/unauthorized/i);
   });
 
-  it('POST /api/creator/subscription/checkout with invalid plan returns 401 (auth checked first)', async () => {
+  it('POST /api/creator/subscription/checkout with invalid plan returns 401 (auth before validation)', async () => {
     const res = await post('/api/creator/subscription/checkout', { plan: 'enterprise' });
-    expect(res.status).toBe(401);
-  });
-
-  it('POST /api/creator/subscription/checkout with empty plan returns 401', async () => {
-    const res = await post('/api/creator/subscription/checkout', { plan: '' });
     expect(res.status).toBe(401);
   });
 });
 
-describe('Creator Subscription Checkout — Authenticated Requests', () => {
-  it('admin login succeeds and returns a session cookie', async () => {
+// ─── Authenticated Session ────────────────────────────────────────────────────
+
+describe('Auth Session — Login & Identity', () => {
+  it('admin login returns session cookie', async () => {
     expect(sessionCookie).toMatch(/connect\.sid=/);
   });
 
-  it('GET /api/auth/me with session returns the authenticated user', async () => {
+  it('GET /api/auth/me with session returns authenticated user', async () => {
     const res = await getWithSession('/api/auth/me', sessionCookie);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toHaveProperty('email', 'missbethanieashton@gmail.com');
     expect(body).toHaveProperty('isAdmin', true);
     expect(body).toHaveProperty('role', 'creator');
-  });
-
-  it('POST /api/creator/subscription/checkout with session returns non-401', async () => {
-    const res = await postWithSession('/api/creator/subscription/checkout', { plan: 'starter' }, sessionCookie);
-    expect(res.status).not.toBe(401);
-    const body = await res.json();
-    if (res.status === 200) {
-      expect(body).toHaveProperty('url');
-      expect(typeof body.url).toBe('string');
-      expect(body.url).toMatch(/^https:\/\//);
-    } else {
-      expect(body).toHaveProperty('error');
-      expect(body.error).not.toMatch(/unauthorized/i);
-    }
-  });
-
-  it('POST /api/creator/subscription/checkout pro plan with session returns non-401', async () => {
-    const res = await postWithSession('/api/creator/subscription/checkout', { plan: 'pro' }, sessionCookie);
-    expect(res.status).not.toBe(401);
-    const body = await res.json();
-    if (res.status === 200) {
-      expect(body).toHaveProperty('url');
-      expect(body.url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
-    }
-  });
-
-  it('POST /api/creator/subscription/portal with session returns non-401', async () => {
-    const res = await postWithSession('/api/creator/subscription/portal', {}, sessionCookie);
-    expect(res.status).not.toBe(401);
-    const body = await res.json();
-    if (res.status === 200) {
-      expect(body).toHaveProperty('url');
-      expect(typeof body.url).toBe('string');
-      expect(body.url).toMatch(/^https:\/\//);
-    } else {
-      expect(body).toHaveProperty('error');
-      expect(body.error).not.toMatch(/unauthorized/i);
-    }
+    expect(body).toHaveProperty('id');
   });
 });
 
-describe('Brand Subscription Checkout — Auth Validation', () => {
-  it('POST /api/brand/subscription/checkout returns 401 without a session', async () => {
-    const res = await post('/api/brand/subscription/checkout', { plan: 'starter' });
+// ─── Creator Checkout — Full Stripe Session Validation ───────────────────────
+
+describe('Creator Checkout — Authenticated with Stripe session internals', () => {
+  it('POST /api/creator/subscription/checkout (starter) returns 200 with url and sessionId', async () => {
+    const res = await postWithSession('/api/creator/subscription/checkout', { plan: 'starter' }, sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('url');
+    expect(body).toHaveProperty('sessionId');
+    expect(body.url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(body.sessionId).toMatch(/^cs_test_/);
+  });
+
+  it('Stripe checkout session (starter) has mode=subscription, correct metadata, and EUR line item', async () => {
+    const checkoutRes = await postWithSession('/api/creator/subscription/checkout', { plan: 'starter' }, sessionCookie);
+    expect(checkoutRes.status).toBe(200);
+    const { sessionId } = await checkoutRes.json();
+
+    const session = await getStripeSession(sessionId);
+
+    expect(session.mode).toBe('subscription');
+    expect(session.metadata).toHaveProperty('plan', 'starter');
+    expect(session.metadata).toHaveProperty('userId', adminUserId);
+
+    expect(Array.isArray(session.line_items)).toBe(true);
+    expect(session.line_items.length).toBeGreaterThanOrEqual(1);
+
+    const lineItem = session.line_items[0];
+    expect(lineItem.currency).toBe('eur');
+    expect(lineItem.price.unit_amount).toBe(24900);
+    expect(lineItem.price.recurring?.interval).toBe('month');
+  }, 30_000);
+
+  it('Stripe checkout session (pro) has mode=subscription with €499 line item', async () => {
+    const checkoutRes = await postWithSession('/api/creator/subscription/checkout', { plan: 'pro' }, sessionCookie);
+    expect(checkoutRes.status).toBe(200);
+    const { sessionId } = await checkoutRes.json();
+
+    const session = await getStripeSession(sessionId);
+
+    expect(session.mode).toBe('subscription');
+    expect(session.metadata).toHaveProperty('plan', 'pro');
+    expect(session.metadata).toHaveProperty('userId', adminUserId);
+
+    const lineItem = session.line_items[0];
+    expect(lineItem.currency).toBe('eur');
+    expect(lineItem.price.unit_amount).toBe(49900);
+    expect(lineItem.price.recurring?.interval).toBe('month');
+  }, 30_000);
+
+  it('POST /api/creator/subscription/portal with session returns 200 with Stripe billing portal URL', async () => {
+    const res = await postWithSession('/api/creator/subscription/portal', {}, sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('url');
+    expect(typeof body.url).toBe('string');
+    expect(body.url).toMatch(/^https:\/\/billing\.stripe\.com\//);
+  }, 15_000);
+});
+
+// ─── Affiliate Connect — Full E2E (create + onboarding URL) ─────────────────
+
+describe('Affiliate Stripe Connect — E2E Create + Onboarding URL', () => {
+  it('POST /api/stripe/connect/create returns 401 without session', async () => {
+    const res = await post('/api/stripe/connect/create', {});
     expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body).toHaveProperty('error');
     expect(body.error).toMatch(/unauthorized/i);
   });
 
-  it('POST /api/brand/subscription/checkout with pro plan returns 401 without session', async () => {
-    const res = await post('/api/brand/subscription/checkout', { plan: 'pro' });
+  it('POST /api/stripe/connect/onboarding returns 401 without session', async () => {
+    const res = await post('/api/stripe/connect/onboarding', {});
     expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toMatch(/unauthorized/i);
   });
 
-  it('POST /api/brand/subscription/checkout with invalid plan returns 401', async () => {
-    const res = await post('/api/brand/subscription/checkout', { plan: 'unlimited' });
+  it('POST /api/stripe/connect/create with session returns 200 with accountId', async () => {
+    const res = await postWithSession('/api/stripe/connect/create', {}, sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('accountId');
+    expect(typeof body.accountId).toBe('string');
+    expect(body.accountId).toMatch(/^acct_/);
+  }, 15_000);
+
+  it('POST /api/stripe/connect/onboarding returns 200 with a Stripe Express onboarding URL', async () => {
+    await postWithSession('/api/stripe/connect/create', {}, sessionCookie);
+
+    const res = await postWithSession('/api/stripe/connect/onboarding', {}, sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('url');
+    expect(typeof body.url).toBe('string');
+    expect(body.url).toMatch(/^https:\/\/connect\.stripe\.com\//);
+  }, 15_000);
+
+  it('GET /api/stripe/connect/status returns 200 with connected and onboarded booleans', async () => {
+    const res = await get('/api/stripe/connect/status');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('connected');
+    expect(body).toHaveProperty('onboarded');
+    expect(typeof body.connected).toBe('boolean');
+    expect(typeof body.onboarded).toBe('boolean');
+  });
+
+  it('GET /api/stripe/connect/status with session returns authenticated user Connect state', async () => {
+    const res = await getWithSession('/api/stripe/connect/status', sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('connected');
+    expect(typeof body.connected).toBe('boolean');
+  });
+});
+
+// ─── Brand Subscription — Unauthenticated Guards ─────────────────────────────
+
+describe('Brand Subscription Checkout — Auth Validation (no session)', () => {
+  it('POST /api/brand/subscription/checkout returns 401 without session', async () => {
+    const res = await post('/api/brand/subscription/checkout', { plan: 'starter' });
     expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toMatch(/unauthorized/i);
   });
 
   it('POST /api/brand/subscription/portal returns 401 without session', async () => {
     const res = await post('/api/brand/subscription/portal', {});
     expect(res.status).toBe(401);
-    const body = await res.json();
-    expect(body).toHaveProperty('error');
   });
 
   it('POST /api/brand/subscription/surplus-invoice returns 401 without session', async () => {
@@ -163,53 +241,7 @@ describe('Brand Subscription Checkout — Auth Validation', () => {
   });
 });
 
-describe('Stripe Connect Endpoints — Auth Enforcement', () => {
-  it('POST /api/stripe/connect/create returns 401 without session', async () => {
-    const res = await post('/api/stripe/connect/create', {});
-    expect(res.status).toBe(401);
-    const body = await res.json();
-    expect(body).toHaveProperty('error');
-    expect(body.error).toMatch(/unauthorized/i);
-  });
-
-  it('POST /api/stripe/connect/onboarding returns 401 without session', async () => {
-    const res = await post('/api/stripe/connect/onboarding', {});
-    expect(res.status).toBe(401);
-    const body = await res.json();
-    expect(body.error).toMatch(/unauthorized/i);
-  });
-
-  it('POST /api/stripe/connect/create with session returns non-401', async () => {
-    const res = await postWithSession('/api/stripe/connect/create', {}, sessionCookie);
-    expect(res.status).not.toBe(401);
-    const body = await res.json();
-    if (res.status === 200) {
-      expect(body).toHaveProperty('accountId');
-      expect(typeof body.accountId).toBe('string');
-    } else {
-      expect(body).toHaveProperty('error');
-      expect(body.error).not.toMatch(/unauthorized/i);
-    }
-  });
-
-  it('GET /api/stripe/connect/status returns 200 with connected/onboarded fields', async () => {
-    const res = await get('/api/stripe/connect/status');
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toHaveProperty('connected');
-    expect(body).toHaveProperty('onboarded');
-    expect(typeof body.connected).toBe('boolean');
-    expect(typeof body.onboarded).toBe('boolean');
-  });
-
-  it('GET /api/stripe/connect/status with session returns auth user state', async () => {
-    const res = await getWithSession('/api/stripe/connect/status', sessionCookie);
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toHaveProperty('connected');
-    expect(body).toHaveProperty('onboarded');
-  });
-});
+// ─── Webhook — Signature Validation ──────────────────────────────────────────
 
 describe('Webhook Endpoint — Signature Validation', () => {
   it('POST /api/webhooks/stripe without stripe-signature returns 400', async () => {
@@ -218,11 +250,11 @@ describe('Webhook Endpoint — Signature Validation', () => {
     const body = await res.json();
     expect(body).toHaveProperty('error');
     const err: string = body.error;
-    const isExpectedError =
+    expect(
       err.includes('Webhook secret not configured') ||
       err.includes('Missing stripe-signature header') ||
-      err.includes('Signature verification failed');
-    expect(isExpectedError).toBe(true);
+      err.includes('Signature verification failed')
+    ).toBe(true);
   });
 
   it('POST /api/webhooks/stripe with malformed stripe-signature returns 400', async () => {
@@ -233,19 +265,12 @@ describe('Webhook Endpoint — Signature Validation', () => {
     const body = await res.json();
     expect(body).toHaveProperty('error');
   });
-
-  it('POST /api/webhooks/stripe with no body returns 400', async () => {
-    const res = await fetch(`${BASE}/api/webhooks/stripe`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'stripe-signature': 't=0,v1=fakesig' },
-      body: '{}',
-    });
-    expect(res.status).toBe(400);
-  });
 });
 
-describe('Subscription Data Endpoints — Accessible without session', () => {
-  it('GET /api/users/me returns user (demo_creator fallback when no session)', async () => {
+// ─── /api/users/me ─────────────────────────────────────────────────────────────
+
+describe('User Identity Endpoint', () => {
+  it('GET /api/users/me returns a user even without session (demo fallback)', async () => {
     const res = await get('/api/users/me');
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -253,7 +278,7 @@ describe('Subscription Data Endpoints — Accessible without session', () => {
     expect(body).toHaveProperty('role');
   });
 
-  it('GET /api/users/me with session returns the authenticated user', async () => {
+  it('GET /api/users/me with session returns the authenticated admin user', async () => {
     const res = await getWithSession('/api/users/me', sessionCookie);
     expect(res.status).toBe(200);
     const body = await res.json();

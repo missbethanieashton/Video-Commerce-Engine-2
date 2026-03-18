@@ -124,8 +124,12 @@ export function registerAuthRoutes(app: Express) {
 }
 
 export async function seedAdminAccount() {
-  const ADMIN_EMAIL = "missbethanieashton@gmail.com";
-  const ADMIN_PASSWORD = "test1233*";
+  if (process.env.NODE_ENV === "production" && !process.env.SEED_ADMIN_ACCOUNT) {
+    return;
+  }
+
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "missbethanieashton@gmail.com";
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "test1233*";
 
   try {
     const existing = await storage.getUserByEmail(ADMIN_EMAIL);
