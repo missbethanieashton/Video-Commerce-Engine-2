@@ -8,7 +8,8 @@ import { BrandDashboardTabs } from "@/components/BrandDashboardTabs";
 import { BrandAnnouncementBanner } from "@/components/BrandAnnouncementBanner";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
 import { defaultCarouselSettings } from "@/components/ProductCarouselEditor";
-import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings, Upload } from "lucide-react";
+import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings, Upload, Calculator, Clock } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -43,6 +44,8 @@ export default function BrandDashboard() {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [isApiConnected, setIsApiConnected] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [calcAudience, setCalcAudience] = useState(10000);
+  const [calcPublishers, setCalcPublishers] = useState(10);
   const { toast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
@@ -255,6 +258,118 @@ export default function BrandDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {activeTab === "stats" && (() => {
+        const minutesConsumed = calcAudience * calcPublishers;
+        const totalCost = minutesConsumed * 0.008;
+        return (
+          <Card data-testid="card-surplus-calculator">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Calculator className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold">Surplus Pricing Calculator</CardTitle>
+                    <p className="text-sm text-muted-foreground">Estimate your campaign spend before launch</p>
+                  </div>
+                </div>
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Unit Rate</p>
+                  <p className="text-sm font-mono font-semibold text-primary">$0.008 / min</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-7">
+
+              {/* Slider 1 — Audience */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Audience (Total Views)</span>
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums" data-testid="value-calc-audience">
+                    {calcAudience.toLocaleString()}
+                  </span>
+                </div>
+                <Slider
+                  data-testid="slider-audience"
+                  min={1000}
+                  max={500000}
+                  step={1000}
+                  value={[calcAudience]}
+                  onValueChange={([v]) => setCalcAudience(v)}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>1,000</span>
+                  <span>500,000</span>
+                </div>
+              </div>
+
+              {/* Slider 2 — Publishers */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Publishers</span>
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums" data-testid="value-calc-publishers">
+                    {calcPublishers.toLocaleString()}
+                  </span>
+                </div>
+                <Slider
+                  data-testid="slider-publishers"
+                  min={1}
+                  max={200}
+                  step={1}
+                  value={[calcPublishers]}
+                  onValueChange={([v]) => setCalcPublishers(v)}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>1</span>
+                  <span>200</span>
+                </div>
+              </div>
+
+              {/* Formula + Results */}
+              <div className="rounded-xl border bg-muted/40 p-4 space-y-3">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Calculation</p>
+                <p className="text-xs font-mono text-muted-foreground">
+                  Minutes Consumed = {calcAudience.toLocaleString()} views × {calcPublishers} publishers
+                </p>
+                <div className="grid grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="text-xs font-medium">Minutes Consumed</span>
+                    </div>
+                    <p className="text-2xl font-bold tabular-nums" data-testid="text-minutes-consumed">
+                      {minutesConsumed.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      <span className="text-xs font-medium">Estimated Cost</span>
+                    </div>
+                    <p className="text-2xl font-bold tabular-nums text-primary" data-testid="text-estimated-cost">
+                      ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground pt-1 border-t">
+                  {minutesConsumed.toLocaleString()} min × $0.008 / min = <strong>${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                </p>
+              </div>
+
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {activeTab === "inventory" && (
         <div className="space-y-6">
