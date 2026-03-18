@@ -7,7 +7,7 @@ const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
   49900: 'pro',
 };
 
-function mapStripeStatus(stripeStatus: string): string {
+function mapStripeStatus(stripeStatus: string): 'active' | 'past_due' | 'cancelled' {
   switch (stripeStatus) {
     case 'active':
     case 'trialing':
@@ -17,9 +17,8 @@ function mapStripeStatus(stripeStatus: string): string {
       return 'past_due';
     case 'canceled':
     case 'incomplete_expired':
-      return 'cancelled';
     default:
-      return 'active';
+      return 'cancelled';
   }
 }
 
@@ -202,14 +201,14 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
   if (!user) return;
 
   const existing = await storage.getBrandSubscription(user.id);
-  if (!existing) return;
+  const invoiceSubscriptionId = extractSubscriptionId(invoice.subscription);
 
   await storage.upsertBrandSubscription({
     userId: user.id,
-    plan: (existing.plan ?? 'starter') as 'starter' | 'pro',
+    plan: (existing?.plan ?? 'starter') as 'starter' | 'pro',
     status: 'past_due',
-    stripeSubscriptionId: existing.stripeSubscriptionId ?? undefined,
-    currentPeriodEnd: existing.currentPeriodEnd ?? undefined,
+    stripeSubscriptionId: existing?.stripeSubscriptionId ?? invoiceSubscriptionId ?? undefined,
+    currentPeriodEnd: existing?.currentPeriodEnd ?? undefined,
   });
 
   console.log(`[Webhook] Payment failed — user ${user.id} marked past_due`);
