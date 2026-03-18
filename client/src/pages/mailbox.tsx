@@ -88,12 +88,12 @@ const PUBLISHER_MESSAGES: Message[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const TYPE_STYLES: Record<NotifType, { bg: string; icon: string }> = {
-  success:  { bg: "bg-emerald-500/15", icon: "text-emerald-400" },
-  warning:  { bg: "bg-amber-500/15",   icon: "text-amber-400" },
-  payment:  { bg: "bg-green-500/15",   icon: "text-green-400" },
-  campaign: { bg: "bg-[#677A67]/15",   icon: "text-[#677A67]" },
-  info:     { bg: "bg-blue-500/15",    icon: "text-blue-400" },
-  system:   { bg: "bg-white/10",       icon: "text-white/40" },
+  success:  { bg: "bg-emerald-500/15", icon: "text-emerald-600 dark:text-emerald-400" },
+  warning:  { bg: "bg-amber-500/15",   icon: "text-amber-600 dark:text-amber-400" },
+  payment:  { bg: "bg-green-500/15",   icon: "text-green-600 dark:text-green-400" },
+  campaign: { bg: "bg-primary/10",     icon: "text-primary" },
+  info:     { bg: "bg-blue-500/15",    icon: "text-blue-600 dark:text-blue-400" },
+  system:   { bg: "bg-muted",          icon: "text-muted-foreground" },
 };
 
 function timeLabel(date: Date) {
@@ -114,8 +114,8 @@ function NotifCard({ n, onRead }: { n: Notification; onRead: (id: number) => voi
     <div
       data-testid={`notif-card-${n.id}`}
       onClick={() => onRead(n.id)}
-      className={`flex gap-3 p-4 rounded-2xl cursor-pointer transition-all hover:bg-white/5 ${
-        !n.read ? "bg-white/5 border border-white/8" : "bg-transparent border border-transparent"
+      className={`flex gap-3 p-4 rounded-2xl cursor-pointer transition-all hover:bg-muted/40 ${
+        !n.read ? "bg-muted/30 border border-border/50" : "bg-transparent border border-transparent"
       }`}
     >
       <div className={`w-9 h-9 rounded-xl ${style.bg} flex items-center justify-center shrink-0`}>
@@ -123,15 +123,15 @@ function NotifCard({ n, onRead }: { n: Notification; onRead: (id: number) => voi
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className={`text-sm leading-tight ${!n.read ? "font-semibold text-white" : "font-medium text-white/70"}`}>
+          <p className={`text-sm leading-tight ${!n.read ? "font-semibold text-foreground" : "font-medium text-foreground/70"}`}>
             {n.title}
           </p>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] text-white/30">{timeLabel(n.time)}</span>
-            {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#677A67] shrink-0" />}
+            <span className="text-[11px] text-muted-foreground">{timeLabel(n.time)}</span>
+            {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
           </div>
         </div>
-        <p className="text-xs text-white/45 mt-1 leading-relaxed line-clamp-2">{n.body}</p>
+        <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{n.body}</p>
       </div>
     </div>
   );
@@ -142,8 +142,8 @@ function MessageCard({ m, onRead }: { m: Message; onRead: (id: number) => void }
     <div
       data-testid={`message-card-${m.id}`}
       onClick={() => onRead(m.id)}
-      className={`flex gap-3 p-4 rounded-2xl cursor-pointer transition-all hover:bg-white/5 ${
-        !m.read ? "bg-white/5 border border-white/8" : "bg-transparent border border-transparent"
+      className={`flex gap-3 p-4 rounded-2xl cursor-pointer transition-all hover:bg-muted/40 ${
+        !m.read ? "bg-muted/30 border border-border/50" : "bg-transparent border border-transparent"
       }`}
     >
       <Avatar className="w-9 h-9 shrink-0">
@@ -153,18 +153,18 @@ function MessageCard({ m, onRead }: { m: Message; onRead: (id: number) => void }
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-0.5">
-          <p className={`text-sm ${!m.read ? "font-semibold text-white" : "font-medium text-white/70"}`}>
+          <p className={`text-sm ${!m.read ? "font-semibold text-foreground" : "font-medium text-foreground/70"}`}>
             {m.sender}
           </p>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] text-white/30">{timeLabel(m.time)}</span>
-            {!m.read && <span className="w-1.5 h-1.5 rounded-full bg-[#677A67]" />}
+            <span className="text-[11px] text-muted-foreground">{timeLabel(m.time)}</span>
+            {!m.read && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
           </div>
         </div>
-        <p className={`text-xs truncate mb-0.5 ${!m.read ? "text-white/80 font-medium" : "text-white/50"}`}>
+        <p className={`text-xs truncate mb-0.5 ${!m.read ? "text-foreground/80 font-medium" : "text-muted-foreground"}`}>
           {m.subject}
         </p>
-        <p className="text-[11px] text-white/35 leading-relaxed line-clamp-2">{m.preview}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{m.preview}</p>
       </div>
     </div>
   );
@@ -194,48 +194,48 @@ export default function Mailbox() {
   const markAllRead    = () => { setNotifs((p) => p.map((n) => ({ ...n, read: true }))); setMsgs((p) => p.map((m) => ({ ...m, read: true }))); };
 
   return (
-    <div className="min-h-screen bg-[#111211] text-white">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">Mailbox</h1>
-            {totalUnread > 0 && (
-              <Badge className="bg-[#677A67] text-white border-0 text-xs px-2 py-0.5 rounded-full" data-testid="badge-unread-count">
-                {totalUnread}
-              </Badge>
-            )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Mailbox</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {totalUnread > 0 ? `${totalUnread} unread item${totalUnread > 1 ? "s" : ""}` : "All caught up"}
+            </p>
           </div>
           {totalUnread > 0 && (
-            <button
-              data-testid="button-mark-all-read"
-              onClick={markAllRead}
-              className="text-xs text-white/40 hover:text-white/70 transition-colors"
-            >
-              Mark all read
-            </button>
+            <Badge className="bg-primary text-primary-foreground border-0 text-xs px-2 py-0.5 rounded-full" data-testid="badge-unread-count">
+              {totalUnread}
+            </Badge>
           )}
         </div>
-        <p className="text-sm text-white/40">
-          {totalUnread > 0 ? `${totalUnread} unread item${totalUnread > 1 ? "s" : ""}` : "All caught up"}
-        </p>
+        {totalUnread > 0 && (
+          <button
+            data-testid="button-mark-all-read"
+            onClick={markAllRead}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Mark all read
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="px-5">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
         <TabsList
-          className="bg-white/5 border border-white/10 rounded-2xl p-1 mb-4 w-full h-10"
+          className="border border-border rounded-2xl p-1 mb-2 w-full h-10"
           data-testid="tabs-mailbox"
         >
           <TabsTrigger
             value="notifications"
             data-testid="tab-notifications"
-            className="flex-1 rounded-xl text-xs data-[state=active]:bg-[#677A67] data-[state=active]:text-white text-white/50 transition-all flex items-center gap-1.5"
+            className="flex-1 rounded-xl text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground transition-all flex items-center gap-1.5"
           >
             <Bell size={12} />
             Notifications
             {unreadNotifs > 0 && (
-              <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+              <span className="bg-primary-foreground/20 text-primary-foreground dark:bg-foreground/20 dark:text-foreground text-[10px] px-1.5 py-0.5 rounded-full leading-none">
                 {unreadNotifs}
               </span>
             )}
@@ -243,12 +243,12 @@ export default function Mailbox() {
           <TabsTrigger
             value="messages"
             data-testid="tab-messages"
-            className="flex-1 rounded-xl text-xs data-[state=active]:bg-[#677A67] data-[state=active]:text-white text-white/50 transition-all flex items-center gap-1.5"
+            className="flex-1 rounded-xl text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground transition-all flex items-center gap-1.5"
           >
             <Mail size={12} />
             Messages
             {unreadMsgs > 0 && (
-              <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+              <span className="bg-primary-foreground/20 text-primary-foreground dark:bg-foreground/20 dark:text-foreground text-[10px] px-1.5 py-0.5 rounded-full leading-none">
                 {unreadMsgs}
               </span>
             )}
@@ -267,8 +267,6 @@ export default function Mailbox() {
           ))}
         </TabsContent>
       </Tabs>
-
-      <div className="h-24" />
     </div>
   );
 }

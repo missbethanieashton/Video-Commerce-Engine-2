@@ -147,12 +147,12 @@ function AddProductSheet({
     <Sheet open={open} onOpenChange={(o) => !o && handleClose()}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md overflow-y-auto bg-[#111211] border-white/10 text-white p-0"
+        className="w-full sm:max-w-md overflow-y-auto p-0"
         data-testid="sheet-add-product"
       >
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-white/8">
-          <SheetTitle className="text-white text-lg font-bold">Add Product</SheetTitle>
-          <SheetDescription className="text-white/40 text-sm">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <SheetTitle className="text-foreground text-lg font-bold">Add Product</SheetTitle>
+          <SheetDescription className="text-muted-foreground text-sm">
             Manually enter a product for a trial campaign.
           </SheetDescription>
         </SheetHeader>
@@ -173,29 +173,29 @@ function AddProductSheet({
 
           {/* Product Title */}
           <div className="space-y-1.5">
-            <Label className="text-white/70 text-xs font-medium">Product Title *</Label>
+            <Label className="text-muted-foreground text-xs font-medium">Product Title *</Label>
             <Input
               data-testid="input-product-title"
               placeholder="e.g. Midnight Serum 30ml"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#677A67] rounded-xl"
+              className="rounded-xl"
             />
           </div>
 
           {/* Product Type */}
           <div className="space-y-1.5">
-            <Label className="text-white/70 text-xs font-medium">Product Type</Label>
+            <Label className="text-muted-foreground text-xs font-medium">Product Type</Label>
             <Select value={productType} onValueChange={setProductType}>
               <SelectTrigger
                 data-testid="select-product-type"
-                className="bg-white/5 border-white/10 text-white rounded-xl focus:ring-[#677A67]"
+                className="rounded-xl"
               >
-                <SelectValue placeholder="Select type…" className="text-white/30" />
+                <SelectValue placeholder="Select type…" />
               </SelectTrigger>
-              <SelectContent className="bg-[#1e201f] border-white/10 text-white rounded-xl">
+              <SelectContent className="rounded-xl">
                 {PRODUCT_TYPES.map((t) => (
-                  <SelectItem key={t} value={t} className="focus:bg-white/10">
+                  <SelectItem key={t} value={t}>
                     {t}
                   </SelectItem>
                 ))}
@@ -205,7 +205,7 @@ function AddProductSheet({
 
           {/* Thumbnail */}
           <div className="space-y-2">
-            <Label className="text-white/70 text-xs font-medium">Thumbnail</Label>
+            <Label className="text-muted-foreground text-xs font-medium">Thumbnail</Label>
 
             {/* Source selector */}
             <div className="flex gap-2 mb-2">
@@ -222,8 +222,8 @@ function AddProductSheet({
                     onClick={() => { setThumbSource(src); setThumbFile(null); setThumbPreview(null); setThumbUrl(""); }}
                     className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${
                       thumbSource === src
-                        ? "bg-[#677A67] text-white"
-                        : "bg-white/8 text-white/45 hover:bg-white/12"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/60 text-muted-foreground hover:bg-muted"
                     }`}
                   >
                     {labels[src]}
@@ -234,7 +234,7 @@ function AddProductSheet({
 
             {thumbSource === "computer" ? (
               thumbPreview ? (
-                <div className="relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 aspect-video">
+                <div className="relative rounded-2xl overflow-hidden bg-muted/40 border border-border aspect-video">
                   {thumbFile?.type.startsWith("video/") ? (
                     <video src={thumbPreview} className="w-full h-full object-cover" muted playsInline controls />
                   ) : (
@@ -260,22 +260,22 @@ function AddProductSheet({
                   onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
                     isDragging
-                      ? "border-[#677A67] bg-[#677A67]/10"
-                      : "border-white/15 bg-white/3 hover:border-white/30 hover:bg-white/5"
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-border/80 hover:bg-muted/30"
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-white/8 flex items-center justify-center">
-                    <UploadCloud size={22} className="text-white/40" />
+                  <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center">
+                    <UploadCloud size={22} className="text-muted-foreground/60" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-white/70">Drop image or video here</p>
-                    <p className="text-xs text-white/35 mt-0.5">or click to browse your computer</p>
+                    <p className="text-sm font-medium text-foreground/70">Drop image or video here</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">or click to browse your computer</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className="flex items-center gap-1 text-[10px] text-white/30 bg-white/5 px-2 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
                       <ImageIcon size={9} /> JPG, PNG, WEBP
                     </span>
-                    <span className="flex items-center gap-1 text-[10px] text-white/30 bg-white/5 px-2 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
                       <Video size={9} /> MP4, MOV
                     </span>
                   </div>
@@ -283,7 +283,7 @@ function AddProductSheet({
               )
             ) : (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-white/40 bg-white/5 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-xl px-3 py-2">
                   {thumbSource === "drive" ? (
                     <><SiGoogledrive size={13} className="text-[#4285F4]" />Paste a Google Drive share link</>
                   ) : (
@@ -295,10 +295,10 @@ function AddProductSheet({
                   placeholder={thumbSource === "drive" ? "https://drive.google.com/file/d/…" : "https://www.dropbox.com/s/…"}
                   value={thumbUrl}
                   onChange={(e) => setThumbUrl(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#677A67] rounded-xl text-sm"
+                  className="rounded-xl text-sm"
                 />
                 {thumbUrl && (
-                  <div className="flex items-center gap-2 text-[11px] text-[#677A67]">
+                  <div className="flex items-center gap-2 text-[11px] text-primary">
                     <ExternalLink size={11} />
                     <span className="truncate">{thumbUrl}</span>
                   </div>
@@ -318,9 +318,9 @@ function AddProductSheet({
 
           {/* Price */}
           <div className="space-y-1.5">
-            <Label className="text-white/70 text-xs font-medium">Product Price *</Label>
+            <Label className="text-muted-foreground text-xs font-medium">Product Price *</Label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-sm font-medium">€</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">€</span>
               <Input
                 data-testid="input-product-price"
                 type="number"
@@ -329,23 +329,23 @@ function AddProductSheet({
                 placeholder="0.00"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="pl-7 bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#677A67] rounded-xl"
+                className="pl-7 rounded-xl"
               />
             </div>
           </div>
 
           {/* Product URL */}
           <div className="space-y-1.5">
-            <Label className="text-white/70 text-xs font-medium">Product URL <span className="text-[#677A67]">(Buy Now Link)</span></Label>
+            <Label className="text-muted-foreground text-xs font-medium">Product URL <span className="text-primary">(Buy Now Link)</span></Label>
             <Input
               data-testid="input-product-pos-url"
               type="url"
               placeholder="https://yourstore.com/product/…"
               value={posUrl}
               onChange={(e) => setPosUrl(e.target.value)}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#677A67] rounded-xl"
+              className="rounded-xl"
             />
-            <p className="text-[11px] text-white/30">
+            <p className="text-[11px] text-muted-foreground">
               Viewers will be sent here when they tap this product in a video.
             </p>
           </div>
@@ -356,7 +356,7 @@ function AddProductSheet({
               data-testid="button-cancel-product"
               variant="outline"
               onClick={handleClose}
-              className="flex-1 rounded-xl border-white/15 text-white/60 hover:bg-white/5 bg-transparent"
+              className="flex-1 rounded-xl"
             >
               Cancel
             </Button>
@@ -364,7 +364,7 @@ function AddProductSheet({
               data-testid="button-save-product"
               onClick={() => createMutation.mutate()}
               disabled={!canSubmit}
-              className="flex-1 rounded-xl bg-[#677A67] hover:bg-[#5a6b5a] text-white"
+              className="flex-1 rounded-xl"
             >
               {createMutation.isPending || isUploading ? "Saving…" : "Add Product"}
             </Button>
