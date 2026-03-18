@@ -2,6 +2,10 @@ import { test, expect, type Page, type Browser } from '@playwright/test';
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5000';
 
+// Admin credentials — override via env vars; falls back to dev-seeded account
+const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'missbethanieashton@gmail.com';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD ?? 'test1233*';
+
 // Brand-specific test credentials — registered once per test run via API
 const BRAND_EMAIL = `brand-e2e-${Date.now()}@example.com`;
 const BRAND_PASSWORD = 'BrandE2E123!';
@@ -200,8 +204,8 @@ test.describe('Brand Subscription — Post-Webhook State Verification', () => {
     const adminPage = await adminCtx.newPage();
     await adminPage.goto(`${BASE}/login`);
     await adminPage.waitForLoadState('networkidle');
-    await adminPage.getByTestId('input-login-email').fill('missbethanieashton@gmail.com');
-    await adminPage.getByTestId('input-login-password').fill('test1233*');
+    await adminPage.getByTestId('input-login-email').fill(ADMIN_EMAIL);
+    await adminPage.getByTestId('input-login-password').fill(ADMIN_PASSWORD);
     await adminPage.getByTestId('button-login-submit').click();
     await adminPage.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
 
@@ -247,8 +251,8 @@ test.describe('Brand Subscription — Post-Webhook State Verification', () => {
     const adminPage = await adminCtx.newPage();
     await adminPage.goto(`${BASE}/login`);
     await adminPage.waitForLoadState('networkidle');
-    await adminPage.getByTestId('input-login-email').fill('missbethanieashton@gmail.com');
-    await adminPage.getByTestId('input-login-password').fill('test1233*');
+    await adminPage.getByTestId('input-login-email').fill(ADMIN_EMAIL);
+    await adminPage.getByTestId('input-login-password').fill(ADMIN_PASSWORD);
     await adminPage.getByTestId('button-login-submit').click();
     await adminPage.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
 

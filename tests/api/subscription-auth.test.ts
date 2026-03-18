@@ -2,6 +2,10 @@ import { describe, it, expect, beforeAll } from 'vitest';
 
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
 
+// Admin credentials — override via env vars for portability; falls back to dev-seeded account
+const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'missbethanieashton@gmail.com';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD ?? 'test1233*';
+
 async function post(path: string, body: unknown, headers: Record<string, string> = {}) {
   return fetch(`${BASE}${path}`, {
     method: 'POST',
@@ -16,8 +20,8 @@ async function get(path: string, headers: Record<string, string> = {}) {
 
 async function loginAndGetCookie(): Promise<string> {
   const res = await post('/api/auth/login', {
-    email: 'missbethanieashton@gmail.com',
-    password: 'test1233*',
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
   });
   if (!res.ok) throw new Error(`Login failed: ${res.status} ${await res.text()}`);
   const setCookie = res.headers.get('set-cookie') ?? '';
@@ -92,7 +96,7 @@ describe('Auth Session — Login & Identity', () => {
     const res = await getWithSession('/api/auth/me', sessionCookie);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty('email', 'missbethanieashton@gmail.com');
+    expect(body).toHaveProperty('email', ADMIN_EMAIL);
     expect(body).toHaveProperty('isAdmin', true);
     expect(body).toHaveProperty('role', 'creator');
     expect(body).toHaveProperty('id');
@@ -341,6 +345,6 @@ describe('User Identity Endpoint', () => {
     const res = await getWithSession('/api/users/me', sessionCookie);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty('email', 'missbethanieashton@gmail.com');
+    expect(body).toHaveProperty('email', ADMIN_EMAIL);
   });
 });

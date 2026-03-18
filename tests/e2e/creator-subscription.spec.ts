@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5000';
 
+// Admin credentials — override via env vars; falls back to dev-seeded account
+const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'missbethanieashton@gmail.com';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD ?? 'test1233*';
+
 test.describe('Creator Subscription Page — Unauthenticated', () => {
   test('redirects to /login when not authenticated', async ({ page }) => {
     await page.goto(`${BASE}/creator/settings/subscription`);
@@ -22,8 +26,8 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     await page.goto(`${BASE}/login`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByTestId('input-login-email').fill('missbethanieashton@gmail.com');
-    await page.getByTestId('input-login-password').fill('test1233*');
+    await page.getByTestId('input-login-email').fill(ADMIN_EMAIL);
+    await page.getByTestId('input-login-password').fill(ADMIN_PASSWORD);
     await page.getByTestId('button-login-submit').click();
     await page.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
 
@@ -158,8 +162,8 @@ test.describe('Creator Subscription — Post-Webhook State Verification', () => 
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE}/login`);
     await page.waitForLoadState('networkidle');
-    await page.getByTestId('input-login-email').fill('missbethanieashton@gmail.com');
-    await page.getByTestId('input-login-password').fill('test1233*');
+    await page.getByTestId('input-login-email').fill(ADMIN_EMAIL);
+    await page.getByTestId('input-login-password').fill(ADMIN_PASSWORD);
     await page.getByTestId('button-login-submit').click();
     await page.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
   });
