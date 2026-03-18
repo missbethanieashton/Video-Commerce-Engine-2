@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 
-const PLAN_AMOUNT_MAP: Record<number, 'starter' | 'pro'> = {
+const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
   24900: 'starter',
   49900: 'pro',
 };
@@ -23,10 +23,33 @@ function mapStripeStatus(stripeStatus: string): string {
   }
 }
 
-function planFromSubscription(subscription: Stripe.Subscription): 'starter' | 'pro' {
+async function planFromSubscription(subscription: Stripe.Subscription): Promise<'starter' | 'pro'> {
   const item = subscription.items?.data?.[0];
-  const amount = item?.price?.unit_amount ?? 0;
-  return PLAN_AMOUNT_MAP[amount] ?? 'starter';
+  if (!item) return 'starter';
+
+  const price = item.price as Stripe.Price;
+
+  if (price.metadata?.plan === 'starter' || price.metadata?.plan === 'pro') {
+    return price.metadata.plan;
+  }
+
+  if (typeof price.product === 'string') {
+    try {
+      const stripe = await getUncachableStripeClient();
+      const product = await stripe.products.retrieve(price.product);
+      if (product.metadata?.plan === 'starter' || product.metadata?.plan === 'pro') {
+        return product.metadata.plan;
+      }
+    } catch {
+    }
+  } else if (price.product && typeof price.product === 'object') {
+    const product = price.product as Stripe.Product;
+    if (product.metadata?.plan === 'starter' || product.metadata?.plan === 'pro') {
+      return product.metadata.plan;
+    }
+  }
+
+  return PLAN_AMOUNT_FALLBACK[price.unit_amount ?? 0] ?? 'starter';
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
@@ -54,9 +77,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   }
 
   const stripe = await getUncachableStripeClient();
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+    expand: ['items.data.price.product'],
+  });
   const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
-  const plan = metaPlan ?? planFromSubscription(subscription);
+  const plan = metaPlan ?? (await planFromSubscription(subscription));
 
   await storage.upsertBrandSubscription({
     userId,
@@ -79,15 +104,20 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Pro
     return;
   }
 
-  const plan = planFromSubscription(subscription);
-  const status = mapStripeStatus(subscription.status);
-  const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+  const stripe = await getUncachableStripeClient();
+  const fullSub = await stripe.subscriptions.retrieve(subscription.id, {
+    expand: ['items.data.price.product'],
+  });
+
+  const plan = await planFromSubscription(fullSub);
+  const status = mapStripeStatus(fullSub.status);
+  const currentPeriodEnd = new Date((fullSub as any).current_period_end * 1000);
 
   await storage.upsertBrandSubscription({
     userId: user.id,
     plan,
     status,
-    stripeSubscriptionId: subscription.id,
+    stripeSubscriptionId: fullSub.id,
     currentPeriodEnd,
   });
 
@@ -101,12 +131,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
   const user = await storage.getUserByStripeCustomerId(customerId);
   if (!user) return;
 
+  const existing = await storage.getBrandSubscription(user.id);
+
   await storage.upsertBrandSubscription({
     userId: user.id,
-    plan: planFromSubscription(subscription),
+    plan: (existing?.plan ?? 'starter') as 'starter' | 'pro',
     status: 'cancelled',
     stripeSubscriptionId: subscription.id,
-    currentPeriodEnd: null,
+    currentPeriodEnd: undefined,
   });
 
   console.log(`[Webhook] Subscription cancelled — user ${user.id}`);
@@ -125,9 +157,11 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
   if (!user) return;
 
   const stripe = await getUncachableStripeClient();
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+    expand: ['items.data.price.product'],
+  });
   const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
-  const plan = planFromSubscription(subscription);
+  const plan = await planFromSubscription(subscription);
 
   await storage.upsertBrandSubscription({
     userId: user.id,
@@ -152,7 +186,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
 
   await storage.upsertBrandSubscription({
     userId: user.id,
-    plan: existing.plan as 'starter' | 'pro',
+    plan: (existing.plan ?? 'starter') as 'starter' | 'pro',
     status: 'past_due',
     stripeSubscriptionId: existing.stripeSubscriptionId ?? undefined,
     currentPeriodEnd: existing.currentPeriodEnd ?? undefined,
@@ -161,30 +195,25 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
   console.log(`[Webhook] Payment failed — user ${user.id} marked past_due`);
 }
 
-async function dispatchEvent(event: Stripe.Event): Promise<void> {
-  try {
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
-        break;
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-        break;
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-        break;
-      case 'invoice.payment_succeeded':
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
-        break;
-      case 'invoice.payment_failed':
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-        break;
-      default:
-        break;
-    }
-  } catch (err) {
-    console.error(`[Webhook] Error handling ${event.type}:`, err);
-    throw err;
+export async function dispatchStripeEvent(event: Stripe.Event): Promise<void> {
+  switch (event.type) {
+    case 'checkout.session.completed':
+      await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+      break;
+    case 'customer.subscription.updated':
+      await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+      break;
+    case 'customer.subscription.deleted':
+      await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+      break;
+    case 'invoice.payment_succeeded':
+      await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+      break;
+    case 'invoice.payment_failed':
+      await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+      break;
+    default:
+      break;
   }
 }
 
@@ -210,6 +239,6 @@ export class WebhookHandlers {
       return;
     }
 
-    await dispatchEvent(event);
+    await dispatchStripeEvent(event);
   }
 }

@@ -4,7 +4,8 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync } from "./stripeClient";
-import { WebhookHandlers } from "./webhookHandlers";
+import { WebhookHandlers, dispatchStripeEvent } from "./webhookHandlers";
+import Stripe from 'stripe';
 
 const app = express();
 const httpServer = createServer(app);
@@ -57,19 +58,21 @@ async function initStripe() {
 
 initStripe();
 
-// Webhook documentation — no STRIPE_WEBHOOK_SECRET needed in this setup:
-// Stripe webhooks are managed automatically by the Replit Stripe integration.
-// The signing secret is handled internally by stripe-replit-sync.
-// Webhook endpoint: POST /api/stripe/webhook
-// Handles: checkout.session.completed, customer.subscription.updated,
-//          customer.subscription.deleted, invoice.payment_succeeded, invoice.payment_failed
-//
-// IF you ever move to a self-managed webhook (e.g. for custom Stripe keys outside Replit):
-// 1. Create an endpoint in Stripe Dashboard → Developers → Webhooks → Add endpoint
-// 2. Set endpoint URL to: https://<your-domain>/api/stripe/webhook
-// 3. Set STRIPE_WEBHOOK_SECRET secret in Replit secrets from the webhook's "Signing secret"
-if (!process.env.REPLIT_CONNECTORS_HOSTNAME) {
-  console.warn('[Stripe] REPLIT_CONNECTORS_HOSTNAME not set — Stripe integration may not be available');
+// ── Self-managed Stripe webhook: POST /api/webhooks/stripe ───────────────────
+// This endpoint uses STRIPE_WEBHOOK_SECRET for signature verification.
+// To set it up:
+//  1. Go to Stripe Dashboard → Developers → Webhooks → Add endpoint
+//  2. Set URL to:  https://<your-domain>/api/webhooks/stripe
+//  3. Select events: checkout.session.completed, customer.subscription.updated,
+//     customer.subscription.deleted, invoice.payment_succeeded, invoice.payment_failed
+//  4. Copy the "Signing secret" and save it in Replit Secrets as STRIPE_WEBHOOK_SECRET
+// ─────────────────────────────────────────────────────────────────────────────
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  console.warn(
+    '[Stripe] STRIPE_WEBHOOK_SECRET is not set. The /api/webhooks/stripe endpoint will ' +
+    'reject all incoming events. To fix: Stripe Dashboard → Developers → Webhooks → ' +
+    'your endpoint → Signing secret → copy to Replit Secrets as STRIPE_WEBHOOK_SECRET.'
+  );
 }
 
 app.post(
@@ -93,6 +96,44 @@ app.post(
     } catch (error: any) {
       console.error("Webhook error:", error.message);
       res.status(400).json({ error: "Webhook processing error" });
+    }
+  }
+);
+
+// ── Self-managed Stripe webhook endpoint (STRIPE_WEBHOOK_SECRET-based) ────────
+app.post(
+  "/api/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const signature = req.headers["stripe-signature"];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error("[Stripe] /api/webhooks/stripe: STRIPE_WEBHOOK_SECRET is not set. Rejecting event.");
+      return res.status(400).json({ error: "Webhook secret not configured" });
+    }
+    if (!signature) {
+      return res.status(400).json({ error: "Missing stripe-signature header" });
+    }
+
+    let event: Stripe.Event;
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      const { getStripeSecretKey } = await import('./stripeClient');
+      const secretKey = await getStripeSecretKey();
+      const stripeInstance = new Stripe(secretKey);
+      event = stripeInstance.webhooks.constructEvent(req.body as Buffer, sig, webhookSecret);
+    } catch (err: any) {
+      console.error("[Stripe] Webhook signature verification failed:", err.message);
+      return res.status(400).json({ error: `Signature verification failed: ${err.message}` });
+    }
+
+    try {
+      await dispatchStripeEvent(event);
+      res.status(200).json({ received: true });
+    } catch (err: any) {
+      console.error("[Stripe] Error dispatching webhook event:", err.message);
+      res.status(400).json({ error: "Webhook handler error" });
     }
   }
 );

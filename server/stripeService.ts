@@ -30,6 +30,7 @@ export class StripeService {
       unit_amount: config.amount,
       currency: 'eur',
       recurring: { interval: 'month' },
+      metadata: { plan },
     });
     return newPrice.id;
   }
