@@ -129,6 +129,7 @@ export async function registerRoutes(
         plan as "starter" | "pro",
         `${origin}/creator/settings/subscription?checkout=success`,
         `${origin}/creator/settings/subscription?checkout=cancelled`,
+        { userId, plan },
       );
 
       res.json({ url: session.url });
@@ -2577,6 +2578,7 @@ Identify which products from the catalog are most likely to appear or be feature
         plan as "starter" | "pro",
         `${origin}/brand/settings/subscription?checkout=success`,
         `${origin}/brand/settings/subscription?checkout=cancelled`,
+        { userId, plan },
       );
 
       res.json({ url: session.url });

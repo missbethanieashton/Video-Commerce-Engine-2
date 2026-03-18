@@ -34,9 +34,15 @@ export class StripeService {
     return newPrice.id;
   }
 
-  async createSubscriptionCheckout(customerId: string, plan: 'starter' | 'pro', successUrl: string, cancelUrl: string) {
+  async createSubscriptionCheckout(
+    customerId: string,
+    plan: 'starter' | 'pro',
+    successUrl: string,
+    cancelUrl: string,
+    metadata?: Record<string, string>,
+  ) {
     const priceId = await this.findOrCreateSubscriptionPrice(plan);
-    return this.createCheckoutSession(customerId, priceId, successUrl, cancelUrl, 'subscription');
+    return this.createCheckoutSession(customerId, priceId, successUrl, cancelUrl, 'subscription', metadata);
   }
 
   async createBillingPortal(customerId: string, returnUrl: string) {
@@ -76,11 +82,12 @@ export class StripeService {
   }
 
   async createCheckoutSession(
-    customerId: string, 
-    priceId: string, 
-    successUrl: string, 
+    customerId: string,
+    priceId: string,
+    successUrl: string,
     cancelUrl: string,
-    mode: 'payment' | 'subscription' = 'payment'
+    mode: 'payment' | 'subscription' = 'payment',
+    metadata?: Record<string, string>,
   ) {
     const stripe = await getUncachableStripeClient();
     return await stripe.checkout.sessions.create({
@@ -90,6 +97,7 @@ export class StripeService {
       mode,
       success_url: successUrl,
       cancel_url: cancelUrl,
+      ...(metadata ? { metadata } : {}),
     });
   }
 

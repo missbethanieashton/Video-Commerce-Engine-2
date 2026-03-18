@@ -57,6 +57,21 @@ async function initStripe() {
 
 initStripe();
 
+// Webhook documentation — no STRIPE_WEBHOOK_SECRET needed in this setup:
+// Stripe webhooks are managed automatically by the Replit Stripe integration.
+// The signing secret is handled internally by stripe-replit-sync.
+// Webhook endpoint: POST /api/stripe/webhook
+// Handles: checkout.session.completed, customer.subscription.updated,
+//          customer.subscription.deleted, invoice.payment_succeeded, invoice.payment_failed
+//
+// IF you ever move to a self-managed webhook (e.g. for custom Stripe keys outside Replit):
+// 1. Create an endpoint in Stripe Dashboard → Developers → Webhooks → Add endpoint
+// 2. Set endpoint URL to: https://<your-domain>/api/stripe/webhook
+// 3. Set STRIPE_WEBHOOK_SECRET secret in Replit secrets from the webhook's "Signing secret"
+if (!process.env.REPLIT_CONNECTORS_HOSTNAME) {
+  console.warn('[Stripe] REPLIT_CONNECTORS_HOSTNAME not set — Stripe integration may not be available');
+}
+
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),
