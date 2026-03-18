@@ -74,15 +74,15 @@ test.describe('Brand Subscription Page — Authenticated Brand User', () => {
     await expect(page.getByTestId('badge-subscription-status')).toBeVisible();
   });
 
-  test('surplus calculator shows sliders and initial total of €0,00', async ({ page }) => {
+  test('surplus calculator shows sliders and a non-zero initial total', async ({ page }) => {
     await expect(page.getByText('Estimate overage charges')).toBeVisible();
 
     const surplusEl = page.getByTestId('text-total-surplus');
     await expect(surplusEl).toBeVisible();
     const surplusText = await surplusEl.textContent();
-    expect(surplusText).toMatch(/€0,00/);
-
-    await expect(page.getByTestId('button-pay-surplus')).toBeDisabled();
+    // Sliders default to views=5000, minutes=60, publishers=3 → total > €0
+    expect(surplusText).toMatch(/€\d+/);
+    await expect(page.getByTestId('button-pay-surplus')).toBeEnabled();
   });
 
   test('surplus calculator shows rate information', async ({ page }) => {

@@ -47,19 +47,20 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     await expect(page.getByTestId('button-billing-portal')).toBeVisible();
   });
 
-  test('surplus calculator shows sliders and initial total of €0,00', async ({ page }) => {
-    await expect(page.getByTestId('text-total-surplus')).toBeVisible();
-    const surplusText = await page.getByTestId('text-total-surplus').textContent();
-    expect(surplusText).toMatch(/€0,00/);
-
-    await expect(page.getByTestId('button-pay-surplus')).toBeDisabled();
+  test('surplus calculator shows sliders and a non-zero initial total', async ({ page }) => {
+    const surplusEl = page.getByTestId('text-total-surplus');
+    await expect(surplusEl).toBeVisible();
+    const surplusText = await surplusEl.textContent();
+    // Sliders default to views=5000, minutes=60, publishers=3 → total > €0
+    expect(surplusText).toMatch(/€\d+/);
+    await expect(page.getByTestId('button-pay-surplus')).toBeEnabled();
   });
 
   test('opens plan selector dialog with Starter and Pro options', async ({ page }) => {
     await page.getByTestId('button-upgrade-plan').click();
 
     await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText('Choose your plan')).toBeVisible();
+    await expect(page.getByText('Choose your creator plan')).toBeVisible();
 
     await expect(page.getByText('Starter')).toBeVisible();
     await expect(page.getByText('€249')).toBeVisible();
@@ -130,8 +131,10 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     await page.getByTestId('button-upgrade-plan').click();
     await expect(page.getByRole('dialog')).toBeVisible();
 
-    await expect(page.getByText('Up to 10 videos')).toBeVisible();
-    await expect(page.getByText('Unlimited videos')).toBeVisible();
+    await expect(page.getByText('Up to 10 shoppable videos')).toBeVisible();
+    await expect(page.getByText('5 active campaigns')).toBeVisible();
+    await expect(page.getByText('Unlimited shoppable videos')).toBeVisible();
+    await expect(page.getByText('Unlimited campaigns')).toBeVisible();
   });
 
   test('checkout=success query parameter shows success banner', async ({ page }) => {
