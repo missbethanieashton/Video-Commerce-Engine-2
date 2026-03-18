@@ -22,14 +22,25 @@ async function adminGet(path: string) {
 
 describe('Stripe Plan Prices — Test-Mode Integration', () => {
   beforeAll(async () => {
-    const res = await fetch(`${BASE}/api/auth/login`, {
+    const loginRes = await fetch(`${BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
     });
-    expect(res.status, 'admin login for stripe price tests').toBe(200);
-    adminCookie = res.headers.get('set-cookie') ?? '';
-  });
+    expect(loginRes.status, 'admin login for stripe price tests').toBe(200);
+    adminCookie = loginRes.headers.get('set-cookie') ?? '';
+
+    // Ensure starter and pro prices exist in Stripe test mode before assertions
+    const ensureRes = await fetch(`${BASE}/api/dev/stripe/ensure-plans`, {
+      method: 'POST',
+      headers: { Cookie: adminCookie },
+    });
+    expect(ensureRes.status, 'ensure-plans').toBe(200);
+    const { starter, pro } = await ensureRes.json();
+    expect(starter).toMatch(/^price_/);
+    expect(pro).toMatch(/^price_/);
+    console.log(`[Setup] Starter price: ${starter}, Pro price: ${pro}`);
+  }, 30_000);
 
   it('GET /api/dev/stripe/plans returns both starter and pro prices', async () => {
     const res = await adminGet('/api/dev/stripe/plans');

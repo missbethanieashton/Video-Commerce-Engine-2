@@ -2825,6 +2825,19 @@ Identify which products from the catalog are most likely to appear or be feature
       return true;
     }
 
+    app.post("/api/dev/stripe/ensure-plans", async (req, res) => {
+      if (!await requireDevAdmin(req, res)) return;
+      try {
+        const [starterId, proId] = await Promise.all([
+          stripeService.findOrCreateSubscriptionPrice('starter'),
+          stripeService.findOrCreateSubscriptionPrice('pro'),
+        ]);
+        res.json({ starter: starterId, pro: proId });
+      } catch (e: any) {
+        res.status(500).json({ error: e?.message ?? "Failed to ensure plans" });
+      }
+    });
+
     app.get("/api/dev/stripe/plans", async (req, res) => {
       if (!await requireDevAdmin(req, res)) return;
       try {
@@ -2852,17 +2865,37 @@ Identify which products from the catalog are most likely to appear or be feature
       }
     });
 
+    function makeEvent(type: string, obj: Record<string, unknown>): Stripe.Event {
+      return {
+        id: `evt_sim_${Date.now()}`,
+        object: "event",
+        type: type as Stripe.Event["type"],
+        data: { object: obj as unknown as Stripe.Event.Data["object"] },
+        livemode: false,
+        created: Math.floor(Date.now() / 1000),
+        api_version: "2024-06-20",
+        pending_webhooks: 0,
+        request: null,
+      } as unknown as Stripe.Event;
+    }
+
     /**
-     * Webhook simulation harness — simulates a Stripe event through dispatchStripeEvent
-     * and returns the resulting subscription DB row so tests can assert state transitions.
-     * Replaces Stripe CLI for integration tests in this environment.
-     * Only available in non-production.
+     * Webhook simulation harness — fires Stripe events through dispatchStripeEvent and
+     * returns the resulting DB subscription row so tests can assert state transitions.
+     * Requires admin session. Non-production only.
      *
      * POST /api/dev/stripe/simulate-webhook
-     * Body: { userId: string, plan: "starter"|"pro", eventType?: string }
+     * Body:
+     *   { userId, plan?, eventType? }
      *
-     * Creates a real Stripe subscription (bypassing checkout) and fires the event.
-     * Supported eventTypes: "checkout.session.completed" (default), "customer.subscription.updated"
+     * eventType defaults to "checkout.session.completed" which creates a real Stripe
+     * subscription via tok_visa and fires the event.
+     *
+     * For lifecycle transition events the user must already have an active subscription
+     * in the DB (run checkout.session.completed first):
+     *   - "invoice.payment_failed"        → status becomes past_due
+     *   - "customer.subscription.deleted" → status becomes cancelled
+     *   - "invoice.payment_succeeded"     → re-activates (status active)
      */
     app.post("/api/dev/stripe/simulate-webhook", async (req, res) => {
       if (!await requireDevAdmin(req, res)) return;
@@ -2872,14 +2905,10 @@ Identify which products from the catalog are most likely to appear or be feature
           plan?: "starter" | "pro";
           eventType?: string;
         };
-        if (!userId) {
-          return res.status(400).json({ error: "userId is required" });
-        }
+        if (!userId) return res.status(400).json({ error: "userId is required" });
 
         const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(404).json({ error: "User not found" });
-        }
+        if (!user) return res.status(404).json({ error: "User not found" });
 
         const stripe = await getUncachableStripeClient();
 
@@ -2890,63 +2919,68 @@ Identify which products from the catalog are most likely to appear or be feature
           await storage.updateUser(userId, { stripeCustomerId: customerId } as any);
         }
 
-        const allPrices = await stripe.prices.list({ active: true, limit: 100 });
-        const price = allPrices.data.find(
-          (p) => (p.metadata as Record<string, string>)?.plan === plan
-        );
-        if (!price) {
-          return res.status(404).json({ error: `No Stripe price found for plan: ${plan}` });
+        if (eventType === "checkout.session.completed") {
+          const allPrices = await stripe.prices.list({ active: true, limit: 100 });
+          const price = allPrices.data.find(
+            (p) => (p.metadata as Record<string, string>)?.plan === plan
+          );
+          if (!price) return res.status(404).json({ error: `No Stripe price found for plan: ${plan}` });
+
+          const pm = await stripe.paymentMethods.create({ type: "card", card: { token: "tok_visa" } });
+          await stripe.paymentMethods.attach(pm.id, { customer: customerId });
+          await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: pm.id } });
+
+          const subscription = await stripe.subscriptions.create({
+            customer: customerId,
+            items: [{ price: price.id }],
+            metadata: { userId, plan },
+            expand: ["latest_invoice.payment_intent"],
+          });
+          const periodEnd = (subscription.items.data[0] as Stripe.SubscriptionItem).current_period_end;
+
+          await dispatchStripeEvent(makeEvent("checkout.session.completed", {
+            id: `cs_sim_${Date.now()}`,
+            object: "checkout.session",
+            mode: "subscription",
+            customer: customerId,
+            subscription: subscription.id,
+            metadata: { userId, plan },
+            status: "complete",
+          }));
+
+          const sub = await storage.getBrandSubscription(userId);
+          return res.json({ dispatched: true, stripeSubscriptionId: subscription.id, periodEnd, subscription: sub });
         }
 
-        const testPaymentMethod = await stripe.paymentMethods.create({
-          type: "card",
-          card: { token: "tok_visa" },
-        });
-        await stripe.paymentMethods.attach(testPaymentMethod.id, { customer: customerId });
-        await stripe.customers.update(customerId, {
-          invoice_settings: { default_payment_method: testPaymentMethod.id },
-        });
+        const existingSub = await storage.getBrandSubscription(userId);
+        const subscriptionId = existingSub?.stripeSubscriptionId;
 
-        const subscription = await stripe.subscriptions.create({
-          customer: customerId,
-          items: [{ price: price.id }],
-          metadata: { userId, plan },
-          expand: ["latest_invoice.payment_intent"],
-        });
-
-        const periodEnd = (subscription.items.data[0] as Stripe.SubscriptionItem).current_period_end;
-
-        const syntheticEvent: Stripe.Event = {
-          id: `evt_sim_${Date.now()}`,
-          object: "event",
-          type: eventType as Stripe.Event["type"],
-          data: {
-            object: {
-              id: `cs_sim_${Date.now()}`,
-              object: "checkout.session",
-              mode: "subscription",
-              customer: customerId,
-              subscription: subscription.id,
-              metadata: { userId, plan },
-              status: "complete",
-            } as unknown as Stripe.Event.Data["object"],
-          },
-          livemode: false,
-          created: Math.floor(Date.now() / 1000),
-          api_version: "2024-06-20",
-          pending_webhooks: 0,
-          request: null,
-        } as unknown as Stripe.Event;
-
-        await dispatchStripeEvent(syntheticEvent);
+        if (eventType === "invoice.payment_failed") {
+          await dispatchStripeEvent(makeEvent("invoice.payment_failed", {
+            object: "invoice",
+            customer: customerId,
+            subscription: subscriptionId ?? null,
+          }));
+        } else if (eventType === "customer.subscription.deleted") {
+          await dispatchStripeEvent(makeEvent("customer.subscription.deleted", {
+            object: "subscription",
+            id: subscriptionId ?? `sub_sim_${Date.now()}`,
+            customer: customerId,
+            status: "canceled",
+            items: { data: [{ price: { metadata: { plan: existingSub?.plan ?? plan } } }] },
+          }));
+        } else if (eventType === "invoice.payment_succeeded") {
+          await dispatchStripeEvent(makeEvent("invoice.payment_succeeded", {
+            object: "invoice",
+            customer: customerId,
+            subscription: subscriptionId ?? null,
+          }));
+        } else {
+          return res.status(400).json({ error: `Unsupported eventType: ${eventType}` });
+        }
 
         const sub = await storage.getBrandSubscription(userId);
-        res.json({
-          dispatched: true,
-          stripeSubscriptionId: subscription.id,
-          periodEnd,
-          subscription: sub,
-        });
+        return res.json({ dispatched: true, stripeSubscriptionId: subscriptionId ?? null, subscription: sub });
       } catch (e: any) {
         console.error("[Dev] simulate-webhook error:", e?.message);
         res.status(500).json({ error: e?.message ?? "Failed to simulate webhook" });
