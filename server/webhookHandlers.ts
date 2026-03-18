@@ -2,12 +2,12 @@ import Stripe from 'stripe';
 import { getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 
-const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
+export const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
   24900: 'starter',
   49900: 'pro',
 };
 
-function mapStripeStatus(stripeStatus: string): 'active' | 'past_due' | 'cancelled' {
+export function mapStripeStatus(stripeStatus: string): 'active' | 'past_due' | 'cancelled' {
   switch (stripeStatus) {
     case 'active':
     case 'trialing':
@@ -51,13 +51,13 @@ async function planFromSubscription(subscription: Stripe.Subscription): Promise<
   return PLAN_AMOUNT_FALLBACK[price.unit_amount ?? 0] ?? 'starter';
 }
 
-function subscriptionPeriodEnd(subscription: Stripe.Subscription): Date {
+export function subscriptionPeriodEnd(subscription: Stripe.Subscription): Date {
   const item = subscription.items.data[0];
   const ts = item?.current_period_end ?? 0;
   return new Date(ts * 1000);
 }
 
-function extractCustomerId(
+export function extractCustomerId(
   customer: string | Stripe.Customer | Stripe.DeletedCustomer | null
 ): string | null {
   if (!customer) return null;
@@ -65,7 +65,7 @@ function extractCustomerId(
   return customer.id;
 }
 
-function extractSubscriptionId(
+export function extractSubscriptionId(
   sub: string | Stripe.Subscription | null
 ): string | null {
   if (!sub) return null;

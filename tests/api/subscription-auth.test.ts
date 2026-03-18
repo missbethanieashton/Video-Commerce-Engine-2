@@ -14,8 +14,8 @@ async function get(path: string) {
   return fetch(`${BASE}${path}`, { method: 'GET' });
 }
 
-describe('Subscription Checkout Endpoints — Auth Validation', () => {
-  it('POST /api/creator/subscription/checkout requires session (401 without auth)', async () => {
+describe('Creator Subscription Checkout — Auth Validation', () => {
+  it('POST /api/creator/subscription/checkout returns 401 without a session', async () => {
     const res = await post('/api/creator/subscription/checkout', { plan: 'starter' });
     expect(res.status).toBe(401);
     const body = await res.json();
@@ -23,12 +23,26 @@ describe('Subscription Checkout Endpoints — Auth Validation', () => {
     expect(body.error).toMatch(/unauthorized/i);
   });
 
-  it('POST /api/creator/subscription/checkout with pro plan requires session (401)', async () => {
+  it('POST /api/creator/subscription/checkout with pro plan returns 401 without session', async () => {
     const res = await post('/api/creator/subscription/checkout', { plan: 'pro' });
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toMatch(/unauthorized/i);
+  });
+
+  it('POST /api/creator/subscription/checkout with invalid plan returns 401 (auth checked first)', async () => {
+    const res = await post('/api/creator/subscription/checkout', { plan: 'enterprise' });
     expect(res.status).toBe(401);
   });
 
-  it('POST /api/brand/subscription/checkout requires session (401 without auth)', async () => {
+  it('POST /api/creator/subscription/checkout with empty plan returns 401', async () => {
+    const res = await post('/api/creator/subscription/checkout', { plan: '' });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('Brand Subscription Checkout — Auth Validation', () => {
+  it('POST /api/brand/subscription/checkout returns 401 without a session', async () => {
     const res = await post('/api/brand/subscription/checkout', { plan: 'starter' });
     expect(res.status).toBe(401);
     const body = await res.json();
@@ -36,42 +50,30 @@ describe('Subscription Checkout Endpoints — Auth Validation', () => {
     expect(body.error).toMatch(/unauthorized/i);
   });
 
-  it('POST /api/brand/subscription/checkout with pro plan requires session (401)', async () => {
+  it('POST /api/brand/subscription/checkout with pro plan returns 401 without session', async () => {
     const res = await post('/api/brand/subscription/checkout', { plan: 'pro' });
     expect(res.status).toBe(401);
   });
 
-  it('POST /api/brand/subscription/portal requires session (401 without auth)', async () => {
+  it('POST /api/brand/subscription/checkout with invalid plan returns 401', async () => {
+    const res = await post('/api/brand/subscription/checkout', { plan: 'unlimited' });
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/brand/subscription/portal returns 401 without session', async () => {
     const res = await post('/api/brand/subscription/portal', {});
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body).toHaveProperty('error');
   });
 
-  it('POST /api/brand/subscription/surplus-invoice requires session (401 without auth)', async () => {
+  it('POST /api/brand/subscription/surplus-invoice returns 401 without session', async () => {
     const res = await post('/api/brand/subscription/surplus-invoice', {
       views: 1000,
       minutes: 60,
       publishers: 3,
       totalAmount: 350,
     });
-    expect(res.status).toBe(401);
-  });
-});
-
-describe('Subscription Checkout Endpoints — Plan Validation', () => {
-  it('Creator checkout rejects invalid plan values (auth required first, so 401)', async () => {
-    const res = await post('/api/creator/subscription/checkout', { plan: 'enterprise' });
-    expect(res.status).toBe(401);
-  });
-
-  it('Creator checkout rejects empty plan (auth required first, so 401)', async () => {
-    const res = await post('/api/creator/subscription/checkout', { plan: '' });
-    expect(res.status).toBe(401);
-  });
-
-  it('Brand checkout rejects invalid plan values (401 — auth checked first)', async () => {
-    const res = await post('/api/brand/subscription/checkout', { plan: 'unlimited' });
     expect(res.status).toBe(401);
   });
 });
@@ -90,16 +92,42 @@ describe('Webhook Endpoint — Signature Validation', () => {
     expect(isExpectedError).toBe(true);
   });
 
-  it('POST /api/webhooks/stripe with invalid signature returns 400', async () => {
+  it('POST /api/webhooks/stripe with malformed stripe-signature returns 400', async () => {
     const res = await post('/api/webhooks/stripe', { type: 'customer.subscription.updated' }, {
       'stripe-signature': 't=invalid,v1=badhash',
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toHaveProperty('error');
+  });
+
+  it('POST /api/webhooks/stripe with no body returns 400', async () => {
+    const res = await fetch(`${BASE}/api/webhooks/stripe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'stripe-signature': 't=0,v1=fakesig' },
+      body: '{}',
     });
     expect(res.status).toBe(400);
   });
 });
 
-describe('Stripe Connect Endpoints — Session-Aware Auth', () => {
-  it('GET /api/stripe/connect/status returns 200 with connected/onboarded fields', async () => {
+describe('Stripe Connect Endpoints — Auth Enforcement', () => {
+  it('POST /api/stripe/connect/create returns 401 without session', async () => {
+    const res = await post('/api/stripe/connect/create', {});
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body).toHaveProperty('error');
+    expect(body.error).toMatch(/unauthorized/i);
+  });
+
+  it('POST /api/stripe/connect/onboarding returns 401 without session', async () => {
+    const res = await post('/api/stripe/connect/onboarding', {});
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toMatch(/unauthorized/i);
+  });
+
+  it('GET /api/stripe/connect/status returns 200 with demo user state when no session', async () => {
     const res = await get('/api/stripe/connect/status');
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -108,14 +136,14 @@ describe('Stripe Connect Endpoints — Session-Aware Auth', () => {
     expect(typeof body.connected).toBe('boolean');
     expect(typeof body.onboarded).toBe('boolean');
   });
+});
 
-  it('GET /api/creator/subscription returns subscription data or null', async () => {
-    const res = await get('/api/creator/subscription');
-    expect([200, 404]).toContain(res.status);
-  });
-
-  it('GET /api/brand/subscription returns subscription data or null', async () => {
-    const res = await get('/api/brand/subscription');
-    expect([200, 401]).toContain(res.status);
+describe('Subscription Data Endpoints — Accessible without session', () => {
+  it('GET /api/users/me returns user (demo_creator fallback when no session)', async () => {
+    const res = await get('/api/users/me');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('email');
+    expect(body).toHaveProperty('role');
   });
 });

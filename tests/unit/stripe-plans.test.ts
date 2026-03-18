@@ -1,214 +1,395 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import Stripe from 'stripe';
 
-describe('Stripe Plan Configuration — Constants and Logic', () => {
-  describe('Plan pricing constants', () => {
-    it('Starter plan amount is 24900 EUR cents (€249/mo)', () => {
-      const PLAN_CONFIG = {
-        starter: { name: 'Materialized Starter Plan', amount: 24900 },
-        pro:     { name: 'Materialized Pro Plan',     amount: 49900 },
-      } as const;
+vi.mock('../../server/stripeClient', () => ({
+  getUncachableStripeClient: vi.fn(),
+}));
 
-      expect(PLAN_CONFIG.starter.amount).toBe(24900);
-      expect(PLAN_CONFIG.starter.name).toBe('Materialized Starter Plan');
+import { StripeService } from '../../server/stripeService';
+import {
+  mapStripeStatus,
+  subscriptionPeriodEnd,
+  extractCustomerId,
+  extractSubscriptionId,
+  PLAN_AMOUNT_FALLBACK,
+} from '../../server/webhookHandlers';
+import { getUncachableStripeClient } from '../../server/stripeClient';
+
+const mockStripe = {
+  products: {
+    list: vi.fn(),
+    create: vi.fn(),
+  },
+  prices: {
+    list: vi.fn(),
+    create: vi.fn(),
+  },
+  checkout: {
+    sessions: {
+      create: vi.fn(),
+    },
+  },
+  customers: {
+    create: vi.fn(),
+  },
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  (getUncachableStripeClient as ReturnType<typeof vi.fn>).mockResolvedValue(mockStripe);
+});
+
+describe('StripeService.findOrCreateSubscriptionPrice', () => {
+  const service = new StripeService();
+
+  it('returns existing price ID when a matching starter price already exists', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_starter', metadata: { plan: 'starter' } }],
+    });
+    mockStripe.prices.list.mockResolvedValue({
+      data: [
+        {
+          id: 'price_existing_starter',
+          unit_amount: 24900,
+          currency: 'eur',
+          recurring: { interval: 'month' },
+        },
+      ],
     });
 
-    it('Pro plan amount is 49900 EUR cents (€499/mo)', () => {
-      const PLAN_CONFIG = {
-        starter: { name: 'Materialized Starter Plan', amount: 24900 },
-        pro:     { name: 'Materialized Pro Plan',     amount: 49900 },
-      } as const;
+    const priceId = await service.findOrCreateSubscriptionPrice('starter');
 
-      expect(PLAN_CONFIG.pro.amount).toBe(49900);
-      expect(PLAN_CONFIG.pro.name).toBe('Materialized Pro Plan');
+    expect(priceId).toBe('price_existing_starter');
+    expect(mockStripe.prices.create).not.toHaveBeenCalled();
+    expect(mockStripe.products.create).not.toHaveBeenCalled();
+  });
+
+  it('returns existing price ID when a matching pro price already exists', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_pro', metadata: { plan: 'pro' } }],
+    });
+    mockStripe.prices.list.mockResolvedValue({
+      data: [
+        {
+          id: 'price_existing_pro',
+          unit_amount: 49900,
+          currency: 'eur',
+          recurring: { interval: 'month' },
+        },
+      ],
     });
 
-    it('€249 in EUR cents equals 24900', () => {
-      expect(249 * 100).toBe(24900);
+    const priceId = await service.findOrCreateSubscriptionPrice('pro');
+
+    expect(priceId).toBe('price_existing_pro');
+    expect(mockStripe.prices.create).not.toHaveBeenCalled();
+  });
+
+  it('creates a new starter product and price when none exists', async () => {
+    mockStripe.products.list.mockResolvedValue({ data: [] });
+    mockStripe.products.create.mockResolvedValue({
+      id: 'prod_new_starter',
+      metadata: { plan: 'starter' },
+    });
+    mockStripe.prices.list.mockResolvedValue({ data: [] });
+    mockStripe.prices.create.mockResolvedValue({ id: 'price_new_starter' });
+
+    const priceId = await service.findOrCreateSubscriptionPrice('starter');
+
+    expect(priceId).toBe('price_new_starter');
+
+    expect(mockStripe.products.create).toHaveBeenCalledWith({
+      name: 'Materialized Starter Plan',
+      metadata: { plan: 'starter' },
     });
 
-    it('€499 in EUR cents equals 49900', () => {
-      expect(499 * 100).toBe(49900);
+    expect(mockStripe.prices.create).toHaveBeenCalledWith({
+      product: 'prod_new_starter',
+      unit_amount: 24900,
+      currency: 'eur',
+      recurring: { interval: 'month' },
+      metadata: { plan: 'starter' },
     });
   });
 
-  describe('PLAN_AMOUNT_FALLBACK mapping', () => {
-    it('amount 24900 maps to starter plan', () => {
-      const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
-        24900: 'starter',
-        49900: 'pro',
-      };
-      expect(PLAN_AMOUNT_FALLBACK[24900]).toBe('starter');
+  it('creates a new pro product and price with correct amount (49900 EUR cents)', async () => {
+    mockStripe.products.list.mockResolvedValue({ data: [] });
+    mockStripe.products.create.mockResolvedValue({
+      id: 'prod_new_pro',
+      metadata: { plan: 'pro' },
+    });
+    mockStripe.prices.list.mockResolvedValue({ data: [] });
+    mockStripe.prices.create.mockResolvedValue({ id: 'price_new_pro' });
+
+    const priceId = await service.findOrCreateSubscriptionPrice('pro');
+
+    expect(priceId).toBe('price_new_pro');
+
+    expect(mockStripe.products.create).toHaveBeenCalledWith({
+      name: 'Materialized Pro Plan',
+      metadata: { plan: 'pro' },
     });
 
-    it('amount 49900 maps to pro plan', () => {
-      const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
-        24900: 'starter',
-        49900: 'pro',
-      };
-      expect(PLAN_AMOUNT_FALLBACK[49900]).toBe('pro');
-    });
-
-    it('unknown amount falls back to undefined (defaults to starter in handlers)', () => {
-      const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
-        24900: 'starter',
-        49900: 'pro',
-      };
-      expect(PLAN_AMOUNT_FALLBACK[99999]).toBeUndefined();
-    });
-  });
-
-  describe('mapStripeStatus — status mapping logic', () => {
-    function mapStripeStatus(stripeStatus: string): 'active' | 'past_due' | 'cancelled' {
-      switch (stripeStatus) {
-        case 'active':
-        case 'trialing':
-          return 'active';
-        case 'past_due':
-        case 'unpaid':
-          return 'past_due';
-        case 'canceled':
-        case 'incomplete_expired':
-        default:
-          return 'cancelled';
-      }
-    }
-
-    it('maps "active" → "active"', () => {
-      expect(mapStripeStatus('active')).toBe('active');
-    });
-
-    it('maps "trialing" → "active"', () => {
-      expect(mapStripeStatus('trialing')).toBe('active');
-    });
-
-    it('maps "past_due" → "past_due"', () => {
-      expect(mapStripeStatus('past_due')).toBe('past_due');
-    });
-
-    it('maps "unpaid" → "past_due"', () => {
-      expect(mapStripeStatus('unpaid')).toBe('past_due');
-    });
-
-    it('maps "canceled" → "cancelled" (Stripe uses US spelling)', () => {
-      expect(mapStripeStatus('canceled')).toBe('cancelled');
-    });
-
-    it('maps "incomplete_expired" → "cancelled"', () => {
-      expect(mapStripeStatus('incomplete_expired')).toBe('cancelled');
-    });
-
-    it('maps unknown status → "cancelled" (default)', () => {
-      expect(mapStripeStatus('unknown_status')).toBe('cancelled');
-    });
-
-    it('maps "incomplete" → "cancelled" (default)', () => {
-      expect(mapStripeStatus('incomplete')).toBe('cancelled');
+    expect(mockStripe.prices.create).toHaveBeenCalledWith({
+      product: 'prod_new_pro',
+      unit_amount: 49900,
+      currency: 'eur',
+      recurring: { interval: 'month' },
+      metadata: { plan: 'pro' },
     });
   });
 
-  describe('extractCustomerId — helper logic', () => {
-    function extractCustomerId(
-      customer: string | { id: string } | null
-    ): string | null {
-      if (!customer) return null;
-      if (typeof customer === 'string') return customer;
-      return customer.id;
-    }
-
-    it('returns string customer ID as-is', () => {
-      expect(extractCustomerId('cus_abc123')).toBe('cus_abc123');
+  it('skips wrong-amount prices and creates a new one', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_starter', metadata: { plan: 'starter' } }],
     });
-
-    it('returns .id when customer is an object', () => {
-      expect(extractCustomerId({ id: 'cus_expanded' })).toBe('cus_expanded');
+    mockStripe.prices.list.mockResolvedValue({
+      data: [
+        {
+          id: 'price_wrong_amount',
+          unit_amount: 9900,
+          currency: 'eur',
+          recurring: { interval: 'month' },
+        },
+      ],
     });
+    mockStripe.prices.create.mockResolvedValue({ id: 'price_correct_starter' });
 
-    it('returns null when customer is null', () => {
-      expect(extractCustomerId(null)).toBeNull();
-    });
+    const priceId = await service.findOrCreateSubscriptionPrice('starter');
+
+    expect(priceId).toBe('price_correct_starter');
+    expect(mockStripe.prices.create).toHaveBeenCalledWith(
+      expect.objectContaining({ unit_amount: 24900 })
+    );
   });
 
-  describe('extractSubscriptionId — helper logic', () => {
-    function extractSubscriptionId(
-      sub: string | { id: string } | null
-    ): string | null {
-      if (!sub) return null;
-      if (typeof sub === 'string') return sub;
-      return sub.id;
-    }
-
-    it('returns string subscription ID as-is', () => {
-      expect(extractSubscriptionId('sub_abc123')).toBe('sub_abc123');
+  it('skips wrong-currency prices and creates a new EUR one', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_starter', metadata: { plan: 'starter' } }],
     });
-
-    it('returns .id when subscription is an expanded object', () => {
-      expect(extractSubscriptionId({ id: 'sub_expanded' })).toBe('sub_expanded');
+    mockStripe.prices.list.mockResolvedValue({
+      data: [
+        {
+          id: 'price_usd',
+          unit_amount: 24900,
+          currency: 'usd',
+          recurring: { interval: 'month' },
+        },
+      ],
     });
+    mockStripe.prices.create.mockResolvedValue({ id: 'price_eur_starter' });
 
-    it('returns null when subscription is null', () => {
-      expect(extractSubscriptionId(null)).toBeNull();
-    });
+    const priceId = await service.findOrCreateSubscriptionPrice('starter');
+
+    expect(priceId).toBe('price_eur_starter');
+    expect(mockStripe.prices.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'eur' })
+    );
   });
 
-  describe('subscriptionPeriodEnd — timestamp conversion', () => {
-    function subscriptionPeriodEnd(periodEndTimestamp: number): Date {
-      return new Date(periodEndTimestamp * 1000);
-    }
+  it('reuses an existing product and creates a new price when price list is empty', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_existing_pro', metadata: { plan: 'pro' } }],
+    });
+    mockStripe.prices.list.mockResolvedValue({ data: [] });
+    mockStripe.prices.create.mockResolvedValue({ id: 'price_pro_new' });
 
-    it('converts Unix timestamp to Date correctly', () => {
-      const ts = 1800000000;
-      const result = subscriptionPeriodEnd(ts);
-      expect(result).toBeInstanceOf(Date);
-      expect(result.getTime()).toBe(ts * 1000);
+    const priceId = await service.findOrCreateSubscriptionPrice('pro');
+
+    expect(priceId).toBe('price_pro_new');
+    expect(mockStripe.products.create).not.toHaveBeenCalled();
+    expect(mockStripe.prices.create).toHaveBeenCalledOnce();
+  });
+});
+
+describe('StripeService.createSubscriptionCheckout', () => {
+  const service = new StripeService();
+
+  it('calls createSubscriptionCheckout with correct plan metadata', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_starter', metadata: { plan: 'starter' } }],
+    });
+    mockStripe.prices.list.mockResolvedValue({
+      data: [{ id: 'price_starter', unit_amount: 24900, currency: 'eur', recurring: { interval: 'month' } }],
+    });
+    mockStripe.checkout.sessions.create.mockResolvedValue({
+      id: 'cs_test',
+      url: 'https://checkout.stripe.com/pay/cs_test',
     });
 
-    it('converts zero timestamp to epoch', () => {
-      const result = subscriptionPeriodEnd(0);
-      expect(result.getTime()).toBe(0);
-    });
+    const result = await service.createSubscriptionCheckout(
+      'cus_test',
+      'starter',
+      'https://example.com/success',
+      'https://example.com/cancel',
+      { userId: 'user_test', plan: 'starter' },
+    );
 
-    it('produces a future date for upcoming billing periods', () => {
-      const thirtyDaysFromNow = Math.floor(Date.now() / 1000) + 30 * 86400;
-      const result = subscriptionPeriodEnd(thirtyDaysFromNow);
-      expect(result.getTime()).toBeGreaterThan(Date.now());
-    });
+    expect(result.url).toBe('https://checkout.stripe.com/pay/cs_test');
+    expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        customer: 'cus_test',
+        mode: 'subscription',
+        success_url: 'https://example.com/success',
+        cancel_url: 'https://example.com/cancel',
+        metadata: { userId: 'user_test', plan: 'starter' },
+      })
+    );
   });
 
-  describe('Stripe plan creation parameters', () => {
-    it('price creation uses EUR currency', () => {
-      const priceCreateParams = {
-        unit_amount: 24900,
-        currency: 'eur',
-        recurring: { interval: 'month' as const },
-        metadata: { plan: 'starter' },
-      };
-      expect(priceCreateParams.currency).toBe('eur');
+  it('calls createSubscriptionCheckout with pro plan price (49900)', async () => {
+    mockStripe.products.list.mockResolvedValue({
+      data: [{ id: 'prod_pro', metadata: { plan: 'pro' } }],
+    });
+    mockStripe.prices.list.mockResolvedValue({
+      data: [{ id: 'price_pro', unit_amount: 49900, currency: 'eur', recurring: { interval: 'month' } }],
+    });
+    mockStripe.checkout.sessions.create.mockResolvedValue({
+      id: 'cs_pro_test',
+      url: 'https://checkout.stripe.com/pay/cs_pro',
     });
 
-    it('price creation uses monthly interval', () => {
-      const priceCreateParams = {
-        unit_amount: 49900,
-        currency: 'eur',
-        recurring: { interval: 'month' as const },
-        metadata: { plan: 'pro' },
-      };
-      expect(priceCreateParams.recurring.interval).toBe('month');
+    const result = await service.createSubscriptionCheckout(
+      'cus_test',
+      'pro',
+      'https://example.com/brand/settings/subscription?checkout=success',
+      'https://example.com/brand/settings/subscription?checkout=cancelled',
+      { userId: 'user_test', plan: 'pro' },
+    );
+
+    expect(result.url).toContain('cs_pro');
+    expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        line_items: [{ price: 'price_pro', quantity: 1 }],
+        mode: 'subscription',
+      })
+    );
+  });
+});
+
+describe('StripeService.createCustomer', () => {
+  const service = new StripeService();
+
+  it('creates a Stripe customer with email and userId metadata', async () => {
+    mockStripe.customers.create.mockResolvedValue({
+      id: 'cus_new_123',
+      email: 'test@example.com',
     });
 
-    it('product creation includes plan metadata for identification', () => {
-      const productCreateParams = {
-        name: 'Materialized Pro Plan',
-        metadata: { plan: 'pro' },
-      };
-      expect(productCreateParams.metadata.plan).toBe('pro');
-    });
+    const customer = await service.createCustomer('test@example.com', 'user_abc123', 'Test User');
 
-    it('Stripe Connect account type is express', () => {
-      const accountCreateParams = {
-        type: 'express' as const,
-        capabilities: { transfers: { requested: true } },
-      };
-      expect(accountCreateParams.type).toBe('express');
+    expect(customer.id).toBe('cus_new_123');
+    expect(mockStripe.customers.create).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      name: 'Test User',
+      metadata: { userId: 'user_abc123' },
     });
+  });
+});
+
+describe('mapStripeStatus — imported from webhookHandlers', () => {
+  it('maps "active" → "active"', () => {
+    expect(mapStripeStatus('active')).toBe('active');
+  });
+
+  it('maps "trialing" → "active"', () => {
+    expect(mapStripeStatus('trialing')).toBe('active');
+  });
+
+  it('maps "past_due" → "past_due"', () => {
+    expect(mapStripeStatus('past_due')).toBe('past_due');
+  });
+
+  it('maps "unpaid" → "past_due"', () => {
+    expect(mapStripeStatus('unpaid')).toBe('past_due');
+  });
+
+  it('maps "canceled" → "cancelled" (Stripe uses US spelling, DB uses UK)', () => {
+    expect(mapStripeStatus('canceled')).toBe('cancelled');
+  });
+
+  it('maps "incomplete_expired" → "cancelled"', () => {
+    expect(mapStripeStatus('incomplete_expired')).toBe('cancelled');
+  });
+
+  it('maps unknown status → "cancelled" (default branch)', () => {
+    expect(mapStripeStatus('some_future_stripe_status')).toBe('cancelled');
+  });
+});
+
+describe('PLAN_AMOUNT_FALLBACK — imported from webhookHandlers', () => {
+  it('maps 24900 cents → starter (€249/mo)', () => {
+    expect(PLAN_AMOUNT_FALLBACK[24900]).toBe('starter');
+  });
+
+  it('maps 49900 cents → pro (€499/mo)', () => {
+    expect(PLAN_AMOUNT_FALLBACK[49900]).toBe('pro');
+  });
+
+  it('unknown amount is undefined (handler defaults to starter)', () => {
+    expect(PLAN_AMOUNT_FALLBACK[99999]).toBeUndefined();
+  });
+});
+
+describe('extractCustomerId — imported from webhookHandlers', () => {
+  it('returns string customer ID directly', () => {
+    expect(extractCustomerId('cus_abc123')).toBe('cus_abc123');
+  });
+
+  it('returns .id when customer is an expanded Stripe object', () => {
+    const customer = { id: 'cus_expanded' } as Stripe.Customer;
+    expect(extractCustomerId(customer)).toBe('cus_expanded');
+  });
+
+  it('returns null for null input', () => {
+    expect(extractCustomerId(null)).toBeNull();
+  });
+});
+
+describe('extractSubscriptionId — imported from webhookHandlers', () => {
+  it('returns string subscription ID directly', () => {
+    expect(extractSubscriptionId('sub_abc123')).toBe('sub_abc123');
+  });
+
+  it('returns .id when subscription is an expanded object', () => {
+    const sub = { id: 'sub_expanded' } as Stripe.Subscription;
+    expect(extractSubscriptionId(sub)).toBe('sub_expanded');
+  });
+
+  it('returns null for null input', () => {
+    expect(extractSubscriptionId(null)).toBeNull();
+  });
+});
+
+describe('subscriptionPeriodEnd — imported from webhookHandlers', () => {
+  it('converts Unix timestamp (seconds) to Date correctly', () => {
+    const subscription = {
+      items: {
+        data: [{ current_period_end: 1800000000 }],
+      },
+    } as unknown as Stripe.Subscription;
+
+    const result = subscriptionPeriodEnd(subscription);
+    expect(result).toBeInstanceOf(Date);
+    expect(result.getTime()).toBe(1800000000 * 1000);
+  });
+
+  it('returns epoch date when current_period_end is 0', () => {
+    const subscription = {
+      items: { data: [{ current_period_end: 0 }] },
+    } as unknown as Stripe.Subscription;
+
+    const result = subscriptionPeriodEnd(subscription);
+    expect(result.getTime()).toBe(0);
+  });
+
+  it('produces a future date for typical upcoming billing', () => {
+    const thirtyDaysFromNow = Math.floor(Date.now() / 1000) + 30 * 86400;
+    const subscription = {
+      items: { data: [{ current_period_end: thirtyDaysFromNow }] },
+    } as unknown as Stripe.Subscription;
+
+    const result = subscriptionPeriodEnd(subscription);
+    expect(result.getTime()).toBeGreaterThan(Date.now());
   });
 });

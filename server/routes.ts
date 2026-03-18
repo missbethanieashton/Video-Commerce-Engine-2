@@ -2205,9 +2205,10 @@ Identify which products from the catalog are most likely to appear or be feature
   app.post("/api/stripe/connect/create", async (req, res) => {
     try {
       const sessionUserId = (req.session as any)?.userId;
-      const user = sessionUserId
-        ? await storage.getUser(sessionUserId)
-        : await storage.getUserByUsername("demo_creator");
+      if (!sessionUserId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const user = await storage.getUser(sessionUserId);
       if (!user) {
         return res.status(401).json({ error: "Not authenticated" });
       }
@@ -2229,9 +2230,10 @@ Identify which products from the catalog are most likely to appear or be feature
   app.post("/api/stripe/connect/onboarding", async (req, res) => {
     try {
       const sessionUserId = (req.session as any)?.userId;
-      const user = sessionUserId
-        ? await storage.getUser(sessionUserId)
-        : await storage.getUserByUsername("demo_creator");
+      if (!sessionUserId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const user = await storage.getUser(sessionUserId);
       if (!user || !user.stripeConnectAccountId) {
         return res.status(400).json({ error: "No connect account found" });
       }
