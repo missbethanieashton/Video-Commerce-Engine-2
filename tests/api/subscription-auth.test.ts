@@ -41,9 +41,9 @@ async function getWithSession(path: string, sessionCookie: string) {
   });
 }
 
-async function getStripeSession(sessionId: string) {
-  const res = await get(`/api/dev/stripe/checkout-session/${sessionId}`);
-  if (!res.ok) throw new Error(`Session fetch failed: ${res.status}`);
+async function getStripeSession(sessionId: string, cookie: string) {
+  const res = await getWithSession(`/api/dev/stripe/checkout-session/${sessionId}`, cookie);
+  if (!res.ok) throw new Error(`Session fetch failed: ${res.status} — ${await res.text()}`);
   return res.json();
 }
 
@@ -117,7 +117,7 @@ describe('Creator Checkout — Authenticated with Stripe session internals', () 
     expect(checkoutRes.status).toBe(200);
     const { sessionId } = await checkoutRes.json();
 
-    const session = await getStripeSession(sessionId);
+    const session = await getStripeSession(sessionId, sessionCookie);
 
     expect(session.mode).toBe('subscription');
     expect(session.metadata).toHaveProperty('plan', 'starter');
@@ -137,7 +137,7 @@ describe('Creator Checkout — Authenticated with Stripe session internals', () 
     expect(checkoutRes.status).toBe(200);
     const { sessionId } = await checkoutRes.json();
 
-    const session = await getStripeSession(sessionId);
+    const session = await getStripeSession(sessionId, sessionCookie);
 
     expect(session.mode).toBe('subscription');
     expect(session.metadata).toHaveProperty('plan', 'pro');
@@ -177,7 +177,7 @@ describe('Brand Checkout — Authenticated with Stripe session internals', () =>
     expect(checkoutRes.status).toBe(200);
     const { sessionId } = await checkoutRes.json();
 
-    const session = await getStripeSession(sessionId);
+    const session = await getStripeSession(sessionId, sessionCookie);
 
     expect(session.mode).toBe('subscription');
     expect(session.metadata).toHaveProperty('plan', 'starter');
@@ -197,7 +197,7 @@ describe('Brand Checkout — Authenticated with Stripe session internals', () =>
     expect(checkoutRes.status).toBe(200);
     const { sessionId } = await checkoutRes.json();
 
-    const session = await getStripeSession(sessionId);
+    const session = await getStripeSession(sessionId, sessionCookie);
 
     expect(session.mode).toBe('subscription');
     expect(session.metadata).toHaveProperty('plan', 'pro');

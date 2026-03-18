@@ -43,7 +43,7 @@ export default function AffiliateSettings() {
 
   const createConnectMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('/api/stripe/connect/create', 'POST');
+      const res = await apiRequest('POST', '/api/stripe/connect/create');
       return res.json();
     },
     onSuccess: () => {
@@ -64,7 +64,7 @@ export default function AffiliateSettings() {
 
   const startOnboardingMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('/api/stripe/connect/onboarding', 'POST');
+      const res = await apiRequest('POST', '/api/stripe/connect/onboarding');
       return res.json();
     },
     onSuccess: (data) => {

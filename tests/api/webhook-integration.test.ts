@@ -2,10 +2,13 @@
  * Webhook Integration Tests — Stripe → DB State Verification
  *
  * These tests simulate the full checkout → webhook → DB state lifecycle:
- * 1. Create a checkout session (real Stripe API call, gets cs_test_ sessionId)
- * 2. Simulate the Stripe webhook event via the dev harness (creates a real subscription,
- *    fires it through dispatchStripeEvent, which is the same handler used in production)
- * 3. Assert the DB subscription row reflects the correct plan/status
+ * 1. Log in as admin to obtain an auth cookie (required for /api/dev/* endpoints)
+ * 2. Call POST /api/dev/stripe/simulate-webhook which:
+ *    a. Creates a real Stripe subscription using a tok_visa test card token
+ *    b. Fires the event through dispatchStripeEvent — same handler used in production
+ *    c. Returns the resulting DB subscription row
+ * 3. Assert the DB subscription row shows status=active and the correct plan
+ * 4. Verify the trial-status API confirms hasActiveSubscription=true
  *
  * This replaces Stripe CLI webhook replay and covers the full server-side loop
  * without requiring a publicly accessible server or browser-level card entry.
@@ -28,22 +31,40 @@ async function loginAsAdmin(): Promise<{ userId: string; cookie: string }> {
   return { userId: user.id, cookie };
 }
 
-describe('Webhook Integration — checkout.session.completed → DB state', () => {
-  let userId: string;
-  let cookie: string;
+async function simulateWebhook(opts: {
+  userId: string;
+  plan: 'starter' | 'pro';
+  adminCookie: string;
+  eventType?: string;
+}) {
+  return fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: opts.adminCookie,
+    },
+    body: JSON.stringify({
+      userId: opts.userId,
+      plan: opts.plan,
+      eventType: opts.eventType ?? 'checkout.session.completed',
+    }),
+  });
+}
+
+// ─── Creator Webhook Loop ─────────────────────────────────────────────────────
+
+describe('Webhook Integration — Creator checkout.session.completed → DB state', () => {
+  let adminUserId: string;
+  let adminCookie: string;
 
   beforeAll(async () => {
     const session = await loginAsAdmin();
-    userId = session.userId;
-    cookie = session.cookie;
+    adminUserId = session.userId;
+    adminCookie = session.cookie;
   });
 
-  it('Creator Starter: simulate checkout.session.completed → subscription active in DB', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, plan: 'starter', eventType: 'checkout.session.completed' }),
-    });
+  it('Starter plan: webhook dispatched → DB shows status=active, plan=starter', async () => {
+    const res = await simulateWebhook({ userId: adminUserId, plan: 'starter', adminCookie });
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -57,15 +78,11 @@ describe('Webhook Integration — checkout.session.completed → DB state', () =
     expect(sub.status).toBe('active');
     expect(typeof sub.currentPeriodEnd).toBe('string');
 
-    console.log(`[Webhook→DB] starter: sub=${body.stripeSubscriptionId}, status=${sub.status}, plan=${sub.plan}`);
+    console.log(`[Webhook→DB] creator starter: sub=${body.stripeSubscriptionId}, status=${sub.status}, plan=${sub.plan}`);
   }, 40_000);
 
-  it('Creator Pro: simulate checkout.session.completed → subscription active in DB', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, plan: 'pro', eventType: 'checkout.session.completed' }),
-    });
+  it('Pro plan: webhook dispatched → DB shows status=active, plan=pro', async () => {
+    const res = await simulateWebhook({ userId: adminUserId, plan: 'pro', adminCookie });
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -78,25 +95,24 @@ describe('Webhook Integration — checkout.session.completed → DB state', () =
     expect(sub.plan).toBe('pro');
     expect(sub.status).toBe('active');
 
-    console.log(`[Webhook→DB] pro: sub=${body.stripeSubscriptionId}, status=${sub.status}, plan=${sub.plan}`);
+    console.log(`[Webhook→DB] creator pro: sub=${body.stripeSubscriptionId}, status=${sub.status}, plan=${sub.plan}`);
   }, 40_000);
 
-  it('Trial-status endpoint confirms hasActiveSubscription=true after webhook simulation', async () => {
+  it('Trial-status API confirms hasActiveSubscription=true after webhook simulation', async () => {
     const res = await fetch(`${BASE}/api/users/me/trial-status`, {
-      headers: { Cookie: cookie },
+      headers: { Cookie: adminCookie },
     });
     expect(res.status).toBe(200);
     const data = await res.json();
 
     expect(data.hasActiveSubscription).toBe(true);
-
     console.log(`[UI→API] trial-status: hasActiveSubscription=${data.hasActiveSubscription}`);
   }, 15_000);
 
-  it('Missing userId returns 400', async () => {
+  it('Missing userId → 400 even when authenticated', async () => {
     const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Cookie: adminCookie },
       body: JSON.stringify({ plan: 'starter' }),
     });
     expect(res.status).toBe(400);
@@ -104,24 +120,38 @@ describe('Webhook Integration — checkout.session.completed → DB state', () =
     expect(body.error).toBeTruthy();
   }, 10_000);
 
-  it('Unknown userId returns 404', async () => {
+  it('Unknown userId → 404 when authenticated as admin', async () => {
     const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Cookie: adminCookie },
       body: JSON.stringify({ userId: '00000000-0000-0000-0000-000000000000', plan: 'starter' }),
     });
     expect(res.status).toBe(404);
     const body = await res.json();
     expect(body.error).toBeTruthy();
   }, 10_000);
+
+  it('Unauthenticated simulate-webhook returns 401', async () => {
+    const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: adminUserId, plan: 'starter' }),
+    });
+    expect(res.status).toBe(401);
+  }, 10_000);
 });
 
+// ─── Brand Webhook Loop ───────────────────────────────────────────────────────
+
 describe('Webhook Integration — Brand checkout.session.completed → DB state', () => {
+  let adminCookie: string;
   let brandUserId: string;
-  let brandCookie: string;
 
   beforeAll(async () => {
-    // Create a brand test user via register
+    const session = await loginAsAdmin();
+    adminCookie = session.cookie;
+
+    // Create a dedicated brand test user
     const email = `brand-wh-test-${Date.now()}@example.com`;
     const regRes = await fetch(`${BASE}/api/auth/register`, {
       method: 'POST',
@@ -133,24 +163,22 @@ describe('Webhook Integration — Brand checkout.session.completed → DB state'
         role: 'brand',
       }),
     });
+
     if (regRes.status === 201 || regRes.status === 200) {
       const user = await regRes.json();
       brandUserId = user.id;
-      brandCookie = regRes.headers.get('set-cookie') ?? '';
     } else {
-      // Fall back to admin user for brand plan path
-      const session = await loginAsAdmin();
-      brandUserId = session.userId;
-      brandCookie = session.cookie;
+      // Fall back to admin user if registration fails
+      brandUserId = (await (await fetch(`${BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
+      })).json()).id;
     }
   });
 
-  it('Brand Starter: simulate checkout.session.completed → subscription active in DB', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: brandUserId, plan: 'starter', eventType: 'checkout.session.completed' }),
-    });
+  it('Brand Starter: webhook dispatched → DB shows status=active, plan=starter', async () => {
+    const res = await simulateWebhook({ userId: brandUserId, plan: 'starter', adminCookie });
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -166,17 +194,14 @@ describe('Webhook Integration — Brand checkout.session.completed → DB state'
     console.log(`[Webhook→DB] brand starter: sub=${body.stripeSubscriptionId}, status=${sub.status}`);
   }, 40_000);
 
-  it('Brand Pro: simulate checkout.session.completed → subscription active in DB', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/simulate-webhook`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: brandUserId, plan: 'pro', eventType: 'checkout.session.completed' }),
-    });
+  it('Brand Pro: webhook dispatched → DB shows status=active, plan=pro', async () => {
+    const res = await simulateWebhook({ userId: brandUserId, plan: 'pro', adminCookie });
 
     expect(res.status).toBe(200);
     const body = await res.json();
 
     expect(body.dispatched).toBe(true);
+    expect(body.stripeSubscriptionId).toMatch(/^sub_/);
 
     const sub = body.subscription;
     expect(sub, 'subscription row must exist in DB after webhook').toBeDefined();

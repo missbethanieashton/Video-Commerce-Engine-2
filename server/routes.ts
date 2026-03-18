@@ -2806,7 +2806,27 @@ Identify which products from the catalog are most likely to appear or be feature
 
   // Dev/test-only: retrieve Stripe plan price configs for integration tests
   if (process.env.NODE_ENV !== "production") {
-    app.get("/api/dev/stripe/plans", async (_req, res) => {
+    /**
+     * Shared admin auth guard for all /api/dev/* endpoints.
+     * Requires a valid session with isAdmin=true.
+     * In automated CI/integration tests, supply cookie from login response.
+     */
+    async function requireDevAdmin(req: Request, res: Response): Promise<boolean> {
+      const sessionUserId = (req.session as any)?.userId as string | undefined;
+      if (!sessionUserId) {
+        res.status(401).json({ error: "Authentication required for dev endpoints" });
+        return false;
+      }
+      const adminUser = await storage.getUser(sessionUserId);
+      if (!adminUser?.isAdmin) {
+        res.status(403).json({ error: "Admin access required for dev endpoints" });
+        return false;
+      }
+      return true;
+    }
+
+    app.get("/api/dev/stripe/plans", async (req, res) => {
+      if (!await requireDevAdmin(req, res)) return;
       try {
         const stripe = await getUncachableStripeClient();
         const allPrices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
@@ -2845,6 +2865,7 @@ Identify which products from the catalog are most likely to appear or be feature
      * Supported eventTypes: "checkout.session.completed" (default), "customer.subscription.updated"
      */
     app.post("/api/dev/stripe/simulate-webhook", async (req, res) => {
+      if (!await requireDevAdmin(req, res)) return;
       try {
         const { userId, plan = "starter", eventType = "checkout.session.completed" } = req.body as {
           userId: string;
@@ -2933,6 +2954,7 @@ Identify which products from the catalog are most likely to appear or be feature
     });
 
     app.get("/api/dev/stripe/checkout-session/:sessionId", async (req, res) => {
+      if (!await requireDevAdmin(req, res)) return;
       try {
         const stripe = await getUncachableStripeClient();
         const session = await stripe.checkout.sessions.retrieve(req.params.sessionId, {

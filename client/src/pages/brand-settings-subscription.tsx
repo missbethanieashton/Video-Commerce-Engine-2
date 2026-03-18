@@ -93,7 +93,7 @@ export default function BrandSettingsSubscription() {
   const checkoutMut = useMutation({
     mutationFn: async (plan: "starter" | "pro") => {
       const res = await apiRequest("POST", "/api/brand/subscription/checkout", { plan });
-      return res as { url: string };
+      return res.json() as Promise<{ url: string; sessionId: string }>;
     },
     onSuccess: ({ url }) => {
       if (url) window.location.href = url;
@@ -106,7 +106,7 @@ export default function BrandSettingsSubscription() {
   const portalMut = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/brand/subscription/portal", {});
-      return res as { url: string };
+      return res.json() as Promise<{ url: string }>;
     },
     onSuccess: ({ url }) => {
       if (url) window.location.href = url;
@@ -122,7 +122,7 @@ export default function BrandSettingsSubscription() {
         views, minutes, publishers,
         totalAmount: totalSurplus,
       });
-      return res as { invoiceId: string; url?: string };
+      return res.json() as Promise<{ invoiceId: string; url?: string }>;
     },
     onSuccess: ({ url }) => {
       if (url) window.open(url, "_blank");

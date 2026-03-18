@@ -3,14 +3,36 @@
  * Verifies that the starter (€249/mo) and pro (€499/mo) prices exist in Stripe
  * test mode with correct amounts, currency, interval, and plan metadata.
  * All assertions run against the real Stripe API via the server's dev endpoint.
+ *
+ * Dev endpoints require admin authentication — tests login as admin first.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
+const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'missbethanieashton@gmail.com';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD ?? 'test1233*';
+
+let adminCookie = '';
+
+async function adminGet(path: string) {
+  return fetch(`${BASE}${path}`, {
+    headers: { Cookie: adminCookie },
+  });
+}
 
 describe('Stripe Plan Prices — Test-Mode Integration', () => {
+  beforeAll(async () => {
+    const res = await fetch(`${BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
+    });
+    expect(res.status, 'admin login for stripe price tests').toBe(200);
+    adminCookie = res.headers.get('set-cookie') ?? '';
+  });
+
   it('GET /api/dev/stripe/plans returns both starter and pro prices', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/plans`);
+    const res = await adminGet('/api/dev/stripe/plans');
     expect(res.status).toBe(200);
     const { plans } = await res.json();
     expect(Array.isArray(plans)).toBe(true);
@@ -22,7 +44,8 @@ describe('Stripe Plan Prices — Test-Mode Integration', () => {
   }, 15_000);
 
   it('Starter plan price has amount=24900 EUR, monthly recurring, and plan metadata', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/plans`);
+    const res = await adminGet('/api/dev/stripe/plans');
+    expect(res.status).toBe(200);
     const { plans } = await res.json();
     const starter = plans.find((p: { plan: string }) => p.plan === 'starter');
 
@@ -39,7 +62,8 @@ describe('Stripe Plan Prices — Test-Mode Integration', () => {
   }, 15_000);
 
   it('Pro plan price has amount=49900 EUR, monthly recurring, and plan metadata', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/plans`);
+    const res = await adminGet('/api/dev/stripe/plans');
+    expect(res.status).toBe(200);
     const { plans } = await res.json();
     const pro = plans.find((p: { plan: string }) => p.plan === 'pro');
 
@@ -55,8 +79,9 @@ describe('Stripe Plan Prices — Test-Mode Integration', () => {
     console.log(`[Stripe] pro price ID: ${pro.id}, product: ${pro.product_id}`);
   }, 15_000);
 
-  it('Starter and Pro prices have distinct price IDs and product IDs', async () => {
-    const res = await fetch(`${BASE}/api/dev/stripe/plans`);
+  it('Starter and Pro prices have distinct price IDs', async () => {
+    const res = await adminGet('/api/dev/stripe/plans');
+    expect(res.status).toBe(200);
     const { plans } = await res.json();
     const starter = plans.find((p: { plan: string }) => p.plan === 'starter');
     const pro = plans.find((p: { plan: string }) => p.plan === 'pro');
@@ -65,4 +90,9 @@ describe('Stripe Plan Prices — Test-Mode Integration', () => {
     expect(starter.id).toMatch(/^price_/);
     expect(pro.id).toMatch(/^price_/);
   }, 15_000);
+
+  it('Unauthenticated request to /api/dev/stripe/plans returns 401', async () => {
+    const res = await fetch(`${BASE}/api/dev/stripe/plans`);
+    expect(res.status).toBe(401);
+  }, 10_000);
 });

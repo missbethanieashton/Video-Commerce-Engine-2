@@ -89,7 +89,7 @@ export default function CreatorSettingsSubscription() {
   const checkoutMut = useMutation({
     mutationFn: async (plan: "starter" | "pro") => {
       const res = await apiRequest("POST", "/api/creator/subscription/checkout", { plan });
-      return res as { url: string };
+      return res.json() as Promise<{ url: string; sessionId: string }>;
     },
     onSuccess: ({ url }) => { if (url) window.location.href = url; },
     onError: (err: any) => toast({ title: "Couldn't start checkout", description: err?.message, variant: "destructive" }),
@@ -98,7 +98,7 @@ export default function CreatorSettingsSubscription() {
   const portalMut = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/creator/subscription/portal", {});
-      return res as { url: string };
+      return res.json() as Promise<{ url: string }>;
     },
     onSuccess: ({ url }) => { if (url) window.location.href = url; },
     onError: (err: any) => toast({ title: "Couldn't open billing portal", description: err?.message, variant: "destructive" }),
@@ -109,7 +109,7 @@ export default function CreatorSettingsSubscription() {
       const res = await apiRequest("POST", "/api/creator/subscription/surplus-invoice", {
         views, minutes, publishers, totalAmount: totalSurplus,
       });
-      return res as { invoiceId: string; url?: string };
+      return res.json() as Promise<{ invoiceId: string; url?: string }>;
     },
     onSuccess: ({ url }) => {
       if (url) window.open(url, "_blank");
