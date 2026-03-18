@@ -2398,6 +2398,95 @@ Identify which products from the catalog are most likely to appear or be feature
     } catch (e) { res.status(400).json({ error: "Invalid data" }); }
   });
 
+  // Subscription → Stripe Checkout (creates recurring plan)
+  app.post("/api/brand/subscription/checkout", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const { plan } = req.body;
+      if (!plan || !["starter", "pro"].includes(plan)) {
+        return res.status(400).json({ error: "Plan must be 'starter' or 'pro'" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user.email ?? "", userId, user.name ?? undefined);
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+      const session = await stripeService.createSubscriptionCheckout(
+        customerId,
+        plan as "starter" | "pro",
+        `${origin}/brand/settings/subscription?checkout=success`,
+        `${origin}/brand/settings/subscription?checkout=cancelled`,
+      );
+
+      res.json({ url: session.url });
+    } catch (e: any) {
+      console.error("Subscription checkout error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to create checkout session" });
+    }
+  });
+
+  // Subscription → Stripe Customer Portal (manage / cancel)
+  app.post("/api/brand/subscription/portal", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No billing account on file. Please subscribe first." });
+      }
+
+      const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+      const portal = await stripeService.createBillingPortal(
+        user.stripeCustomerId,
+        `${origin}/brand/settings/subscription`,
+      );
+
+      res.json({ url: portal.url });
+    } catch (e: any) {
+      console.error("Billing portal error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to open billing portal" });
+    }
+  });
+
+  // Subscription → Surplus invoice (one-time overage charge)
+  app.post("/api/brand/subscription/surplus-invoice", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const { views, minutes, publishers, totalAmount } = req.body;
+      if (!totalAmount || totalAmount <= 0) {
+        return res.status(400).json({ error: "Surplus amount must be greater than zero" });
+      }
+
+      const user = await storage.getUser(userId);
+      let customerId = user?.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user?.email ?? "", userId, user?.name ?? undefined);
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      const description = `Overage charges — ${(views ?? 0).toLocaleString()} views × ${publishers ?? 1} publishers + ${(minutes ?? 0).toLocaleString()} min × ${publishers ?? 1} publishers`;
+      const invoice = await stripeService.createSurplusInvoice(customerId, totalAmount, description);
+
+      res.json({ invoiceId: invoice.id, url: invoice.hosted_invoice_url });
+    } catch (e: any) {
+      console.error("Surplus invoice error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to create surplus invoice" });
+    }
+  });
+
   // Billing records (history + transactions)
   app.get("/api/brand/billing-records", async (req, res) => {
     try {

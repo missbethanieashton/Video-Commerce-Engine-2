@@ -1,6 +1,71 @@
 import { getUncachableStripeClient } from './stripeClient';
 
+const PLAN_CONFIG = {
+  starter: { name: 'Materialized Starter Plan', amount: 24900 },
+  pro:     { name: 'Materialized Pro Plan',     amount: 49900 },
+} as const;
+
 export class StripeService {
+  async findOrCreateSubscriptionPrice(plan: 'starter' | 'pro'): Promise<string> {
+    const stripe = await getUncachableStripeClient();
+    const config = PLAN_CONFIG[plan];
+
+    const products = await stripe.products.list({ active: true, limit: 100 });
+    let product = products.data.find(p => p.metadata?.plan === plan);
+
+    if (!product) {
+      product = await stripe.products.create({
+        name: config.name,
+        metadata: { plan },
+      });
+    }
+
+    const prices = await stripe.prices.list({ product: product.id, active: true, limit: 10 });
+    const existing = prices.data.find(p => p.recurring?.interval === 'month' && p.unit_amount === config.amount && p.currency === 'eur');
+
+    if (existing) return existing.id;
+
+    const newPrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: config.amount,
+      currency: 'eur',
+      recurring: { interval: 'month' },
+    });
+    return newPrice.id;
+  }
+
+  async createSubscriptionCheckout(customerId: string, plan: 'starter' | 'pro', successUrl: string, cancelUrl: string) {
+    const priceId = await this.findOrCreateSubscriptionPrice(plan);
+    return this.createCheckoutSession(customerId, priceId, successUrl, cancelUrl, 'subscription');
+  }
+
+  async createBillingPortal(customerId: string, returnUrl: string) {
+    const stripe = await getUncachableStripeClient();
+    return await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+  }
+
+  async createSurplusInvoice(customerId: string, amountEuros: number, description: string) {
+    const stripe = await getUncachableStripeClient();
+    await stripe.invoiceItems.create({
+      customer: customerId,
+      amount: Math.round(amountEuros * 100),
+      currency: 'eur',
+      description,
+    });
+    const invoice = await stripe.invoices.create({
+      customer: customerId,
+      auto_advance: true,
+      collection_method: 'charge_automatically',
+      metadata: { type: 'surplus' },
+    });
+    const finalized = await stripe.invoices.finalizeInvoice(invoice.id);
+    return finalized;
+  }
+
+
   async createCustomer(email: string, userId: string, name?: string) {
     const stripe = await getUncachableStripeClient();
     return await stripe.customers.create({
