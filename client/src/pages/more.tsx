@@ -17,22 +17,36 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-// ─── Hardcoded Brand Profile menu sections ────────────────────────────────────
-const profileSection = [
-  { label: "Edit Profile",                icon: UserPen,          path: "/brand/profile" },
-];
+// ─── Role-based menu sections ─────────────────────────────────────────────────
+function buildSections(role: string) {
+  const isBrand   = role === "brand";
+  const isCreator = role === "creator";
+  const base      = isBrand ? "/brand" : isCreator ? "/creator" : "/affiliate";
 
-const billingSection = [
-  { label: "Subscription Information",    icon: CalendarDays,     path: "/brand/settings/subscription" },
-  { label: "Billing History",             icon: Receipt,          path: "/brand/settings/billing-history" },
-  { label: "Transaction History",         icon: ArrowLeftRight,   path: "/brand/settings/transactions" },
-  { label: "Payout Method",              icon: Wallet,           path: "/brand/settings/payout" },
-  { label: "Billing Address & Business",  icon: Building2,        path: "/brand/settings/billing-address" },
-];
+  const profile = [
+    { label: "Edit Profile", icon: UserPen, path: `${base}/profile` },
+  ];
 
-const developerSection = [
-  { label: "API Key",                     icon: KeyRound,         path: "/brand/settings/api-key" },
-];
+  const billing = isBrand
+    ? [
+        { label: "Subscription Information",   icon: CalendarDays,   path: "/brand/settings/subscription" },
+        { label: "Billing History",            icon: Receipt,        path: "/brand/settings/billing-history" },
+        { label: "Transaction History",        icon: ArrowLeftRight, path: "/brand/settings/transactions" },
+        { label: "Payout Method",             icon: Wallet,         path: "/brand/settings/payout" },
+        { label: "Billing Address & Business", icon: Building2,      path: "/brand/settings/billing-address" },
+      ]
+    : isCreator
+    ? [
+        { label: "Subscription & Billing", icon: CalendarDays, path: "/creator/settings/subscription" },
+      ]
+    : [];
+
+  const developer = isBrand
+    ? [{ label: "API Key", icon: KeyRound, path: "/brand/settings/api-key" }]
+    : [];
+
+  return { profile, billing, developer };
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getInitials(name?: string): string {
@@ -83,8 +97,10 @@ export default function More() {
     queryKey: ["/api/users/me"],
   });
 
-  const displayName = user?.displayName || "Demo Brand";
-  const username    = user?.username    || "brand-account";
+  const role        = user?.role ?? "brand";
+  const { profile: profileSection, billing: billingSection, developer: developerSection } = buildSections(role);
+  const displayName = user?.displayName || (role === "creator" ? "Demo Creator" : "Demo Brand");
+  const username    = user?.username    || `${role}-account`;
   const initials    = getInitials(displayName);
 
   return (
@@ -113,15 +129,15 @@ export default function More() {
               <p className="text-sm text-muted-foreground truncate" data-testid="text-username">
                 {username}
               </p>
-              <Badge className="mt-2 bg-chart-2 hover:bg-chart-2/90" data-testid="badge-role">
-                Brand
+              <Badge className="mt-2 bg-chart-2 hover:bg-chart-2/90 capitalize" data-testid="badge-role">
+                {role}
               </Badge>
             </div>
             <Button
               variant="outline"
               size="sm"
               className="rounded-full shrink-0"
-              onClick={() => navigate("/brand/profile")}
+              onClick={() => navigate(profileSection[0]?.path ?? `/${role}/profile`)}
               data-testid="button-edit-profile"
             >
               Edit Profile
@@ -172,26 +188,28 @@ export default function More() {
         </CardContent>
       </Card>
 
-      {/* ── Developer section ── */}
-      <Card>
-        <CardHeader className="px-4 pt-4 pb-1">
-          <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-            Developer
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 pb-1">
-          {developerSection.map((item, i) => (
-            <MenuRow
-              key={item.path}
-              label={item.label}
-              icon={item.icon}
-              path={item.path}
-              testId={`link-dev-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-              last={i === developerSection.length - 1}
-            />
-          ))}
-        </CardContent>
-      </Card>
+      {/* ── Developer section (brand only) ── */}
+      {developerSection.length > 0 && (
+        <Card>
+          <CardHeader className="px-4 pt-4 pb-1">
+            <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+              Developer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 pb-1">
+            {developerSection.map((item, i) => (
+              <MenuRow
+                key={item.path}
+                label={item.label}
+                icon={item.icon}
+                path={item.path}
+                testId={`link-dev-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                last={i === developerSection.length - 1}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Sign out ── */}
       <Button

@@ -99,6 +99,7 @@ export interface IStorage {
   
   // Videos
   getVideos(creatorId?: string): Promise<Video[]>;
+  getVideoCountByUser(userId: string): Promise<number>;
   getVideo(id: string): Promise<Video | undefined>;
   createVideo(video: InsertVideo): Promise<Video>;
   updateVideo(id: string, data: Partial<InsertVideo>): Promise<Video | undefined>;
@@ -491,6 +492,10 @@ export class MemStorage implements IStorage {
         .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
     }
     return allVideos.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async getVideoCountByUser(userId: string): Promise<number> {
+    return Array.from(this.videos.values()).filter((v) => v.creatorId === userId).length;
   }
 
   async getVideo(id: string): Promise<Video | undefined> {
@@ -1707,6 +1712,11 @@ export class DatabaseStorage implements IStorage {
       return db.select().from(videos).where(eq(videos.creatorId, creatorId)).orderBy(desc(videos.createdAt));
     }
     return db.select().from(videos).orderBy(desc(videos.createdAt));
+  }
+
+  async getVideoCountByUser(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(videos).where(eq(videos.creatorId, userId));
+    return result[0]?.count ?? 0;
   }
 
   async getVideo(id: string): Promise<Video | undefined> {

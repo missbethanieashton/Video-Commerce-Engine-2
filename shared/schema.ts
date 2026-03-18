@@ -112,6 +112,8 @@ export const videos = pgTable("videos", {
   totalClicks: integer("total_clicks").default(0),
   totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0.00"),
   categories: text("categories"), // JSON array of up to 3 categories
+  durationSeconds: integer("duration_seconds"),
+  isTrial: boolean("is_trial").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

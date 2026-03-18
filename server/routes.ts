@@ -62,13 +62,132 @@ export async function registerRoutes(
   // Get current user (demo user for now)
   app.get("/api/users/me", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("demo_creator");
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
       res.json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  // Trial status — is the user on free trial, and have they used it?
+  app.get("/api/users/me/trial-status", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const sub = await storage.getBrandSubscription(user.id);
+      const hasActiveSubscription = !!(sub && (sub.status === "active" || sub.status === "trialing"));
+      const videoCount = await storage.getVideoCountByUser(user.id);
+
+      res.json({
+        hasActiveSubscription,
+        videoCount,
+        isTrialExhausted: !hasActiveSubscription && videoCount >= 1,
+        trialVideosAllowed: 1,
+        trialMaxDurationSeconds: 120,
+      });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to get trial status" });
+    }
+  });
+
+  // ─── Creator Subscription (mirrors brand subscription flow) ──────────────────
+
+  // Creator subscription checkout
+  app.post("/api/creator/subscription/checkout", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const { plan } = req.body;
+      if (!plan || !["starter", "pro"].includes(plan)) {
+        return res.status(400).json({ error: "Plan must be 'starter' or 'pro'" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user.email ?? "", userId, user.name ?? undefined);
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+      const session = await stripeService.createSubscriptionCheckout(
+        customerId,
+        plan as "starter" | "pro",
+        `${origin}/creator/settings/subscription?checkout=success`,
+        `${origin}/creator/settings/subscription?checkout=cancelled`,
+      );
+
+      res.json({ url: session.url });
+    } catch (e: any) {
+      console.error("Creator checkout error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to create checkout session" });
+    }
+  });
+
+  // Creator billing portal
+  app.post("/api/creator/subscription/portal", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No billing account on file. Please subscribe first." });
+      }
+
+      const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+      const portal = await stripeService.createBillingPortal(
+        user.stripeCustomerId,
+        `${origin}/creator/settings/subscription`,
+      );
+
+      res.json({ url: portal.url });
+    } catch (e: any) {
+      console.error("Creator portal error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to open billing portal" });
+    }
+  });
+
+  // Creator surplus invoice
+  app.post("/api/creator/subscription/surplus-invoice", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const { views, minutes, publishers, totalAmount } = req.body;
+      if (!totalAmount || totalAmount <= 0) {
+        return res.status(400).json({ error: "Surplus amount must be greater than zero" });
+      }
+
+      const user = await storage.getUser(userId);
+      let customerId = user?.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user?.email ?? "", userId, user?.name ?? undefined);
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      const description = `Creator overage — ${(views ?? 0).toLocaleString()} views × ${publishers ?? 1} pub + ${(minutes ?? 0).toLocaleString()} min × ${publishers ?? 1} pub`;
+      const invoice = await stripeService.createSurplusInvoice(customerId, totalAmount, description);
+
+      res.json({ invoiceId: invoice.id, url: invoice.hosted_invoice_url });
+    } catch (e: any) {
+      console.error("Creator surplus error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to create surplus invoice" });
     }
   });
 
@@ -190,15 +309,48 @@ export async function registerRoutes(
   // Create video
   app.post("/api/videos", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("demo_creator");
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
+
       if (!user) {
         return res.status(401).json({ error: "Not authenticated" });
       }
 
+      // ─── Trial enforcement ─────────────────────────────────────────────────
+      const sub = await storage.getBrandSubscription(user.id);
+      const hasActiveSubscription = sub && (sub.status === "active" || sub.status === "trialing");
+
+      if (!hasActiveSubscription) {
+        const videoCount = await storage.getVideoCountByUser(user.id);
+        if (videoCount >= 1) {
+          return res.status(403).json({
+            error: "TRIAL_EXHAUSTED",
+            message:
+              "Your free trial allows 1 video upload. Subscribe to a paid plan to upload more videos and unlock unlimited campaigns, analytics, and affiliate payouts.",
+          });
+        }
+
+        // Duration check for trial videos (max 2 minutes)
+        const durationSeconds = req.body.durationSeconds ?? null;
+        if (durationSeconds !== null && durationSeconds > 120) {
+          return res.status(400).json({
+            error: "TRIAL_DURATION_EXCEEDED",
+            message:
+              "Trial videos are limited to 2 minutes. Please trim your video or subscribe to a paid plan to upload longer videos.",
+          });
+        }
+      }
+      // ──────────────────────────────────────────────────────────────────────
+
       const { brandIds, ...videoData } = req.body;
+      const isTrial = !hasActiveSubscription;
+
       const data = insertVideoSchema.parse({
         ...videoData,
         creatorId: user.id,
+        isTrial,
       });
       
       const video = await storage.createVideo(data);

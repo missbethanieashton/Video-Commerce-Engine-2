@@ -41,6 +41,7 @@ import Profile from "@/pages/profile";
 import BrandAuthorize from "@/pages/brand-authorize";
 import AdminPipeline from "@/pages/admin-pipeline";
 import BrandSettingsSubscription from "@/pages/brand-settings-subscription";
+import CreatorSettingsSubscription from "@/pages/creator-settings-subscription";
 import BrandSettingsBillingHistory from "@/pages/brand-settings-billing-history";
 import BrandSettingsTransactions from "@/pages/brand-settings-transactions";
 import BrandSettingsPayout from "@/pages/brand-settings-payout";
@@ -67,6 +68,7 @@ function CreatorRouter() {
       <Route path="/creator/help" component={Help} />
       <Route path="/creator/mailbox" component={Mailbox} />
       <Route path="/creator/more" component={More} />
+      <Route path="/creator/settings/subscription" component={CreatorSettingsSubscription} />
       <Route component={NotFound} />
     </Switch>
   );

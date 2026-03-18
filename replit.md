@@ -62,6 +62,14 @@ Preferred communication style: Simple, everyday language.
 └── migrations/       # Database migration files
 ```
 
+### Free Trial System
+- **Trial rules**: 1 video max, 120 seconds max, fully functional (shoppable, analytics, affiliate payouts ledger)
+- **Backend enforcement**: `POST /api/videos` checks video count and returns `TRIAL_EXHAUSTED` error code
+- **Client enforcement**: `VideoUploadModal` reads duration client-side and blocks oversized uploads; shows trial-exhausted gate when limit is reached
+- **Trial status endpoint**: `GET /api/users/me/trial-status` returns `hasActiveSubscription`, `videoCount`, `isTrialExhausted`, `trialVideosAllowed`, `trialMaxDurationSeconds`
+- **Creator subscription page**: `/creator/settings/subscription` — free trial banner, plan selector (€249 Starter / €499 Pro), surplus calculator, Stripe checkout/portal/surplus-invoice
+- **Schema additions**: `durationSeconds` and `isTrial` columns on `videos` table
+
 ### Key Design Patterns
 - **Storage Interface Pattern**: `IStorage` interface in `server/storage.ts` abstracts data access, allowing for different implementations (in-memory or PostgreSQL)
 - **Schema-First Design**: Database schemas defined with Drizzle, with Zod schemas auto-generated for validation using `drizzle-zod`

@@ -40,8 +40,9 @@ import {
 } from "@/components/ui/popover";
 import {
   Upload, X, Check, ChevronsUpDown, Plus, Send, Loader2, Wand2,
-  Save, Mail, ScanSearch, CheckCircle2, AlertCircle, Package, ArrowRight, Settings2,
+  Save, Mail, ScanSearch, CheckCircle2, AlertCircle, Package, ArrowRight, Settings2, Lock, Zap,
 } from "lucide-react";
+import { Link } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { useUpload } from "@/hooks/use-upload";
 import { ProductCarouselEditor, defaultCarouselSettings, type CarouselSettings } from "@/components/ProductCarouselEditor";
@@ -111,6 +112,7 @@ export function VideoUploadModal({
   const [step, setStep] = useState<Step>("upload");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | null>(null);
   const [createdVideoId, setCreatedVideoId] = useState<string | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
@@ -123,6 +125,17 @@ export function VideoUploadModal({
   const scanInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
+
+  const { data: trialStatus } = useQuery<{
+    hasActiveSubscription: boolean;
+    videoCount: number;
+    isTrialExhausted: boolean;
+    trialVideosAllowed: number;
+    trialMaxDurationSeconds: number;
+  }>({
+    queryKey: ["/api/users/me/trial-status"],
+    enabled: open,
+  });
 
   const { uploadFile, isUploading, progress } = useUpload({
     onSuccess: (response) => {
@@ -190,21 +203,48 @@ export function VideoUploadModal({
     },
   });
 
+  const getVideoDuration = (file: File): Promise<number> =>
+    new Promise((resolve) => {
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        URL.revokeObjectURL(el.src);
+        resolve(el.duration);
+      };
+      el.onerror = () => resolve(0);
+      el.src = URL.createObjectURL(file);
+    });
+
+  const validateAndUpload = async (file: File) => {
+    const duration = await getVideoDuration(file);
+    setVideoDurationSeconds(Math.round(duration));
+
+    // Trial restriction: max 120 seconds
+    if (trialStatus && !trialStatus.hasActiveSubscription) {
+      const maxSecs = trialStatus.trialMaxDurationSeconds ?? 120;
+      if (duration > maxSecs) {
+        toast({
+          title: "Video too long for free trial",
+          description: `Your free trial is limited to ${maxSecs / 60} minute${maxSecs / 60 !== 1 ? "s" : ""}. Subscribe to upload longer videos.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setVideoFile(file);
+    await uploadFile(file);
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setVideoFile(file);
-      await uploadFile(file);
-    }
+    if (file) await validateAndUpload(file);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("video/")) {
-      setVideoFile(file);
-      await uploadFile(file);
-    }
+    if (file && file.type.startsWith("video/")) await validateAndUpload(file);
   };
 
   const toggleBrand = (brandId: string) => {
@@ -223,6 +263,7 @@ export function VideoUploadModal({
         videoUrl,
         brandIds: selectedBrands,
         status: "draft",
+        durationSeconds: videoDurationSeconds ?? undefined,
       });
       const video = await createRes.json();
       setCreatedVideoId(video.id);
@@ -284,6 +325,7 @@ export function VideoUploadModal({
         videoUrl,
         brandIds: selectedBrands,
         status: "draft",
+        durationSeconds: videoDurationSeconds ?? undefined,
       });
       const video = await createRes.json();
       setCreatedVideoId(video.id);
@@ -373,6 +415,7 @@ export function VideoUploadModal({
         videoUrl,
         brandIds: selectedBrands,
         status: "draft",
+        durationSeconds: videoDurationSeconds ?? undefined,
       });
       const video = await createRes.json();
       setCreatedVideoId(video.id);
@@ -392,6 +435,7 @@ export function VideoUploadModal({
     setStep("upload");
     setVideoFile(null);
     setVideoUrl("");
+    setVideoDurationSeconds(null);
     setCreatedVideoId(null);
     setSelectedBrands([]);
     setEnableAiDetection(true);
@@ -449,40 +493,77 @@ export function VideoUploadModal({
 
         {/* ── STEP: UPLOAD ── */}
         {step === "upload" && (
-          <div
-            className="border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors hover:border-primary hover:bg-primary/5"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById("video-input")?.click()}
-          >
-            <input
-              id="video-input"
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleFileSelect}
-              data-testid="input-video-file"
-            />
-            {isUploading ? (
-              <div className="space-y-4">
-                <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin" />
-                <p className="text-sm text-muted-foreground">Uploading… {progress}%</p>
-                <div className="w-full max-w-xs mx-auto h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="h-16 w-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                  <Upload className="h-8 w-8 text-primary" />
+          <>
+            {/* Trial exhausted gate */}
+            {trialStatus?.isTrialExhausted && !trialStatus.hasActiveSubscription ? (
+              <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-8 text-center space-y-4">
+                <div className="h-14 w-14 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                  <Lock className="h-7 w-7 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="font-medium">Drop your video here or click to browse</p>
-                  <p className="text-sm text-muted-foreground mt-1">MP4, MOV, WebM up to 500MB</p>
+                  <p className="font-semibold text-base text-foreground">Free trial limit reached</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
+                    You've used your 1 free trial video. Subscribe to unlock unlimited uploads, longer videos, and all pro features.
+                  </p>
                 </div>
+                <Link href="/creator/settings/subscription" onClick={() => onOpenChange(false)}>
+                  <Button data-testid="button-upgrade-from-modal" className="rounded-full gap-2">
+                    <Zap className="h-4 w-4" />
+                    See plans & subscribe
+                  </Button>
+                </Link>
               </div>
+            ) : (
+              <>
+                {/* Trial info banner */}
+                {trialStatus && !trialStatus.hasActiveSubscription && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground mb-1">
+                    <Lock className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Free trial:</strong> 1 video allowed, max 2 minutes. Upload will be blocked if the video exceeds 2 minutes.{" "}
+                      <Link href="/creator/settings/subscription" onClick={() => onOpenChange(false)} className="text-primary underline">
+                        Subscribe for unlimited access.
+                      </Link>
+                    </span>
+                  </div>
+                )}
+                <div
+                  className="border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors hover:border-primary hover:bg-primary/5"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById("video-input")?.click()}
+                >
+                  <input
+                    id="video-input"
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    data-testid="input-video-file"
+                  />
+                  {isUploading ? (
+                    <div className="space-y-4">
+                      <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Uploading… {progress}%</p>
+                      <div className="w-full max-w-xs mx-auto h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="h-16 w-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                        <Upload className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Drop your video here or click to browse</p>
+                        <p className="text-sm text-muted-foreground mt-1">MP4, MOV, WebM up to 500MB</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
-          </div>
+          </>
         )}
 
         {/* ── STEP: DETAILS ── */}
