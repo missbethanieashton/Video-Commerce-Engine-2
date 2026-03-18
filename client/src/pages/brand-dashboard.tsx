@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
 import { BrandDashboardTabs } from "@/components/BrandDashboardTabs";
-import { BrandAnnouncementBanner } from "@/components/BrandAnnouncementBanner";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
 import { defaultCarouselSettings } from "@/components/ProductCarouselEditor";
 import { Eye, DollarSign, MousePointer, Users, Package, Link2, TrendingUp, Zap, Mail, Settings, Upload, Calculator, Clock } from "lucide-react";
@@ -173,10 +172,6 @@ export default function BrandDashboard() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
-      <div className="-mx-4 md:-mx-6 -mt-6 mb-4 overflow-hidden">
-        <BrandAnnouncementBanner />
-      </div>
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Brand Dashboard</h1>
