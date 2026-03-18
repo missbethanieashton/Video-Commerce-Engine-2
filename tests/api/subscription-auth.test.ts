@@ -159,6 +159,65 @@ describe('Creator Checkout — Authenticated with Stripe session internals', () 
   }, 15_000);
 });
 
+// ─── Brand Checkout — Authenticated with Stripe Session Internals ────────────
+
+describe('Brand Checkout — Authenticated with Stripe session internals', () => {
+  it('POST /api/brand/subscription/checkout (starter) returns 200 with url and sessionId', async () => {
+    const res = await postWithSession('/api/brand/subscription/checkout', { plan: 'starter' }, sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('url');
+    expect(body).toHaveProperty('sessionId');
+    expect(body.url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(body.sessionId).toMatch(/^cs_test_/);
+  }, 15_000);
+
+  it('Stripe brand checkout session (starter) has mode=subscription, correct metadata and EUR amount', async () => {
+    const checkoutRes = await postWithSession('/api/brand/subscription/checkout', { plan: 'starter' }, sessionCookie);
+    expect(checkoutRes.status).toBe(200);
+    const { sessionId } = await checkoutRes.json();
+
+    const session = await getStripeSession(sessionId);
+
+    expect(session.mode).toBe('subscription');
+    expect(session.metadata).toHaveProperty('plan', 'starter');
+    expect(session.metadata).toHaveProperty('userId', adminUserId);
+
+    expect(Array.isArray(session.line_items)).toBe(true);
+    expect(session.line_items.length).toBeGreaterThanOrEqual(1);
+
+    const lineItem = session.line_items[0];
+    expect(lineItem.currency).toBe('eur');
+    expect(lineItem.price.unit_amount).toBe(24900);
+    expect(lineItem.price.recurring?.interval).toBe('month');
+  }, 30_000);
+
+  it('Stripe brand checkout session (pro) has mode=subscription with €499 line item and metadata', async () => {
+    const checkoutRes = await postWithSession('/api/brand/subscription/checkout', { plan: 'pro' }, sessionCookie);
+    expect(checkoutRes.status).toBe(200);
+    const { sessionId } = await checkoutRes.json();
+
+    const session = await getStripeSession(sessionId);
+
+    expect(session.mode).toBe('subscription');
+    expect(session.metadata).toHaveProperty('plan', 'pro');
+    expect(session.metadata).toHaveProperty('userId', adminUserId);
+
+    const lineItem = session.line_items[0];
+    expect(lineItem.currency).toBe('eur');
+    expect(lineItem.price.unit_amount).toBe(49900);
+    expect(lineItem.price.recurring?.interval).toBe('month');
+  }, 30_000);
+
+  it('POST /api/brand/subscription/portal with session returns 200 with Stripe billing portal URL', async () => {
+    const res = await postWithSession('/api/brand/subscription/portal', {}, sessionCookie);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty('url');
+    expect(body.url).toMatch(/^https:\/\/billing\.stripe\.com\//);
+  }, 15_000);
+});
+
 // ─── Affiliate Connect — Full E2E (create + onboarding URL) ─────────────────
 
 describe('Affiliate Stripe Connect — E2E Create + Onboarding URL', () => {

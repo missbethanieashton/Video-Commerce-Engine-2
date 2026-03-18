@@ -2,8 +2,24 @@ import { test, expect } from '@playwright/test';
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5000';
 
-test.describe('Brand Subscription Page', () => {
+test.describe('Brand Subscription Page — Unauthenticated', () => {
+  test('redirects to /login when not authenticated', async ({ page }) => {
+    await page.goto(`${BASE}/brand/settings/subscription`);
+    await page.waitForLoadState('networkidle');
+    expect(page.url()).toContain('/login');
+  });
+});
+
+test.describe('Brand Subscription Page — Authenticated', () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE}/login`);
+    await page.waitForLoadState('networkidle');
+
+    await page.getByTestId('input-email').fill('missbethanieashton@gmail.com');
+    await page.getByTestId('input-password').fill('test1233*');
+    await page.getByTestId('button-login-submit').click();
+    await page.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
+
     await page.goto(`${BASE}/brand/settings/subscription`);
     await page.waitForLoadState('networkidle');
   });
@@ -75,25 +91,46 @@ test.describe('Brand Subscription Page', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
-  test('clicking Pro plan triggers checkout API (returns 401 in demo mode)', async ({ page }) => {
+  test('clicking Starter plan triggers checkout API and returns a Stripe URL', async ({ page }) => {
     const [response] = await Promise.all([
       page.waitForResponse(
         r => r.url().includes('/api/brand/subscription/checkout') && r.request().method() === 'POST',
-        { timeout: 8_000 }
-      ).catch(() => null),
+        { timeout: 10_000 }
+      ),
       (async () => {
         await page.getByTestId('button-upgrade-plan').click();
         await page.waitForTimeout(300);
-        const proBtn = page.getByTestId('button-select-plan-pro');
-        if (await proBtn.isEnabled()) {
-          await proBtn.click();
-        }
+        await page.getByTestId('button-select-plan-starter').click();
       })(),
     ]);
 
-    if (response) {
-      expect([200, 401, 500]).toContain(response.status());
-    }
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body).toHaveProperty('url');
+    expect(typeof body.url).toBe('string');
+    expect(body.url).toMatch(/^https:\/\//);
+  });
+
+  test('clicking Pro plan triggers checkout API and returns a Stripe URL', async ({ page }) => {
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        r => r.url().includes('/api/brand/subscription/checkout') && r.request().method() === 'POST',
+        { timeout: 10_000 }
+      ),
+      (async () => {
+        await page.getByTestId('button-upgrade-plan').click();
+        await page.waitForTimeout(300);
+        await page.getByTestId('button-select-plan-pro').click();
+      })(),
+    ]);
+
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body).toHaveProperty('url');
+    expect(typeof body.url).toBe('string');
+    expect(body.url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(body).toHaveProperty('sessionId');
+    expect(body.sessionId).toMatch(/^cs_test_/);
   });
 
   test('plan dialog shows included features for each plan', async ({ page }) => {
