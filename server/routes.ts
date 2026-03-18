@@ -2916,7 +2916,7 @@ Identify which products from the catalog are most likely to appear or be feature
         if (!customerId) {
           const customer = await stripe.customers.create({ email: user.email ?? "", metadata: { userId } });
           customerId = customer.id;
-          await storage.updateUser(userId, { stripeCustomerId: customerId } as any);
+          await storage.updateUser(userId, { stripeCustomerId: customerId });
         }
 
         if (eventType === "checkout.session.completed") {
