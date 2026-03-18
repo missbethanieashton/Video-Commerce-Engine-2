@@ -2265,7 +2265,7 @@ Identify which products from the catalog are most likely to appear or be feature
       }
 
       if (!user.stripeConnectAccountId) {
-        return res.json({ connected: false });
+        return res.json({ connected: false, onboarded: false });
       }
 
       const account = await stripeService.getConnectAccount(user.stripeConnectAccountId);
