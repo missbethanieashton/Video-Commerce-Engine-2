@@ -55,7 +55,7 @@ function StatusBadge({ status }: { status: string }) {
     past_due:  { label: "Past Due",  className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
   };
   const s = map[status] ?? map["active"];
-  return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>;
+  return <span data-testid="badge-subscription-status" className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>;
 }
 
 function fmt(n: number) {

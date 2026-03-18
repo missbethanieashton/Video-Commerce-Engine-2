@@ -68,7 +68,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const s = map[status] ?? map["active"];
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.className}`}>
+    <span data-testid="badge-subscription-status" className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.className}`}>
       {s.label}
     </span>
   );

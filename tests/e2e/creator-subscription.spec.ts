@@ -12,8 +12,8 @@ test.describe('Creator Subscription Page — Unauthenticated', () => {
   test('login page shows email and password fields', async ({ page }) => {
     await page.goto(`${BASE}/login`);
     await page.waitForLoadState('networkidle');
-    await expect(page.getByTestId('input-email')).toBeVisible();
-    await expect(page.getByTestId('input-password')).toBeVisible();
+    await expect(page.getByTestId('input-login-email')).toBeVisible();
+    await expect(page.getByTestId('input-login-password')).toBeVisible();
   });
 });
 
@@ -22,8 +22,8 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     await page.goto(`${BASE}/login`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByTestId('input-email').fill('missbethanieashton@gmail.com');
-    await page.getByTestId('input-password').fill('test1233*');
+    await page.getByTestId('input-login-email').fill('missbethanieashton@gmail.com');
+    await page.getByTestId('input-login-password').fill('test1233*');
     await page.getByTestId('button-login-submit').click();
     await page.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
 
@@ -144,5 +144,114 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     await page.goto(`${BASE}/creator/settings/subscription?checkout=cancelled`);
     await page.waitForLoadState('networkidle');
     await expect(page.getByText('Checkout was cancelled')).toBeVisible();
+  });
+
+  test('subscription status badge is visible', async ({ page }) => {
+    await expect(page.getByTestId('badge-subscription-status')).toBeVisible();
+  });
+});
+
+test.describe('Creator Subscription — Post-Webhook State Verification', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE}/login`);
+    await page.waitForLoadState('networkidle');
+    await page.getByTestId('input-login-email').fill('missbethanieashton@gmail.com');
+    await page.getByTestId('input-login-password').fill('test1233*');
+    await page.getByTestId('button-login-submit').click();
+    await page.waitForURL(`${BASE}/creator`, { timeout: 10_000 });
+  });
+
+  test('after checkout.session.completed webhook, subscription page shows Active badge', async ({ page }) => {
+    // Get current user id via /api/auth/me
+    const me = await page.evaluate(async (base) => {
+      const r = await fetch(`${base}/api/auth/me`, { credentials: 'include' });
+      return r.ok ? r.json() : null;
+    }, BASE);
+    if (!me?.id) throw new Error('Could not retrieve authenticated user');
+
+    // Ensure Stripe plans exist then fire checkout.session.completed
+    await page.evaluate(async ({ base, userId }) => {
+      await fetch(`${base}/api/dev/stripe/ensure-plans`, { method: 'POST', credentials: 'include' });
+      await fetch(`${base}/api/dev/stripe/simulate-webhook`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, plan: 'starter', eventType: 'checkout.session.completed' }),
+      });
+    }, { base: BASE, userId: me.id });
+
+    await page.goto(`${BASE}/creator/settings/subscription`);
+    await page.waitForLoadState('networkidle');
+    const badge = page.getByTestId('badge-subscription-status');
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText('Active');
+  });
+
+  test('after invoice.payment_failed webhook, subscription page shows Past Due badge', async ({ page }) => {
+    const me = await page.evaluate(async (base) => {
+      const r = await fetch(`${base}/api/auth/me`, { credentials: 'include' });
+      return r.ok ? r.json() : null;
+    }, BASE);
+    if (!me?.id) throw new Error('Could not retrieve authenticated user');
+
+    // Ensure active subscription exists, then fail payment
+    await page.evaluate(async ({ base, userId }) => {
+      await fetch(`${base}/api/dev/stripe/ensure-plans`, { method: 'POST', credentials: 'include' });
+      await fetch(`${base}/api/dev/stripe/simulate-webhook`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, plan: 'starter', eventType: 'checkout.session.completed' }),
+      });
+      await fetch(`${base}/api/dev/stripe/simulate-webhook`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, eventType: 'invoice.payment_failed' }),
+      });
+    }, { base: BASE, userId: me.id });
+
+    await page.goto(`${BASE}/creator/settings/subscription`);
+    await page.waitForLoadState('networkidle');
+    const badge = page.getByTestId('badge-subscription-status');
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText('Past Due');
+  });
+
+  test('after invoice.payment_succeeded webhook, subscription page shows Active badge again', async ({ page }) => {
+    const me = await page.evaluate(async (base) => {
+      const r = await fetch(`${base}/api/auth/me`, { credentials: 'include' });
+      return r.ok ? r.json() : null;
+    }, BASE);
+    if (!me?.id) throw new Error('Could not retrieve authenticated user');
+
+    // Ensure subscription exists, fail it, then re-activate
+    await page.evaluate(async ({ base, userId }) => {
+      await fetch(`${base}/api/dev/stripe/ensure-plans`, { method: 'POST', credentials: 'include' });
+      await fetch(`${base}/api/dev/stripe/simulate-webhook`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, plan: 'pro', eventType: 'checkout.session.completed' }),
+      });
+      await fetch(`${base}/api/dev/stripe/simulate-webhook`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, eventType: 'invoice.payment_failed' }),
+      });
+      await fetch(`${base}/api/dev/stripe/simulate-webhook`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, eventType: 'invoice.payment_succeeded' }),
+      });
+    }, { base: BASE, userId: me.id });
+
+    await page.goto(`${BASE}/creator/settings/subscription`);
+    await page.waitForLoadState('networkidle');
+    const badge = page.getByTestId('badge-subscription-status');
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText('Active');
   });
 });

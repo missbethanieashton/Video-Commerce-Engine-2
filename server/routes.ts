@@ -2811,7 +2811,7 @@ Identify which products from the catalog are most likely to appear or be feature
      * Requires a valid session with isAdmin=true.
      * In automated CI/integration tests, supply cookie from login response.
      */
-    async function requireDevAdmin(req: Request, res: Response): Promise<boolean> {
+    const requireDevAdmin = async (req: Request, res: Response): Promise<boolean> => {
       const sessionUserId = (req.session as any)?.userId as string | undefined;
       if (!sessionUserId) {
         res.status(401).json({ error: "Authentication required for dev endpoints" });

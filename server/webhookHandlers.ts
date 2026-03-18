@@ -168,7 +168,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
 // Stripe SDK v20 removed the top-level `subscription` field from Invoice type,
 // but it is still present in webhook payloads — access via the raw object.
 type InvoiceWithSubscription = Stripe.Invoice & {
-  subscription?: string | Stripe.Subscription | null;
+  subscription: string | Stripe.Subscription | null;
 };
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
