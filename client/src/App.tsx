@@ -49,6 +49,13 @@ import BrandSettingsBillingAddress from "@/pages/brand-settings-billing-address"
 import BrandSettingsApiKey from "@/pages/brand-settings-api-key";
 import Mailbox from "@/pages/mailbox";
 import WishlistPage from "@/pages/wishlist";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import { useCurrentUser, useLogout } from "@/hooks/useCurrentUser";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronDown, LogOut, User, Layers } from "lucide-react";
 
 function CreatorRouter() {
   return (
@@ -128,9 +135,7 @@ function Router() {
   const isLandingRoute = location === "/";
   const isAuthorizeRoute = location.startsWith("/brand-authorize");
 
-  if (isLandingRoute) {
-    return <Landing />;
-  }
+  if (isLandingRoute) return <Landing />;
   if (isAuthorizeRoute) {
     return (
       <Switch>
@@ -138,25 +143,82 @@ function Router() {
       </Switch>
     );
   }
-  if (isBrandRoute) {
-    return <BrandRouter />;
-  }
-  if (isAffiliateRoute) {
-    return <AffiliateRouter />;
-  }
-  if (isCreatorRoute) {
-    return <CreatorRouter />;
-  }
+  if (isBrandRoute) return <BrandRouter />;
+  if (isAffiliateRoute) return <AffiliateRouter />;
+  if (isCreatorRoute) return <CreatorRouter />;
   return <CreatorRouter />;
+}
+
+function AdminPortalSwitcher() {
+  const [, navigate] = useLocation();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1 h-8 text-xs" data-testid="button-admin-portal-switcher">
+          <Layers className="h-3.5 w-3.5" />
+          Switch Portal
+          <ChevronDown className="h-3 w-3" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem onClick={() => navigate("/creator")} data-testid="menu-portal-creator">
+          Creator Portal
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/brand")} data-testid="menu-portal-brand">
+          Brand Portal
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/affiliate")} data-testid="menu-portal-publisher">
+          Publisher Portal
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { data: user, isLoading } = useCurrentUser();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && user === null) {
+      navigate("/login");
+    }
+  }, [isLoading, user, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return <>{children}</>;
 }
 
 function AppContent() {
   const [location] = useLocation();
+  const { data: user } = useCurrentUser();
+  const logoutMutation = useLogout();
+
   const isBrandRoute = location.startsWith("/brand") && !location.startsWith("/brand-authorize");
   const isAffiliateRoute = location.startsWith("/affiliate");
   const isLandingRoute = location === "/";
   const isAuthorizeRoute = location.startsWith("/brand-authorize");
   const isAdminRoute = location.startsWith("/admin");
+  const isAuthRoute = location === "/login" || location === "/register";
+
+  if (isAuthRoute) {
+    return (
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+      </Switch>
+    );
+  }
 
   if (isAuthorizeRoute) {
     return (
@@ -174,10 +236,12 @@ function AppContent() {
     );
   }
 
+  if (isLandingRoute) return <Landing />;
+
   const getSidebar = () => {
-    if (isBrandRoute) return <BrandAppSidebar />;
-    if (isAffiliateRoute) return <AffiliateAppSidebar />;
-    return <AppSidebar />;
+    if (isBrandRoute) return <BrandAppSidebar user={user ?? undefined} />;
+    if (isAffiliateRoute) return <AffiliateAppSidebar user={user ?? undefined} />;
+    return <AppSidebar user={user ?? undefined} />;
   };
 
   const getMobileNav = () => {
@@ -186,12 +250,8 @@ function AppContent() {
     return <MobileNav />;
   };
 
-  if (isLandingRoute) {
-    return <Landing />;
-  }
-
   return (
-    <>
+    <AuthGuard>
       <div className="flex h-screen w-full">
         <div className="hidden md:block">
           {getSidebar()}
@@ -207,7 +267,36 @@ function AppContent() {
                 style={{ height: 32, width: "auto" }}
               />
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              {user?.isAdmin && <AdminPortalSwitcher />}
+              <ThemeToggle />
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-1 h-8" data-testid="button-user-menu">
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs max-w-24 truncate">{user.displayName}</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <div className="px-2 py-1.5">
+                      <p className="text-xs font-medium truncate">{user.displayName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => logoutMutation.mutate()}
+                      className="text-destructive focus:text-destructive"
+                      data-testid="button-logout"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 bg-background">
             <Router />
@@ -215,7 +304,7 @@ function AppContent() {
         </div>
       </div>
       {getMobileNav()}
-    </>
+    </AuthGuard>
   );
 }
 
@@ -235,12 +324,21 @@ function AppWithSidebar() {
 function App() {
   const [location] = useLocation();
   const isLandingRoute = location === "/";
+  const isAuthRoute = location === "/login" || location === "/register";
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          {isLandingRoute ? <Landing /> : <AppWithSidebar />}
+          {(isLandingRoute || isAuthRoute) ? (
+            <Switch>
+              <Route path="/" component={Landing} />
+              <Route path="/login" component={Login} />
+              <Route path="/register" component={Register} />
+            </Switch>
+          ) : (
+            <AppWithSidebar />
+          )}
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>

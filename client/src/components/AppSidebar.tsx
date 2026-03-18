@@ -16,7 +16,9 @@ import {
   UserCircle,
   Bell,
   Heart,
+  LogOut,
 } from "lucide-react";
+import { useLogout } from "@/hooks/useCurrentUser";
 import {
   Sidebar,
   SidebarContent,
@@ -78,12 +80,15 @@ interface AppSidebarProps {
   user?: {
     displayName: string;
     username: string;
+    email?: string;
     avatarUrl?: string;
     role: string;
+    isAdmin?: boolean;
   };
 }
 
 export function AppSidebar({ user }: AppSidebarProps) {
+  const logoutMutation = useLogout();
   const [location] = useLocation();
 
   const renderItems = (items: typeof overviewItems) => (
@@ -127,10 +132,10 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">
-              {user?.displayName || "demo_creator"}
+              {user?.displayName || "Creator"}
             </p>
             <p className="text-xs text-muted-foreground truncate">
-              {user?.username || "content-creator"}
+              {user?.email || user?.username || ""}
             </p>
           </div>
         </div>
@@ -235,11 +240,13 @@ export function AppSidebar({ user }: AppSidebarProps) {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/help">
-                <HelpCircle className="h-4 w-4" />
-                <span>Help Center</span>
-              </Link>
+            <SidebarMenuButton
+              onClick={() => logoutMutation.mutate()}
+              className="text-muted-foreground hover:text-destructive w-full"
+              data-testid="button-sidebar-logout"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

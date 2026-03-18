@@ -27,13 +27,14 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useLogout } from "@/hooks/useCurrentUser";
 
 type User = {
-  id: string;
+  id?: string;
   displayName: string;
-  avatarUrl: string | null;
-  email: string;
+  avatarUrl?: string | null;
+  email?: string;
+  isAdmin?: boolean;
 };
 
 const affiliateMenuItems = [
@@ -92,11 +93,13 @@ const bottomMenuItems = [
   },
 ];
 
-export function AffiliateAppSidebar() {
+interface AffiliateAppSidebarProps {
+  user?: User;
+}
+
+export function AffiliateAppSidebar({ user }: AffiliateAppSidebarProps) {
   const [location] = useLocation();
-  const { data: user } = useQuery<User>({
-    queryKey: ['/api/users/me'],
-  });
+  const logoutMutation = useLogout();
 
   return (
     <Sidebar className="border-r border-border">
@@ -178,7 +181,13 @@ export function AffiliateAppSidebar() {
             <p className="text-sm font-medium truncate">{user?.displayName || "Affiliate"}</p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <Button size="icon" variant="ghost" className="shrink-0" data-testid="button-logout">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="shrink-0 hover:text-destructive"
+            onClick={() => logoutMutation.mutate()}
+            data-testid="button-sidebar-logout"
+          >
             <LogOut className="w-4 h-4" />
           </Button>
         </div>

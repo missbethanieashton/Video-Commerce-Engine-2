@@ -1205,6 +1205,30 @@ export default function Landing() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
         </motion.div>
 
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
+          <img src={materializedLogo} alt="Materialized" style={{ height: 28, width: "auto" }} />
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-full text-sm"
+                data-testid="button-nav-signin"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Button
+              onClick={scrollToSignup}
+              size="sm"
+              className="bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold rounded-full text-sm"
+              data-testid="button-nav-get-started"
+            >
+              Get Started
+            </Button>
+          </div>
+        </div>
+
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

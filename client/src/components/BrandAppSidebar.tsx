@@ -14,7 +14,9 @@ import {
   Library,
   ListVideo,
   Heart,
+  LogOut,
 } from "lucide-react";
+import { useLogout } from "@/hooks/useCurrentUser";
 import {
   Sidebar,
   SidebarContent,
@@ -68,13 +70,16 @@ interface BrandAppSidebarProps {
   user?: {
     displayName: string;
     username: string;
+    email?: string;
     avatarUrl?: string;
     role: string;
+    isAdmin?: boolean;
   };
 }
 
 export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
   const [location] = useLocation();
+  const logoutMutation = useLogout();
 
   const renderItems = (items: typeof overviewItems) => (
     <SidebarMenu>
@@ -117,10 +122,10 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate leading-tight">
-              {user?.displayName || "Demo Brand"}
+              {user?.displayName || "Brand"}
             </p>
             <p className="text-xs text-muted-foreground truncate">
-              {user?.username || "brand-account"}
+              {user?.email || user?.username || ""}
             </p>
           </div>
           <Badge className="shrink-0 bg-chart-2 hover:bg-chart-2/90 text-[10px] px-2 py-0.5">
@@ -206,11 +211,13 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/brand/help">
-                <HelpCircle className="h-4 w-4" />
-                <span>Help Center</span>
-              </Link>
+            <SidebarMenuButton
+              onClick={() => logoutMutation.mutate()}
+              className="text-muted-foreground hover:text-destructive w-full"
+              data-testid="button-sidebar-logout"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

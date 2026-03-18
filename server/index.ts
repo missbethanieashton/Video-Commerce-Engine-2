@@ -1,5 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
+import { registerAuthRoutes, seedAdminAccount } from "./authRoutes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { runMigrations } from "stripe-replit-sync";
@@ -7,8 +10,34 @@ import { getStripeSync, getUncachableStripeClient } from "./stripeClient";
 import { dispatchStripeEvent } from "./webhookHandlers";
 import Stripe from 'stripe';
 
+declare module "express-session" {
+  interface SessionData {
+    userId?: string;
+  }
+}
+
 const app = express();
 const httpServer = createServer(app);
+
+const PgStore = connectPgSimple(session);
+app.use(
+  session({
+    store: new PgStore({
+      conString: process.env.DATABASE_URL,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || "materialized-dev-secret-2026",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+    },
+  })
+);
 
 declare module "http" {
   interface IncomingMessage {
@@ -147,7 +176,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  registerAuthRoutes(app);
   await registerRoutes(httpServer, app);
+  await seedAdminAccount();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
