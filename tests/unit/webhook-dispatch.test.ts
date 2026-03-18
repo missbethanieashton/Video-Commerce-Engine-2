@@ -91,7 +91,7 @@ function makeInvoiceObject(opts: {
 function makeCheckoutSession(opts: {
   customerId?: string;
   subscriptionId?: string;
-  userId?: string;
+  userId?: string | null;
   plan?: 'starter' | 'pro';
 }): Stripe.Checkout.Session {
   const {
@@ -100,13 +100,15 @@ function makeCheckoutSession(opts: {
     userId = 'user_test123',
     plan = 'starter',
   } = opts;
+  const metadata: Record<string, string> = { plan };
+  if (userId != null) metadata.userId = userId;
   return {
     id: 'cs_test123',
     object: 'checkout.session',
     mode: 'subscription',
     customer: customerId,
     subscription: subscriptionId,
-    metadata: { userId, plan },
+    metadata,
   } as unknown as Stripe.Checkout.Session;
 }
 
@@ -203,8 +205,8 @@ describe('dispatchStripeEvent — checkout.session.completed', () => {
   });
 
   it('resolves userId via stripe customer lookup when not in metadata', async () => {
-    const session = makeCheckoutSession({ userId: undefined as any });
-    (session as any).metadata = {};
+    const session = makeCheckoutSession({ userId: null });
+    Object.assign(session, { metadata: {} });
     const subscription = makeSubscriptionObject({ status: 'active' });
 
     (getUncachableStripeClient as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -220,11 +222,10 @@ describe('dispatchStripeEvent — checkout.session.completed', () => {
 
   it('falls back to amount-based plan detection when metadata.plan is missing', async () => {
     const session = makeCheckoutSession({ userId: 'user_test123' });
-    (session as any).metadata = { userId: 'user_test123' };
+    Object.assign(session, { metadata: { userId: 'user_test123' } });
 
     const subscription = makeSubscriptionObject({ status: 'active' });
-    subscription.items.data[0].price.metadata = {};
-    (subscription.items.data[0].price as any).unit_amount = 49900;
+    Object.assign(subscription.items.data[0].price, { metadata: {}, unit_amount: 49900 });
 
     (getUncachableStripeClient as ReturnType<typeof vi.fn>).mockResolvedValue({
       subscriptions: { retrieve: vi.fn().mockResolvedValue(subscription) },

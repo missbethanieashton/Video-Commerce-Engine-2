@@ -40,6 +40,7 @@ import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
 import { registerDetectionRoutes } from "./replit_integrations/detection/routes";
 import { ai } from "./replit_integrations/detection/client";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import type Stripe from "stripe";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 
@@ -2802,8 +2803,34 @@ Identify which products from the catalog are most likely to appear or be feature
 
   // ─────────────────────────────────────────────────────────────────────────────
 
-  // Dev/test-only: retrieve Stripe checkout session internals for integration tests
+  // Dev/test-only: retrieve Stripe plan price configs for integration tests
   if (process.env.NODE_ENV !== "production") {
+    app.get("/api/dev/stripe/plans", async (_req, res) => {
+      try {
+        const stripe = await getUncachableStripeClient();
+        const allPrices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
+        const plans: Record<string, unknown>[] = [];
+        for (const price of allPrices.data) {
+          const planName =
+            (price.metadata as Record<string, string>)?.plan ||
+            ((price.product as Stripe.Product)?.metadata as Record<string, string>)?.plan;
+          if (!planName || !["starter", "pro"].includes(planName)) continue;
+          plans.push({
+            id: price.id,
+            plan: planName,
+            unit_amount: price.unit_amount,
+            currency: price.currency,
+            recurring: price.recurring,
+            metadata: price.metadata,
+            product_id: typeof price.product === "string" ? price.product : (price.product as Stripe.Product).id,
+          });
+        }
+        res.json({ plans });
+      } catch (e: any) {
+        res.status(500).json({ error: e?.message ?? "Failed to retrieve plans" });
+      }
+    });
+
     app.get("/api/dev/stripe/checkout-session/:sessionId", async (req, res) => {
       try {
         const stripe = await getUncachableStripeClient();

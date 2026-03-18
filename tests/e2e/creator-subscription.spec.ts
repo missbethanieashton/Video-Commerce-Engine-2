@@ -84,7 +84,7 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
-  test('clicking Starter plan triggers checkout API and returns a Stripe URL', async ({ page }) => {
+  test('clicking Starter plan triggers checkout API and returns a Stripe URL with sessionId', async ({ page }) => {
     const [response] = await Promise.all([
       page.waitForResponse(
         r => r.url().includes('/api/creator/subscription/checkout') && r.request().method() === 'POST',
@@ -100,8 +100,30 @@ test.describe('Creator Subscription Page — Authenticated', () => {
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body).toHaveProperty('url');
-    expect(typeof body.url).toBe('string');
-    expect(body.url).toMatch(/^https:\/\//);
+    expect(body).toHaveProperty('sessionId');
+    expect(body.url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(body.sessionId).toMatch(/^cs_test_/);
+  });
+
+  test('clicking Pro plan triggers checkout API and returns a Stripe URL with sessionId', async ({ page }) => {
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        r => r.url().includes('/api/creator/subscription/checkout') && r.request().method() === 'POST',
+        { timeout: 10_000 }
+      ),
+      (async () => {
+        await page.getByTestId('button-upgrade-plan').click();
+        await page.waitForTimeout(300);
+        await page.getByTestId('button-select-plan-pro').click();
+      })(),
+    ]);
+
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body).toHaveProperty('url');
+    expect(body).toHaveProperty('sessionId');
+    expect(body.url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(body.sessionId).toMatch(/^cs_test_/);
   });
 
   test('plan selector dialog features list includes expected plan features', async ({ page }) => {
