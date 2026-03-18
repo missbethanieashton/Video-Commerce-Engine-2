@@ -24,7 +24,7 @@ import { Package, Link2, Plus, RefreshCw, Code2, UploadCloud, X, AlertTriangle, 
 import { SiShopify, SiWoocommerce, SiBigcommerce, SiMagento, SiGoogledrive, SiDropbox } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Product } from "@shared/schema";
+import type { Product, Brand } from "@shared/schema";
 
 const PLATFORMS = [
   { id: "shopify",     label: "Shopify",      placeholder: "shpat_xxxxxxxxxxxxxxxxxxxx",        Icon: SiShopify,     color: "#96bf48" },
@@ -50,10 +50,12 @@ function AddProductSheet({
   open,
   onClose,
   isApiConnected,
+  brandId,
 }: {
   open: boolean;
   onClose: () => void;
   isApiConnected: boolean;
+  brandId?: string;
 }) {
   const { toast } = useToast();
 
@@ -126,6 +128,7 @@ function AddProductSheet({
         productType: productType || undefined,
         imageUrl,
         thumbnailType: thumbFile?.type.startsWith("video/") ? "video" : "image",
+        ...(brandId ? { brandId } : {}),
       });
     },
     onSuccess: () => {
@@ -331,9 +334,9 @@ function AddProductSheet({
             </div>
           </div>
 
-          {/* Point-of-sale URL */}
+          {/* Product URL */}
           <div className="space-y-1.5">
-            <Label className="text-white/70 text-xs font-medium">Point-of-Sale URL</Label>
+            <Label className="text-white/70 text-xs font-medium">Product URL <span className="text-[#677A67]">(Buy Now Link)</span></Label>
             <Input
               data-testid="input-product-pos-url"
               type="url"
@@ -343,7 +346,7 @@ function AddProductSheet({
               className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#677A67] rounded-xl"
             />
             <p className="text-[11px] text-white/30">
-              The URL where customers can purchase this product.
+              Viewers will be sent here when they tap this product in a video.
             </p>
           </div>
 
@@ -384,6 +387,11 @@ export default function BrandInventory() {
   const inputPlaceholder = activePlatform
     ? `${activePlatform.label} API key — e.g. ${activePlatform.placeholder}`
     : "Select a platform above, then enter your API key";
+
+  const { data: brands = [] } = useQuery<Brand[]>({
+    queryKey: ["/api/brands"],
+  });
+  const currentBrandId = brands[0]?.id;
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -601,6 +609,7 @@ export default function BrandInventory() {
         open={addProductOpen}
         onClose={() => setAddProductOpen(false)}
         isApiConnected={isApiConnected}
+        brandId={currentBrandId}
       />
     </div>
   );

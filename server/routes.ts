@@ -124,22 +124,26 @@ export async function registerRoutes(
     }
   });
 
-  // Create product (auto-resolves brandId from first available brand if not provided)
+  // Create product
   app.post("/api/products", async (req, res) => {
     try {
-      let { brandId, ...rest } = req.body;
+      let { brandId, price, ...rest } = req.body;
+      // Resolve brandId — prefer explicit, then fall back to first available brand
       if (!brandId) {
         const brands = await storage.getBrands();
         brandId = brands[0]?.id;
       }
       if (!brandId) return res.status(400).json({ error: "No brand available" });
-      const data = insertProductSchema.parse({ ...rest, brandId });
+      // Drizzle decimal columns are validated as strings by drizzle-zod
+      const priceStr = price !== undefined && price !== null ? String(price) : undefined;
+      const data = insertProductSchema.parse({ ...rest, brandId, price: priceStr });
       const product = await storage.createProduct(data);
       res.status(201).json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      console.error("Create product error:", error);
       res.status(500).json({ error: "Failed to create product" });
     }
   });
