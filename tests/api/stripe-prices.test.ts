@@ -33,8 +33,7 @@ describe('Stripe Plan Prices — Test-Mode Integration', () => {
     expect(starter.recurring?.interval_count).toBe(1);
 
     const meta: Record<string, string> = starter.metadata ?? {};
-    const productId: string = starter.product_id ?? '';
-    expect(meta.plan === 'starter' || productId.startsWith('prod_')).toBe(true);
+    expect(meta.plan).toBe('starter');
 
     console.log(`[Stripe] starter price ID: ${starter.id}, product: ${starter.product_id}`);
   }, 15_000);
@@ -51,8 +50,7 @@ describe('Stripe Plan Prices — Test-Mode Integration', () => {
     expect(pro.recurring?.interval_count).toBe(1);
 
     const meta: Record<string, string> = pro.metadata ?? {};
-    const productId: string = pro.product_id ?? '';
-    expect(meta.plan === 'pro' || productId.startsWith('prod_')).toBe(true);
+    expect(meta.plan).toBe('pro');
 
     console.log(`[Stripe] pro price ID: ${pro.id}, product: ${pro.product_id}`);
   }, 15_000);

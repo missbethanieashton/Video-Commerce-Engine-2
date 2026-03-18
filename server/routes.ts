@@ -43,6 +43,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import type Stripe from "stripe";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
+import { dispatchStripeEvent } from "./webhookHandlers";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -2828,6 +2829,106 @@ Identify which products from the catalog are most likely to appear or be feature
         res.json({ plans });
       } catch (e: any) {
         res.status(500).json({ error: e?.message ?? "Failed to retrieve plans" });
+      }
+    });
+
+    /**
+     * Webhook simulation harness — simulates a Stripe event through dispatchStripeEvent
+     * and returns the resulting subscription DB row so tests can assert state transitions.
+     * Replaces Stripe CLI for integration tests in this environment.
+     * Only available in non-production.
+     *
+     * POST /api/dev/stripe/simulate-webhook
+     * Body: { userId: string, plan: "starter"|"pro", eventType?: string }
+     *
+     * Creates a real Stripe subscription (bypassing checkout) and fires the event.
+     * Supported eventTypes: "checkout.session.completed" (default), "customer.subscription.updated"
+     */
+    app.post("/api/dev/stripe/simulate-webhook", async (req, res) => {
+      try {
+        const { userId, plan = "starter", eventType = "checkout.session.completed" } = req.body as {
+          userId: string;
+          plan?: "starter" | "pro";
+          eventType?: string;
+        };
+        if (!userId) {
+          return res.status(400).json({ error: "userId is required" });
+        }
+
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        const stripe = await getUncachableStripeClient();
+
+        let customerId = user.stripeCustomerId;
+        if (!customerId) {
+          const customer = await stripe.customers.create({ email: user.email ?? "", metadata: { userId } });
+          customerId = customer.id;
+          await storage.updateUser(userId, { stripeCustomerId: customerId } as any);
+        }
+
+        const allPrices = await stripe.prices.list({ active: true, limit: 100 });
+        const price = allPrices.data.find(
+          (p) => (p.metadata as Record<string, string>)?.plan === plan
+        );
+        if (!price) {
+          return res.status(404).json({ error: `No Stripe price found for plan: ${plan}` });
+        }
+
+        const testPaymentMethod = await stripe.paymentMethods.create({
+          type: "card",
+          card: { token: "tok_visa" },
+        });
+        await stripe.paymentMethods.attach(testPaymentMethod.id, { customer: customerId });
+        await stripe.customers.update(customerId, {
+          invoice_settings: { default_payment_method: testPaymentMethod.id },
+        });
+
+        const subscription = await stripe.subscriptions.create({
+          customer: customerId,
+          items: [{ price: price.id }],
+          metadata: { userId, plan },
+          expand: ["latest_invoice.payment_intent"],
+        });
+
+        const periodEnd = (subscription.items.data[0] as Stripe.SubscriptionItem).current_period_end;
+
+        const syntheticEvent: Stripe.Event = {
+          id: `evt_sim_${Date.now()}`,
+          object: "event",
+          type: eventType as Stripe.Event["type"],
+          data: {
+            object: {
+              id: `cs_sim_${Date.now()}`,
+              object: "checkout.session",
+              mode: "subscription",
+              customer: customerId,
+              subscription: subscription.id,
+              metadata: { userId, plan },
+              status: "complete",
+            } as unknown as Stripe.Event.Data["object"],
+          },
+          livemode: false,
+          created: Math.floor(Date.now() / 1000),
+          api_version: "2024-06-20",
+          pending_webhooks: 0,
+          request: null,
+        } as unknown as Stripe.Event;
+
+        await dispatchStripeEvent(syntheticEvent);
+
+        const sub = await storage.getBrandSubscription(userId);
+        res.json({
+          dispatched: true,
+          stripeSubscriptionId: subscription.id,
+          periodEnd,
+          subscription: sub,
+        });
+      } catch (e: any) {
+        console.error("[Dev] simulate-webhook error:", e?.message);
+        res.status(500).json({ error: e?.message ?? "Failed to simulate webhook" });
       }
     });
 
