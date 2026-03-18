@@ -44,7 +44,7 @@ test.describe('Creator Subscription Page — Authenticated', () => {
 
   test('renders upgrade plan and billing portal buttons', async ({ page }) => {
     await expect(page.getByTestId('button-upgrade-plan')).toBeVisible();
-    await expect(page.getByTestId('button-cancel-plan')).toBeVisible();
+    await expect(page.getByTestId('button-billing-portal')).toBeVisible();
   });
 
   test('surplus calculator shows sliders and initial total of €0,00', async ({ page }) => {

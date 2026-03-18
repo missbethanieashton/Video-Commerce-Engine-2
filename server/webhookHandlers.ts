@@ -165,11 +165,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
   console.log(`[Webhook] Subscription cancelled — user ${user.id}`);
 }
 
+// Stripe SDK v20 removed the top-level `subscription` field from Invoice type,
+// but it is still present in webhook payloads — access via the raw object.
+type InvoiceWithSubscription = Stripe.Invoice & {
+  subscription?: string | Stripe.Subscription | null;
+};
+
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
   const customerId = extractCustomerId(invoice.customer);
   if (!customerId) return;
 
-  const subscriptionId = extractSubscriptionId(invoice.subscription);
+  const subscriptionId = extractSubscriptionId((invoice as InvoiceWithSubscription).subscription);
   if (!subscriptionId) return;
 
   const user = await storage.getUserByStripeCustomerId(customerId);
@@ -201,7 +207,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
   if (!user) return;
 
   const existing = await storage.getBrandSubscription(user.id);
-  const invoiceSubscriptionId = extractSubscriptionId(invoice.subscription);
+  const invoiceSubscriptionId = extractSubscriptionId((invoice as InvoiceWithSubscription).subscription);
 
   await storage.upsertBrandSubscription({
     userId: user.id,
