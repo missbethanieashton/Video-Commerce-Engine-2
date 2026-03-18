@@ -46,6 +46,8 @@ export default function BrandDashboard() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [calcAudience, setCalcAudience] = useState(10000);
   const [calcPublishers, setCalcPublishers] = useState(10);
+  const calcMinutesConsumed = calcAudience * calcPublishers;
+  const calcTotalCost = calcMinutesConsumed * 0.008;
   const { toast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
@@ -259,10 +261,7 @@ export default function BrandDashboard() {
         </Card>
       )}
 
-      {activeTab === "stats" && (() => {
-        const minutesConsumed = calcAudience * calcPublishers;
-        const totalCost = minutesConsumed * 0.008;
-        return (
+      {activeTab === "stats" && (
           <Card data-testid="card-surplus-calculator">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -275,7 +274,7 @@ export default function BrandDashboard() {
                     <p className="text-sm text-muted-foreground">Estimate your campaign spend before launch</p>
                   </div>
                 </div>
-                <div className="text-right hidden sm:block">
+                <div className="text-right">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Unit Rate</p>
                   <p className="text-sm font-mono font-semibold text-primary">$0.008 / min</p>
                 </div>
@@ -348,7 +347,7 @@ export default function BrandDashboard() {
                       <span className="text-xs font-medium">Minutes Consumed</span>
                     </div>
                     <p className="text-2xl font-bold tabular-nums" data-testid="text-minutes-consumed">
-                      {minutesConsumed.toLocaleString()}
+                      {calcMinutesConsumed.toLocaleString()}
                     </p>
                   </div>
                   <div className="space-y-0.5">
@@ -357,19 +356,18 @@ export default function BrandDashboard() {
                       <span className="text-xs font-medium">Estimated Cost</span>
                     </div>
                     <p className="text-2xl font-bold tabular-nums text-primary" data-testid="text-estimated-cost">
-                      ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${calcTotalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-1 border-t">
-                  {minutesConsumed.toLocaleString()} min × $0.008 / min = <strong>${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  {calcMinutesConsumed.toLocaleString()} min × $0.008 / min = <strong>${calcTotalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                 </p>
               </div>
 
             </CardContent>
           </Card>
-        );
-      })()}
+      )}
 
       {activeTab === "inventory" && (
         <div className="space-y-6">
