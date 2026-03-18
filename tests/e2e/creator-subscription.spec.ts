@@ -256,5 +256,7 @@ test.describe('Creator Subscription — Post-Webhook State Verification', () => 
     const badge = page.getByTestId('badge-subscription-status');
     await expect(badge).toBeVisible();
     await expect(badge).toHaveText('Active');
+    // The Pro checkout was completed, so the plan label should show "Pro Plan"
+    await expect(page.getByText('Pro Plan')).toBeVisible();
   });
 });

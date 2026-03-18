@@ -211,13 +211,13 @@ test.describe('Brand Subscription — Post-Webhook State Verification', () => {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, plan: 'starter', eventType: 'checkout.session.completed' }),
+        body: JSON.stringify({ userId, plan: 'pro', eventType: 'checkout.session.completed' }),
       });
     }, { base: BASE, userId: brandUserId });
 
     await adminCtx.close();
 
-    // --- Brand context: verify the UI shows Active ---
+    // --- Brand context: verify the UI shows Active badge and Pro Plan label ---
     const brandCtx = await browser.newContext();
     const brandPage = await brandCtx.newPage();
     await brandPage.goto(`${BASE}/login`);
@@ -233,6 +233,8 @@ test.describe('Brand Subscription — Post-Webhook State Verification', () => {
     const badge = brandPage.getByTestId('badge-subscription-status');
     await expect(badge).toBeVisible();
     await expect(badge).toHaveText('Active');
+    // Pro checkout was completed → UI must show "Pro Plan" label
+    await expect(brandPage.getByText('Pro Plan')).toBeVisible();
 
     await brandCtx.close();
   });

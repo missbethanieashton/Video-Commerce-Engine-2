@@ -169,8 +169,8 @@ describe('Webhook Integration — Brand checkout.session.completed → DB state'
     if (regRes.status === 201 || regRes.status === 200) {
       brandUserId = (await regRes.json()).id;
     } else {
-      // Fall back to admin user ID if registration is unavailable
-      brandUserId = (await loginAsAdmin()).userId;
+      const errBody = await regRes.text();
+      throw new Error(`Brand user registration failed (status=${regRes.status}): ${errBody}`);
     }
   }, 15_000);
 
