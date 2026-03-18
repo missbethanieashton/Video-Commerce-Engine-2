@@ -126,8 +126,8 @@ export default function MyVideos() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Videos</h1>
-          <p className="text-muted-foreground mt-1">Manage and track all your uploaded videos</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Campaigns</h1>
+          <p className="text-muted-foreground mt-1">Manage and track all your video campaigns</p>
         </div>
         <Button
           onClick={() => setUploadModalOpen(true)}
@@ -156,9 +156,9 @@ export default function MyVideos() {
             <Tabs value={statusFilter} onValueChange={setStatusFilter}>
               <TabsList>
                 <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="published">Published</TabsTrigger>
-                <TabsTrigger value="draft">Draft</TabsTrigger>
-                <TabsTrigger value="processing">Processing</TabsTrigger>
+                <TabsTrigger value="published">Active</TabsTrigger>
+                <TabsTrigger value="archived">Expired</TabsTrigger>
+                <TabsTrigger value="draft">Drafts</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -232,17 +232,23 @@ export default function MyVideos() {
             <Video className="h-10 w-10 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold mb-2">
-            {searchQuery || statusFilter !== "all" || categoryFilter !== "all" ? "No videos found" : "No videos yet"}
+            {statusFilter === "draft" ? "No drafts yet" :
+             statusFilter === "archived" ? "No expired campaigns" :
+             statusFilter === "published" ? "No active campaigns" :
+             searchQuery || categoryFilter !== "all" ? "No campaigns found" : "No campaigns yet"}
           </h3>
           <p className="text-muted-foreground max-w-md mx-auto mb-6">
-            {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
+            {statusFilter === "draft" ? "Save a draft while uploading to see it here." :
+             statusFilter === "archived" ? "Campaigns that have ended will appear here." :
+             statusFilter === "published" ? "Published campaigns will appear here once your video is live." :
+             searchQuery || categoryFilter !== "all"
               ? "Try adjusting your search or filters"
               : "Upload your first video to start generating revenue with product detection and affiliate tracking."}
           </p>
           {!searchQuery && statusFilter === "all" && categoryFilter === "all" && (
             <Button onClick={() => setUploadModalOpen(true)} className="rounded-full gap-2">
               <Upload className="h-4 w-4" />
-              Upload Your First Video
+              Upload Your First Campaign
             </Button>
           )}
         </div>

@@ -47,7 +47,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { ProductCarouselEditor, defaultCarouselSettings, type CarouselSettings } from "@/components/ProductCarouselEditor";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Brand } from "@shared/schema";
 
 const videoUploadSchema = z.object({
@@ -355,21 +355,36 @@ export function VideoUploadModal({
     }
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!videoUrl) {
       toast({ title: "Cannot Save Draft", description: "Please upload a video first.", variant: "destructive" });
       return;
     }
-    localStorage.setItem("videoDraft", JSON.stringify({
-      title: form.getValues("title"),
-      description: form.getValues("description"),
-      videoUrl,
-      selectedBrands,
-      carouselSettings,
-      enableAiDetection,
-      savedAt: new Date().toISOString(),
-    }));
-    toast({ title: "Draft Saved", description: "Your video draft has been saved." });
+    const formData = form.getValues();
+    if (!formData.title?.trim()) {
+      toast({ title: "Campaign Title Required", description: "Please enter a campaign title before saving.", variant: "destructive" });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const createRes = await apiRequest("POST", "/api/videos", {
+        title: formData.title.trim(),
+        description: formData.description || "",
+        videoUrl,
+        brandIds: selectedBrands,
+        status: "draft",
+      });
+      const video = await createRes.json();
+      setCreatedVideoId(video.id);
+      localStorage.removeItem("videoDraft");
+      queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+      toast({ title: "Draft Saved", description: `"${formData.title.trim()}" has been saved to your campaigns.` });
+      resetAndClose();
+    } catch {
+      toast({ title: "Save Failed", description: "Could not save draft. Please try again.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetAndClose = () => {
@@ -391,7 +406,7 @@ export function VideoUploadModal({
 
   const stepTitles: Record<Step, string> = {
     upload: "Upload Video",
-    details: "Video Details",
+    details: "Campaign Details",
     detecting: "AI Product Scan",
     carousel: "Carousel Settings",
     refer: videoUrl ? "Brand Outreach" : "Refer a Brand",
@@ -399,7 +414,7 @@ export function VideoUploadModal({
 
   const stepDescriptions: Record<Step, string> = {
     upload: "Upload your video to start building a shoppable campaign",
-    details: "Add details, select featured brands and enable AI product detection",
+    details: "Name your campaign, select featured brands and enable AI product detection",
     detecting: "Gemini AI is scanning your video for brand products",
     carousel: "Customise how the product carousel appears on your video",
     refer: videoUrl
@@ -494,9 +509,9 @@ export function VideoUploadModal({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Video Title</FormLabel>
+                    <FormLabel>Campaign Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter video title" {...field} data-testid="input-video-title" />
+                      <Input placeholder="e.g. Spring Skincare Edit, Paris Travel Vlog" {...field} data-testid="input-video-title" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -618,12 +633,18 @@ export function VideoUploadModal({
               <Separator />
 
               <div className="flex justify-between gap-3">
-                <Button type="button" variant="outline" onClick={handleSaveDraft} className="gap-2" data-testid="button-save-draft">
-                  <Save className="h-4 w-4" />
-                  Save Draft
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={isSubmitting}
+                  className="gap-2"
+                  data-testid="button-save-draft"
+                >
+                  {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <><Save className="h-4 w-4" /> Save Draft</>}
                 </Button>
                 <div className="flex gap-3">
-                  <Button type="button" variant="ghost" onClick={resetAndClose}>Cancel</Button>
+                  <Button type="button" variant="ghost" onClick={resetAndClose} disabled={isSubmitting}>Cancel</Button>
                   <Button
                     type="submit"
                     disabled={startDetectionMutation.isPending || isSubmitting}
