@@ -2204,7 +2204,10 @@ Identify which products from the catalog are most likely to appear or be feature
   // Create Stripe Connect account for affiliate payouts
   app.post("/api/stripe/connect/create", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("demo_creator");
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
       if (!user) {
         return res.status(401).json({ error: "Not authenticated" });
       }
@@ -2225,7 +2228,10 @@ Identify which products from the catalog are most likely to appear or be feature
   // Create onboarding link for Stripe Connect
   app.post("/api/stripe/connect/onboarding", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("demo_creator");
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
       if (!user || !user.stripeConnectAccountId) {
         return res.status(400).json({ error: "No connect account found" });
       }
@@ -2246,7 +2252,10 @@ Identify which products from the catalog are most likely to appear or be feature
   // Get Stripe Connect account status
   app.get("/api/stripe/connect/status", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("demo_creator");
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
       if (!user) {
         return res.status(401).json({ error: "Not authenticated" });
       }
