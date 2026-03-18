@@ -3,7 +3,7 @@ import { LayoutDashboard, Video, Library, Bell, MoreHorizontal } from "lucide-re
 
 const navItems = [
   { path: "/creator", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/creator/my-videos", label: "Videos", icon: Video },
+  { path: "/creator/my-videos", label: "Campaigns", icon: Video },
   { path: "/creator/library", label: "Library", icon: Library },
   { path: "/creator/mailbox", label: "Mailbox", icon: Bell },
   { path: "/creator/more", label: "More", icon: MoreHorizontal },

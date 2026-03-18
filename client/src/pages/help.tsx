@@ -24,7 +24,7 @@ import {
 const faqs = [
   {
     question: "How do I upload a video?",
-    answer: "Click the 'Upload Video' button on the dashboard or My Videos page. You can drag and drop your video file or click to browse. Supported formats include MP4, MOV, and WebM up to 500MB.",
+    answer: "Click the 'Upload Video' button on the dashboard or My Campaigns page. You can drag and drop your video file or click to browse. Supported formats include MP4, MOV, and WebM up to 500MB.",
   },
   {
     question: "How does product detection work?",
@@ -49,10 +49,10 @@ const faqs = [
 ];
 
 const quickLinks = [
-  { icon: Upload, label: "Upload Video", href: "/my-videos" },
-  { icon: Link2, label: "Affiliate Links", href: "/" },
-  { icon: BarChart3, label: "Analytics", href: "/analytics" },
-  { icon: Code, label: "Embed Codes", href: "/my-videos" },
+  { icon: Upload, label: "Upload Video", href: "/creator/my-videos" },
+  { icon: Link2, label: "Affiliate Links", href: "/creator" },
+  { icon: BarChart3, label: "Analytics", href: "/creator/analytics" },
+  { icon: Code, label: "Embed Codes", href: "/creator/my-videos" },
 ];
 
 export default function Help() {
