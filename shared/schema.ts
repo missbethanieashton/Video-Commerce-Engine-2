@@ -214,8 +214,8 @@ export const brandKits = pgTable("brand_kits", {
   defaultButtonFont: text("default_button_font"),
   defaultButtonColor: text("default_button_color"), // hex color
   defaultButtonTextColor: text("default_button_text_color"), // hex color
-  defaultCornerRadius: integer("default_corner_radius").default(8),
-  defaultBackgroundOpacity: integer("default_background_opacity").default(80),
+  defaultCornerRadius: integer("default_corner_radius").default(16),
+  defaultBackgroundOpacity: integer("default_background_opacity").default(55),
   defaultShowThumbnail: boolean("default_show_thumbnail").default(true),
   defaultShowButton: boolean("default_show_button").default(true),
   defaultShowPrice: boolean("default_show_price").default(true),

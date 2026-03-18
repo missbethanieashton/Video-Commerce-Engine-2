@@ -21,7 +21,9 @@ import {
   Trash2, 
   FileText,
   Check,
-  Loader2
+  Loader2,
+  Sparkles,
+  Save
 } from "lucide-react";
 import type { BrandKit } from "@shared/schema";
 import { BUTTON_LABEL_OPTIONS, CAROUSEL_POSITION_OPTIONS } from "@shared/schema";
@@ -59,8 +61,8 @@ export default function BrandKitPage() {
     buttonFont: "Inter",
     buttonColor: "#677A67",
     buttonTextColor: "#FFFFFF",
-    cornerRadius: 8,
-    backgroundOpacity: 80,
+    cornerRadius: 16,
+    backgroundOpacity: 55,
     showThumbnail: true,
     showButton: true,
     showPrice: true,
@@ -99,8 +101,8 @@ export default function BrandKitPage() {
         buttonFont: brandKit.defaultButtonFont || "Inter",
         buttonColor: brandKit.defaultButtonColor || "#677A67",
         buttonTextColor: brandKit.defaultButtonTextColor || "#FFFFFF",
-        cornerRadius: brandKit.defaultCornerRadius || 8,
-        backgroundOpacity: brandKit.defaultBackgroundOpacity || 80,
+        cornerRadius: brandKit.defaultCornerRadius ?? 16,
+        backgroundOpacity: brandKit.defaultBackgroundOpacity ?? 55,
         showThumbnail: brandKit.defaultShowThumbnail ?? true,
         showButton: brandKit.defaultShowButton ?? true,
         showPrice: brandKit.defaultShowPrice ?? true,
@@ -111,16 +113,23 @@ export default function BrandKitPage() {
     }
   }, [brandKit]);
 
-  const saveBrandKitMutation = useMutation({
-    mutationFn: async (data: any) => {
+  const saveBrandKitMutation = useMutation<any, Error, { data: any; carouselOnly?: boolean }>({
+    mutationFn: async ({ data }) => {
       return apiRequest("POST", "/api/brand-kit", data);
     },
-    onSuccess: () => {
+    onSuccess: (_result, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/brand-kit"] });
-      toast({
-        title: "Brand Kit Saved",
-        description: "Your brand settings have been updated.",
-      });
+      if (variables.carouselOnly) {
+        toast({
+          title: "Carousel Defaults Saved",
+          description: "Carousel saved as default for all new videos.",
+        });
+      } else {
+        toast({
+          title: "Brand Kit Saved",
+          description: "Your brand settings have been updated.",
+        });
+      }
     },
     onError: () => {
       toast({
@@ -130,6 +139,33 @@ export default function BrandKitPage() {
       });
     },
   });
+
+  const handleSaveCarouselDefault = () => {
+    saveBrandKitMutation.mutate({
+      carouselOnly: true,
+      data: {
+        defaultButtonFont: carouselSettings.buttonFont,
+        defaultButtonColor: carouselSettings.buttonColor,
+        defaultButtonTextColor: carouselSettings.buttonTextColor,
+        defaultCornerRadius: carouselSettings.cornerRadius,
+        defaultBackgroundOpacity: carouselSettings.backgroundOpacity,
+        defaultShowThumbnail: carouselSettings.showThumbnail,
+        defaultShowButton: carouselSettings.showButton,
+        defaultShowPrice: carouselSettings.showPrice,
+        defaultShowTitle: carouselSettings.showTitle,
+        defaultButtonLabel: carouselSettings.buttonLabel,
+        defaultPosition: carouselSettings.position,
+      },
+    });
+  };
+
+  const applyHeroStyle = () => {
+    setCarouselSettings((prev) => ({
+      ...prev,
+      cornerRadius: 16,
+      backgroundOpacity: 55,
+    }));
+  };
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -323,21 +359,23 @@ export default function BrandKitPage() {
 
   const handleSave = () => {
     saveBrandKitMutation.mutate({
-      extractedFonts: JSON.stringify(extractedFonts),
-      extractedColors: JSON.stringify(extractedColors),
-      manualFonts: JSON.stringify(manualFonts),
-      manualColors: JSON.stringify(manualColors),
-      defaultButtonFont: carouselSettings.buttonFont,
-      defaultButtonColor: carouselSettings.buttonColor,
-      defaultButtonTextColor: carouselSettings.buttonTextColor,
-      defaultCornerRadius: carouselSettings.cornerRadius,
-      defaultBackgroundOpacity: carouselSettings.backgroundOpacity,
-      defaultShowThumbnail: carouselSettings.showThumbnail,
-      defaultShowButton: carouselSettings.showButton,
-      defaultShowPrice: carouselSettings.showPrice,
-      defaultShowTitle: carouselSettings.showTitle,
-      defaultButtonLabel: carouselSettings.buttonLabel,
-      defaultPosition: carouselSettings.position,
+      data: {
+        extractedFonts: JSON.stringify(extractedFonts),
+        extractedColors: JSON.stringify(extractedColors),
+        manualFonts: JSON.stringify(manualFonts),
+        manualColors: JSON.stringify(manualColors),
+        defaultButtonFont: carouselSettings.buttonFont,
+        defaultButtonColor: carouselSettings.buttonColor,
+        defaultButtonTextColor: carouselSettings.buttonTextColor,
+        defaultCornerRadius: carouselSettings.cornerRadius,
+        defaultBackgroundOpacity: carouselSettings.backgroundOpacity,
+        defaultShowThumbnail: carouselSettings.showThumbnail,
+        defaultShowButton: carouselSettings.showButton,
+        defaultShowPrice: carouselSettings.showPrice,
+        defaultShowTitle: carouselSettings.showTitle,
+        defaultButtonLabel: carouselSettings.buttonLabel,
+        defaultPosition: carouselSettings.position,
+      },
     });
   };
 
@@ -720,10 +758,40 @@ export default function BrandKitPage() {
         <TabsContent value="carousel" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Default Carousel Settings</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                These settings will be applied to all new video uploads
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <CardTitle>Default Carousel Settings</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    These settings will be applied to all new video uploads
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-2"
+                    onClick={applyHeroStyle}
+                    data-testid="button-hero-style"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Hero Style
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="rounded-full gap-2"
+                    onClick={handleSaveCarouselDefault}
+                    disabled={saveBrandKitMutation.isPending}
+                    data-testid="button-save-carousel-default"
+                  >
+                    {saveBrandKitMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Save as Default
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
