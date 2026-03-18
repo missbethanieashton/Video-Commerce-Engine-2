@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
+import { getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 
 const PLAN_AMOUNT_FALLBACK: Record<number, 'starter' | 'pro'> = {
@@ -52,11 +52,33 @@ async function planFromSubscription(subscription: Stripe.Subscription): Promise<
   return PLAN_AMOUNT_FALLBACK[price.unit_amount ?? 0] ?? 'starter';
 }
 
+function subscriptionPeriodEnd(subscription: Stripe.Subscription): Date {
+  const item = subscription.items.data[0];
+  const ts = item?.current_period_end ?? 0;
+  return new Date(ts * 1000);
+}
+
+function extractCustomerId(
+  customer: string | Stripe.Customer | Stripe.DeletedCustomer | null
+): string | null {
+  if (!customer) return null;
+  if (typeof customer === 'string') return customer;
+  return customer.id;
+}
+
+function extractSubscriptionId(
+  sub: string | Stripe.Subscription | null
+): string | null {
+  if (!sub) return null;
+  if (typeof sub === 'string') return sub;
+  return sub.id;
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
   if (session.mode !== 'subscription') return;
 
-  const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id;
-  const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
+  const customerId = extractCustomerId(session.customer);
+  const subscriptionId = extractSubscriptionId(session.subscription);
 
   if (!customerId || !subscriptionId) {
     console.warn('[Webhook] checkout.session.completed: missing customer or subscription ID');
@@ -80,7 +102,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ['items.data.price.product'],
   });
-  const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+  const currentPeriodEnd = subscriptionPeriodEnd(subscription);
   const plan = metaPlan ?? (await planFromSubscription(subscription));
 
   await storage.upsertBrandSubscription({
@@ -95,7 +117,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
-  const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+  const customerId = extractCustomerId(subscription.customer);
   if (!customerId) return;
 
   const user = await storage.getUserByStripeCustomerId(customerId);
@@ -111,7 +133,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Pro
 
   const plan = await planFromSubscription(fullSub);
   const status = mapStripeStatus(fullSub.status);
-  const currentPeriodEnd = new Date((fullSub as any).current_period_end * 1000);
+  const currentPeriodEnd = subscriptionPeriodEnd(fullSub);
 
   await storage.upsertBrandSubscription({
     userId: user.id,
@@ -125,7 +147,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Pro
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
-  const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+  const customerId = extractCustomerId(subscription.customer);
   if (!customerId) return;
 
   const user = await storage.getUserByStripeCustomerId(customerId);
@@ -145,12 +167,10 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
-  const customerId = typeof invoice.customer === 'string' ? invoice.customer : (invoice.customer as any)?.id;
+  const customerId = extractCustomerId(invoice.customer);
   if (!customerId) return;
 
-  const subscriptionId = typeof invoice.subscription === 'string'
-    ? invoice.subscription
-    : (invoice.subscription as any)?.id;
+  const subscriptionId = extractSubscriptionId(invoice.subscription);
   if (!subscriptionId) return;
 
   const user = await storage.getUserByStripeCustomerId(customerId);
@@ -160,7 +180,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
   const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ['items.data.price.product'],
   });
-  const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+  const currentPeriodEnd = subscriptionPeriodEnd(subscription);
   const plan = await planFromSubscription(subscription);
 
   await storage.upsertBrandSubscription({
@@ -175,7 +195,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
-  const customerId = typeof invoice.customer === 'string' ? invoice.customer : (invoice.customer as any)?.id;
+  const customerId = extractCustomerId(invoice.customer);
   if (!customerId) return;
 
   const user = await storage.getUserByStripeCustomerId(customerId);
@@ -214,31 +234,5 @@ export async function dispatchStripeEvent(event: Stripe.Event): Promise<void> {
       break;
     default:
       break;
-  }
-}
-
-export class WebhookHandlers {
-  static async processWebhook(payload: Buffer, signature: string): Promise<void> {
-    if (!Buffer.isBuffer(payload)) {
-      throw new Error(
-        'STRIPE WEBHOOK ERROR: Payload must be a Buffer. ' +
-        'Received type: ' + typeof payload + '. ' +
-        'This usually means express.json() parsed the body before reaching this handler. ' +
-        'FIX: Ensure webhook route is registered BEFORE app.use(express.json()).'
-      );
-    }
-
-    const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature);
-
-    let event: Stripe.Event;
-    try {
-      event = JSON.parse(payload.toString('utf8')) as Stripe.Event;
-    } catch {
-      console.warn('[Webhook] Could not parse event payload as JSON — skipping custom handlers');
-      return;
-    }
-
-    await dispatchStripeEvent(event);
   }
 }

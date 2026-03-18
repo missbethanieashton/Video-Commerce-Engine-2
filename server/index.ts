@@ -3,8 +3,8 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { runMigrations } from "stripe-replit-sync";
-import { getStripeSync } from "./stripeClient";
-import { WebhookHandlers, dispatchStripeEvent } from "./webhookHandlers";
+import { getStripeSync, getUncachableStripeClient } from "./stripeClient";
+import { dispatchStripeEvent } from "./webhookHandlers";
 import Stripe from 'stripe';
 
 const app = express();
@@ -29,24 +29,6 @@ async function initStripe() {
     console.log("Stripe schema ready");
 
     const stripeSync = await getStripeSync();
-
-    const replitDomains = process.env.REPLIT_DOMAINS;
-    if (!replitDomains) {
-      console.log("REPLIT_DOMAINS not found, skipping webhook setup (development mode)");
-      return;
-    }
-
-    console.log("Setting up managed webhook...");
-    const webhookBaseUrl = `https://${replitDomains.split(",")[0]}`;
-    const result = await stripeSync.findOrCreateManagedWebhook(
-      `${webhookBaseUrl}/api/stripe/webhook`
-    );
-    if (result?.webhook?.url) {
-      console.log(`Webhook configured: ${result.webhook.url}`);
-    } else {
-      console.log("Webhook setup returned empty result (may require Stripe key configuration)");
-    }
-
     stripeSync
       .syncBackfill()
       .then(() => console.log("Stripe data synced"))
@@ -58,13 +40,18 @@ async function initStripe() {
 
 initStripe();
 
-// ── Self-managed Stripe webhook: POST /api/webhooks/stripe ───────────────────
-// This endpoint uses STRIPE_WEBHOOK_SECRET for signature verification.
-// To set it up:
-//  1. Go to Stripe Dashboard → Developers → Webhooks → Add endpoint
-//  2. Set URL to:  https://<your-domain>/api/webhooks/stripe
-//  3. Select events: checkout.session.completed, customer.subscription.updated,
-//     customer.subscription.deleted, invoice.payment_succeeded, invoice.payment_failed
+// ── Stripe webhook: POST /api/webhooks/stripe ─────────────────────────────────
+// Authoritative single webhook endpoint verified with STRIPE_WEBHOOK_SECRET.
+//
+// Setup instructions for operators:
+//  1. Stripe Dashboard → Developers → Webhooks → Add endpoint
+//  2. Endpoint URL:  https://<your-domain>/api/webhooks/stripe
+//  3. Subscribe to events:
+//       checkout.session.completed
+//       customer.subscription.updated
+//       customer.subscription.deleted
+//       invoice.payment_succeeded
+//       invoice.payment_failed
 //  4. Copy the "Signing secret" and save it in Replit Secrets as STRIPE_WEBHOOK_SECRET
 // ─────────────────────────────────────────────────────────────────────────────
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
@@ -75,32 +62,6 @@ if (!process.env.STRIPE_WEBHOOK_SECRET) {
   );
 }
 
-app.post(
-  "/api/stripe/webhook",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    const signature = req.headers["stripe-signature"];
-    if (!signature) {
-      return res.status(400).json({ error: "Missing stripe-signature" });
-    }
-
-    try {
-      const sig = Array.isArray(signature) ? signature[0] : signature;
-      if (!Buffer.isBuffer(req.body)) {
-        console.error("Stripe webhook: req.body is not a Buffer");
-        return res.status(500).json({ error: "Webhook processing error" });
-      }
-
-      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-      res.status(200).json({ received: true });
-    } catch (error: any) {
-      console.error("Webhook error:", error.message);
-      res.status(400).json({ error: "Webhook processing error" });
-    }
-  }
-);
-
-// ── Self-managed Stripe webhook endpoint (STRIPE_WEBHOOK_SECRET-based) ────────
 app.post(
   "/api/webhooks/stripe",
   express.raw({ type: "application/json" }),
@@ -116,23 +77,23 @@ app.post(
       return res.status(400).json({ error: "Missing stripe-signature header" });
     }
 
+    const sig = Array.isArray(signature) ? signature[0] : signature;
     let event: Stripe.Event;
     try {
-      const sig = Array.isArray(signature) ? signature[0] : signature;
-      const { getStripeSecretKey } = await import('./stripeClient');
-      const secretKey = await getStripeSecretKey();
-      const stripeInstance = new Stripe(secretKey);
+      const stripeInstance = await getUncachableStripeClient();
       event = stripeInstance.webhooks.constructEvent(req.body as Buffer, sig, webhookSecret);
-    } catch (err: any) {
-      console.error("[Stripe] Webhook signature verification failed:", err.message);
-      return res.status(400).json({ error: `Signature verification failed: ${err.message}` });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[Stripe] Webhook signature verification failed:", message);
+      return res.status(400).json({ error: `Signature verification failed: ${message}` });
     }
 
     try {
       await dispatchStripeEvent(event);
       res.status(200).json({ received: true });
-    } catch (err: any) {
-      console.error("[Stripe] Error dispatching webhook event:", err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[Stripe] Error dispatching webhook event:", message);
       res.status(400).json({ error: "Webhook handler error" });
     }
   }
