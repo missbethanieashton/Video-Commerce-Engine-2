@@ -131,6 +131,14 @@ describe('Webhook Integration — Creator subscription lifecycle transitions', (
     await simulateWebhook({ userId: adminUserId, plan: 'starter', eventType: 'checkout.session.completed', adminCookie });
   }, 50_000);
 
+  it('customer.subscription.updated (plan upgrade starter→pro) → DB plan=pro, status=active', async () => {
+    const body = await simulateWebhook({ userId: adminUserId, plan: 'pro', eventType: 'customer.subscription.updated', adminCookie });
+    expect(body.dispatched).toBe(true);
+    expect(body.subscription.plan).toBe('pro');
+    expect(body.subscription.status).toBe('active');
+    console.log(`[lifecycle] customer.subscription.updated → plan=${body.subscription.plan}, status=${body.subscription.status}`);
+  }, 40_000);
+
   it('invoice.payment_failed → DB status=past_due', async () => {
     const body = await simulateWebhook({ userId: adminUserId, eventType: 'invoice.payment_failed', adminCookie });
     expect(body.dispatched).toBe(true);

@@ -2599,8 +2599,12 @@ Identify which products from the catalog are most likely to appear or be feature
 
   // POST make a user admin (for bootstrapping — protected by a secret header)
   app.post("/api/admin/make-admin", async (req, res) => {
+    const bootstrapSecret = process.env.ADMIN_BOOTSTRAP_SECRET;
+    if (!bootstrapSecret) {
+      return res.status(403).json({ error: "Bootstrap not configured" });
+    }
     const secret = req.headers["x-admin-secret"];
-    if (secret !== process.env.ADMIN_BOOTSTRAP_SECRET) {
+    if (!secret || secret !== bootstrapSecret) {
       return res.status(403).json({ error: "Forbidden" });
     }
     const { userId } = req.body;
@@ -3058,6 +3062,40 @@ Identify which products from the catalog are most likely to appear or be feature
             object: "invoice",
             customer: customerId,
             subscription: subscriptionId ?? null,
+          }));
+        } else if (eventType === "customer.subscription.updated") {
+          if (!subscriptionId) return res.status(400).json({ error: "No existing subscription to update" });
+          const allPrices = await stripe.prices.list({ active: true, limit: 100 });
+          const targetPrice = allPrices.data.find(
+            (p) => (p.metadata as Record<string, string>)?.plan === plan
+          );
+          if (targetPrice && subscriptionId) {
+            const stripeSub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["items.data.price"] });
+            const existingItem = stripeSub.items.data[0];
+            if (existingItem.price.id !== targetPrice.id) {
+              await stripe.subscriptions.update(subscriptionId, {
+                items: [{ id: existingItem.id, price: targetPrice.id }],
+                metadata: { userId, plan },
+              });
+            }
+          }
+          const updatedStripeSub = await stripe.subscriptions.retrieve(subscriptionId!, {
+            expand: ["items.data.price.product"],
+          });
+          await dispatchStripeEvent(makeEvent("customer.subscription.updated", {
+            object: "subscription",
+            id: subscriptionId,
+            customer: customerId,
+            status: updatedStripeSub.status,
+            metadata: { userId, plan },
+            items: {
+              data: [{
+                price: {
+                  metadata: { plan },
+                  product: { name: plan === "pro" ? "Pro" : "Starter" },
+                },
+              }],
+            },
           }));
         } else {
           return res.status(400).json({ error: `Unsupported eventType: ${eventType}` });
