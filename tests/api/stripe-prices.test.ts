@@ -9,8 +9,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
-const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'missbethanieashton@gmail.com';
-const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD ?? 'test1233*';
+const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
+
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD environment variables are required to run these tests');
+}
 
 let adminCookie = '';
 
