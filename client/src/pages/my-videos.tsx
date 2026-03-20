@@ -73,10 +73,15 @@ export default function MyVideos() {
   const videoMutation = useMutation({
     mutationFn: async (data: {
       title: string; description?: string; videoUrl: string; brandIds: string[];
-    }) => apiRequest("POST", "/api/videos", data),
-    onSuccess: () => {
+    }) => {
+      const res = await apiRequest("POST", "/api/videos", data);
+      return res.json();
+    },
+    onSuccess: (newVideo: VideoType) => {
       queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
-      toast({ title: "Video Published!", description: "Your video is now being processed." });
+      toast({ title: "Video Uploaded!", description: "Your video is ready. Here's your embed code." });
+      setSelectedVideo(newVideo);
+      setEmbedModalOpen(true);
     },
     onError: () =>
       toast({ title: "Upload Failed", description: "There was an error uploading your video.", variant: "destructive" }),

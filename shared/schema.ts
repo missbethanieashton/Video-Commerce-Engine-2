@@ -246,6 +246,7 @@ export const videoCarouselOverrides = pgTable("video_carousel_overrides", {
   buttonFont: text("button_font"),
   buttonColor: text("button_color"),
   buttonTextColor: text("button_text_color"),
+  manualProducts: text("manual_products"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

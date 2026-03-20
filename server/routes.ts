@@ -87,15 +87,15 @@ export async function registerRoutes(
       if (!user) return res.status(401).json({ error: "Not authenticated" });
 
       const sub = await storage.getBrandSubscription(user.id);
-      const hasActiveSubscription = !!(sub && (sub.status === "active" || sub.status === "trialing"));
+      const hasActiveSubscription = user.isAdmin || !!(sub && (sub.status === "active" || sub.status === "trialing"));
       const videoCount = await storage.getVideoCountByUser(user.id);
 
       res.json({
         hasActiveSubscription,
         videoCount,
         isTrialExhausted: !hasActiveSubscription && videoCount >= 1,
-        trialVideosAllowed: 1,
-        trialMaxDurationSeconds: 120,
+        trialVideosAllowed: user.isAdmin ? 99999 : 1,
+        trialMaxDurationSeconds: user.isAdmin ? 99999 : 120,
       });
     } catch (e) {
       res.status(500).json({ error: "Failed to get trial status" });
@@ -323,7 +323,7 @@ export async function registerRoutes(
 
       // ─── Trial enforcement ─────────────────────────────────────────────────
       const sub = await storage.getBrandSubscription(user.id);
-      const hasActiveSubscription = sub && (sub.status === "active" || sub.status === "trialing");
+      const hasActiveSubscription = user.isAdmin || !!(sub && (sub.status === "active" || sub.status === "trialing"));
 
       if (!hasActiveSubscription) {
         const videoCount = await storage.getVideoCountByUser(user.id);
@@ -1291,11 +1291,42 @@ export async function registerRoutes(
 
   // ==================== CAROUSEL OVERRIDE ROUTES ====================
 
-  // Get carousel override for a video
+  // Get carousel override for a video (includes manual products mapped to DetectedProduct shape)
   app.get("/api/videos/:id/carousel", async (req, res) => {
     try {
       const override = await storage.getVideoCarouselOverride(req.params.id);
-      res.json(override || null);
+      if (!override) return res.json(null);
+
+      let rawProducts: any[] = [];
+      if (override.manualProducts) {
+        try { rawProducts = JSON.parse(override.manualProducts); } catch {}
+      }
+
+      const products = rawProducts.map((p: any) => ({
+        id: p.id,
+        productId: p.id,
+        confidence: 1.0,
+        startTime: p.startTime ?? 0,
+        endTime: p.endTime ?? 999999,
+        product: {
+          id: p.id,
+          name: p.name,
+          productUrl: p.buyUrl,
+          buyUrl: p.buyUrl,
+          price: p.price ?? null,
+          imageUrl: p.imageUrl ?? null,
+          brandId: null,
+          description: null,
+          sku: null,
+          category: null,
+          productType: null,
+          thumbnailType: null,
+          isActive: true,
+        },
+      }));
+
+      const { manualProducts: _, ...settings } = override;
+      res.json({ ...settings, products });
     } catch (error) {
       res.status(500).json({ error: "Failed to get carousel settings" });
     }
@@ -1304,20 +1335,73 @@ export async function registerRoutes(
   // Create or update carousel override for a video
   app.post("/api/videos/:id/carousel", async (req, res) => {
     try {
+      const { manualProducts, ...settings } = req.body;
+      const body: any = { ...settings };
+      if (manualProducts !== undefined) {
+        body.manualProducts = JSON.stringify(manualProducts);
+      }
       const existingOverride = await storage.getVideoCarouselOverride(req.params.id);
-      
       if (existingOverride) {
-        const updated = await storage.updateVideoCarouselOverride(req.params.id, req.body);
+        const updated = await storage.updateVideoCarouselOverride(req.params.id, body);
         return res.json(updated);
       }
-
       const newOverride = await storage.createVideoCarouselOverride({
         videoId: req.params.id,
-        ...req.body,
+        ...body,
       });
       res.status(201).json(newOverride);
     } catch (error) {
       res.status(500).json({ error: "Failed to save carousel settings" });
+    }
+  });
+
+  // Add a manual product URL to a video's carousel
+  app.post("/api/videos/:id/carousel/products", async (req, res) => {
+    try {
+      const { name, buyUrl, price, imageUrl, startTime, endTime } = req.body;
+      if (!name || !buyUrl) {
+        return res.status(400).json({ error: "name and buyUrl are required" });
+      }
+      const newProduct = {
+        id: Math.random().toString(36).slice(2),
+        name,
+        buyUrl,
+        price: price ?? null,
+        imageUrl: imageUrl ?? null,
+        startTime: startTime ?? 0,
+        endTime: endTime ?? 999999,
+      };
+      let override = await storage.getVideoCarouselOverride(req.params.id);
+      let existing: any[] = [];
+      if (override?.manualProducts) {
+        try { existing = JSON.parse(override.manualProducts); } catch {}
+      }
+      const updated = [...existing, newProduct];
+      if (override) {
+        await storage.updateVideoCarouselOverride(req.params.id, { manualProducts: JSON.stringify(updated) });
+      } else {
+        await storage.createVideoCarouselOverride({ videoId: req.params.id, manualProducts: JSON.stringify(updated) });
+      }
+      res.status(201).json(newProduct);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add product" });
+    }
+  });
+
+  // Remove a manual product from a video's carousel
+  app.delete("/api/videos/:id/carousel/products/:productId", async (req, res) => {
+    try {
+      const override = await storage.getVideoCarouselOverride(req.params.id);
+      if (!override) return res.status(404).json({ error: "No carousel found" });
+      let existing: any[] = [];
+      if (override.manualProducts) {
+        try { existing = JSON.parse(override.manualProducts); } catch {}
+      }
+      const filtered = existing.filter((p: any) => p.id !== req.params.productId);
+      await storage.updateVideoCarouselOverride(req.params.id, { manualProducts: JSON.stringify(filtered) });
+      res.json({ ok: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove product" });
     }
   });
 
