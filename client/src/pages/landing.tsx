@@ -1440,7 +1440,7 @@ export default function Landing() {
       <section className="relative w-full overflow-hidden" style={{ minHeight: "80vh" }}>
         <video
           ref={miroVideoRef}
-          src="/miro-misljen-dress.mp4"
+          src="/miro-misljen-dress.mp4?v=25s"
           autoPlay
           loop
           playsInline
