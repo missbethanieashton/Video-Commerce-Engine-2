@@ -76,7 +76,7 @@ export default function Register() {
                 name="accessCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Access Code <span className="text-muted-foreground font-normal text-xs">(optional — grants free access)</span></FormLabel>
+                    <FormLabel>Access Code <span className="text-muted-foreground font-normal text-xs">If you have an access code, enter it here</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}

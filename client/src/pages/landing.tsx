@@ -1201,7 +1201,7 @@ function SignupSection() {
                       name="accessCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white">Access Code <span className="text-white/50 font-normal text-xs">(optional — grants free access)</span></FormLabel>
+                          <FormLabel className="text-white">Access Code <span className="text-white/50 font-normal text-xs">If you have an access code, enter it here</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
