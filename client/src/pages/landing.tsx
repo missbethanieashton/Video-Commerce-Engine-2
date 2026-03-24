@@ -1267,7 +1267,7 @@ export default function Landing() {
         </motion.div>
 
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
-          <img src={materializedLogo} alt="Materialized" style={{ height: 28, width: "auto" }} />
+          <img src={materializedLogo} alt="Materialized" style={{ height: 140, width: "auto", filter: "invert(1)" }} />
           <div className="flex items-center gap-3">
             <Link href="/login">
               <Button
