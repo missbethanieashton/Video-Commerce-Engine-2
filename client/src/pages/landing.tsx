@@ -18,7 +18,7 @@ import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import celineBagImage from "@assets/celine_bag_1773420370038.png";
 import { COUNTRIES } from "@shared/schema";
-import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
+import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video, Volume2, VolumeX } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
@@ -1239,6 +1239,8 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
   const heroScale = useTransform(scrollY, [0, 400], [1, 1.1]);
   const [openFooterItem, setOpenFooterItem] = useState<string | null>(null);
+  const [miroMuted, setMiroMuted] = useState(true);
+  const miroVideoRef = useRef<HTMLVideoElement>(null);
 
   const scrollToSignup = () => {
     document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
@@ -1433,6 +1435,80 @@ export default function Landing() {
       <TestimonialCarousel />
       <VideoOfTheWeekSection />
       <SignupSection />
+
+      {/* Miro Misljen — full-width bottom-of-page video hero */}
+      <section className="relative w-full overflow-hidden" style={{ minHeight: "80vh" }}>
+        <video
+          ref={miroVideoRef}
+          src="/miro-misljen-dress.mov"
+          autoPlay
+          loop
+          playsInline
+          muted={miroMuted}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ minHeight: "100%" }}
+          data-testid="video-miro-misljen"
+        />
+        {/* dark overlay for legibility */}
+        <div className="absolute inset-0 bg-black/30" />
+
+        {/* audio toggle — top-left */}
+        <button
+          onClick={() => {
+            const v = miroVideoRef.current;
+            if (!v) return;
+            const next = !miroMuted;
+            v.muted = next;
+            setMiroMuted(next);
+          }}
+          className="absolute top-5 left-5 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2.5 transition-colors backdrop-blur-sm"
+          data-testid="button-miro-audio-toggle"
+          title={miroMuted ? "Enable audio" : "Mute"}
+        >
+          {miroMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        </button>
+
+        {/* floating product card — bottom-right, same style as hero Celine card */}
+        <div className="absolute bottom-10 right-6 md:right-14 z-30">
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <a
+              href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block no-underline"
+              style={{ width: "clamp(148px, 18vw, 196px)" }}
+              data-testid="link-miro-product-card"
+            >
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{
+                  background: "rgba(0,0,0,0.52)",
+                  backdropFilter: "blur(14px)",
+                  border: "1px solid rgba(255,255,255,0.13)",
+                  boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                }}
+              >
+                <div className="p-3 space-y-2.5">
+                  <div className="space-y-0.5">
+                    <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
+                    <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
+                    <div className="text-white font-bold text-base leading-tight">€1,129</div>
+                  </div>
+                  <div
+                    className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                    style={{ background: "rgba(255,255,255,0.92)" }}
+                  >
+                    BUY NOW
+                  </div>
+                </div>
+              </div>
+            </a>
+          </motion.div>
+        </div>
+      </section>
 
       <footer className="py-12 px-4 bg-[#202120] border-t border-white/10">
         <div className="max-w-6xl mx-auto">
