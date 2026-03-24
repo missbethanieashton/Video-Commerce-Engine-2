@@ -22,6 +22,7 @@ import Stripe from 'stripe';
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
+const ACCESS_CODE = process.env.ACCESS_CODE ?? 'exclusiveaccess1233*';
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
@@ -330,7 +331,7 @@ describe('Signed Webhook Endpoint — Brand: customer.subscription.updated via r
         displayName: 'Brand Signed Test',
         role: 'brand',
         username: `brand_signed_${timestamp}`,
-        accessCode: 'exclusiveaccess1233*',
+        accessCode: ACCESS_CODE,
       }),
     });
     expect(regRes.status, 'brand registration').toBe(201);

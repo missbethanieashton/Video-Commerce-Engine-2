@@ -5,9 +5,10 @@ const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5000';
 // Admin credentials — set TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD env vars before running
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
+const ACCESS_CODE = process.env.ACCESS_CODE;
 
-if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD environment variables are required. Set them before running E2E tests.');
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !ACCESS_CODE) {
+  throw new Error('TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, and ACCESS_CODE environment variables are required. Set them before running E2E tests.');
 }
 
 // Brand-specific test credentials — registered once per test run via API
@@ -25,7 +26,7 @@ async function registerBrandUser() {
       password: BRAND_PASSWORD,
       displayName: 'Brand E2E Test',
       role: 'brand',
-      accessCode: 'exclusiveaccess1233*',
+      accessCode: ACCESS_CODE,
     }),
   });
   if (res.ok) {

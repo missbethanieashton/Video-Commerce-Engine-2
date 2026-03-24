@@ -17,6 +17,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
+const ACCESS_CODE = process.env.ACCESS_CODE ?? 'exclusiveaccess1233*';
 
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
   throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD environment variables are required to run these tests');
@@ -175,7 +176,7 @@ describe('Webhook Integration — Brand checkout.session.completed → DB state'
     const regRes = await fetch(`${BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: 'BrandTest123!', displayName: 'Brand WH Test', role: 'brand', accessCode: 'exclusiveaccess1233*' }),
+      body: JSON.stringify({ email, password: 'BrandTest123!', displayName: 'Brand WH Test', role: 'brand', accessCode: ACCESS_CODE }),
     });
 
     if (regRes.status === 201 || regRes.status === 200) {

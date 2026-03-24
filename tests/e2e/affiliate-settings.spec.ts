@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5000';
+const ACCESS_CODE = process.env.ACCESS_CODE;
+
+if (!ACCESS_CODE) {
+  throw new Error('ACCESS_CODE environment variable is required');
+}
 
 // Affiliate-specific test credentials — registered once per test run via API
 const AFFILIATE_EMAIL = `affiliate-e2e-${Date.now()}@example.com`;
@@ -17,7 +22,7 @@ async function registerAffiliateUser() {
       password: AFFILIATE_PASSWORD,
       displayName: 'Affiliate E2E Test',
       role: 'affiliate',
-      accessCode: 'exclusiveaccess1233*',
+      accessCode: ACCESS_CODE,
     }),
   });
   if (res.ok) {
