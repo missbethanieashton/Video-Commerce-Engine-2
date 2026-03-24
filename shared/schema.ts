@@ -281,6 +281,23 @@ export const videoDetectionResults = pgTable("video_detection_results", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Video Product Overlays - per-product timing and position for the video player
+export const videoProductOverlays = pgTable("video_product_overlays", {
+  id: serial("id").primaryKey(),
+  videoId: varchar("video_id").notNull().references(() => videos.id, { onDelete: "cascade" }),
+  productId: varchar("product_id").references(() => products.id),
+  name: text("name").notNull(),
+  productUrl: text("product_url"),
+  imageUrl: text("image_url"),
+  price: text("price"),
+  brandName: text("brand_name"),
+  position: carouselPositionEnum("position").notNull().default("bottom"),
+  startTime: decimal("start_time", { precision: 10, scale: 2 }).notNull().default("0"),
+  endTime: decimal("end_time", { precision: 10, scale: 2 }),
+  source: text("source").notNull().default("manual"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Creator Invitations - brand invitations to influencer affiliates
 export const creatorInvitations = pgTable("creator_invitations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -569,6 +586,7 @@ export const insertBrandKitSchema = createInsertSchema(brandKits).omit({ id: tru
 export const insertVideoCarouselOverrideSchema = createInsertSchema(videoCarouselOverrides).omit({ id: true, createdAt: true });
 export const insertVideoDetectionJobSchema = createInsertSchema(videoDetectionJobs).omit({ id: true, status: true, totalFrames: true, processedFrames: true, error: true, startedAt: true, completedAt: true, createdAt: true });
 export const insertVideoDetectionResultSchema = createInsertSchema(videoDetectionResults).omit({ id: true, createdAt: true });
+export const insertVideoProductOverlaySchema = createInsertSchema(videoProductOverlays).omit({ id: true, createdAt: true });
 export const insertCreatorInvitationSchema = createInsertSchema(creatorInvitations).omit({ id: true, status: true, invitedAt: true });
 export const insertAffiliateInvitationSchema = createInsertSchema(affiliateInvitations).omit({ id: true, status: true, inviteToken: true, acceptedByUserId: true, createdAt: true });
 export const insertCampaignAffiliateSchema = createInsertSchema(campaignAffiliates).omit({ id: true, utmCode: true, embedCode: true, totalClicks: true, totalConversions: true, totalRevenue: true, totalEarnings: true, notifiedAt: true, createdAt: true });
@@ -609,6 +627,8 @@ export type InsertVideoDetectionJob = z.infer<typeof insertVideoDetectionJobSche
 export type VideoDetectionJob = typeof videoDetectionJobs.$inferSelect;
 export type InsertVideoDetectionResult = z.infer<typeof insertVideoDetectionResultSchema>;
 export type VideoDetectionResult = typeof videoDetectionResults.$inferSelect;
+export type InsertVideoProductOverlay = z.infer<typeof insertVideoProductOverlaySchema>;
+export type VideoProductOverlay = typeof videoProductOverlays.$inferSelect;
 export type InsertCreatorInvitation = z.infer<typeof insertCreatorInvitationSchema>;
 export type CreatorInvitation = typeof creatorInvitations.$inferSelect;
 export type InsertAffiliateInvitation = z.infer<typeof insertAffiliateInvitationSchema>;

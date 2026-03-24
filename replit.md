@@ -38,6 +38,7 @@ Preferred communication style: Simple, everyday language.
 - **Global Video Library**: Creators pay €45 to list videos; affiliates pay €45 to license
 - **Video Publishing**: Generate embeddable widget code with UTM tracking
 - **Stripe Integration**: Connect accounts for affiliate payouts, payment intents for licensing
+- **Video Product Overlays**: Per-video timeline overlays table (`video_product_overlays`) with position, startTime/endTime; CRUD API at `/api/videos/:id/overlays`; VideoDetailSheet "Timeline Overlays" section; VideoPlayerWithCarousel renders one carousel per position group simultaneously filtered by current playback time; AI import endpoint converts detection results to overlays
 
 ### Payment Flow
 - **Stripe Connect**: Affiliates onboard to receive payouts directly

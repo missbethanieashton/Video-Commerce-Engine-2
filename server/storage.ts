@@ -16,6 +16,7 @@ import {
   type VideoCarouselOverride, type InsertVideoCarouselOverride,
   type VideoDetectionJob, type InsertVideoDetectionJob,
   type VideoDetectionResult, type InsertVideoDetectionResult,
+  type VideoProductOverlay, type InsertVideoProductOverlay,
   type CreatorInvitation, type InsertCreatorInvitation,
   type AffiliateInvitation, type InsertAffiliateInvitation,
   type CampaignAffiliate, type InsertCampaignAffiliate,
@@ -49,6 +50,7 @@ import {
   videoCarouselOverrides,
   videoDetectionJobs,
   videoDetectionResults,
+  videoProductOverlays,
   creatorInvitations,
   affiliateInvitations,
   campaignAffiliates,
@@ -181,6 +183,12 @@ export interface IStorage {
   getDetectionResultsByVideo(videoId: string): Promise<VideoDetectionResult[]>;
   createDetectionResult(result: InsertVideoDetectionResult): Promise<VideoDetectionResult>;
   
+  // Video Product Overlays
+  getVideoProductOverlays(videoId: string): Promise<VideoProductOverlay[]>;
+  createVideoProductOverlay(overlay: InsertVideoProductOverlay): Promise<VideoProductOverlay>;
+  updateVideoProductOverlay(id: number, data: Partial<InsertVideoProductOverlay>): Promise<VideoProductOverlay | undefined>;
+  deleteVideoProductOverlay(id: number): Promise<void>;
+
   // Creator Invitations
   getCreatorInvitations(brandId: string): Promise<CreatorInvitation[]>;
   createCreatorInvitation(invitation: InsertCreatorInvitation): Promise<CreatorInvitation>;
@@ -314,6 +322,8 @@ export class MemStorage implements IStorage {
   private videoCarouselOverrides: Map<string, VideoCarouselOverride> = new Map();
   private detectionJobs: Map<string, VideoDetectionJob> = new Map();
   private detectionResults: Map<string, VideoDetectionResult> = new Map();
+  private videoProductOverlaysMap: Map<number, VideoProductOverlay> = new Map();
+  private overlayIdSeq = 0;
   private creatorInvitations: Map<string, CreatorInvitation> = new Map();
   private affiliateInvitations: Map<string, AffiliateInvitation> = new Map();
   private campaignAffiliates: Map<string, CampaignAffiliate> = new Map();
@@ -993,6 +1003,29 @@ export class MemStorage implements IStorage {
     };
     this.detectionResults.set(id, newResult);
     return newResult;
+  }
+
+  // Video Product Overlays
+  async getVideoProductOverlays(videoId: string): Promise<VideoProductOverlay[]> {
+    return Array.from(this.videoProductOverlaysMap.values())
+      .filter((o) => o.videoId === videoId)
+      .sort((a, b) => (a.id as number) - (b.id as number));
+  }
+  async createVideoProductOverlay(overlay: InsertVideoProductOverlay): Promise<VideoProductOverlay> {
+    const id = ++this.overlayIdSeq;
+    const created: VideoProductOverlay = { ...overlay, id, productId: overlay.productId ?? null, productUrl: overlay.productUrl ?? null, imageUrl: overlay.imageUrl ?? null, price: overlay.price ?? null, brandName: overlay.brandName ?? null, endTime: overlay.endTime ?? null, createdAt: new Date() };
+    this.videoProductOverlaysMap.set(id, created);
+    return created;
+  }
+  async updateVideoProductOverlay(id: number, data: Partial<InsertVideoProductOverlay>): Promise<VideoProductOverlay | undefined> {
+    const existing = this.videoProductOverlaysMap.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...data };
+    this.videoProductOverlaysMap.set(id, updated);
+    return updated;
+  }
+  async deleteVideoProductOverlay(id: number): Promise<void> {
+    this.videoProductOverlaysMap.delete(id);
   }
 
   // Creator Invitations
@@ -1972,6 +2005,22 @@ export class DatabaseStorage implements IStorage {
   async createDetectionResult(result: InsertVideoDetectionResult): Promise<VideoDetectionResult> {
     const [newResult] = await db.insert(videoDetectionResults).values(result).returning();
     return newResult;
+  }
+
+  // Video Product Overlays
+  async getVideoProductOverlays(videoId: string): Promise<VideoProductOverlay[]> {
+    return db.select().from(videoProductOverlays).where(eq(videoProductOverlays.videoId, videoId)).orderBy(videoProductOverlays.id);
+  }
+  async createVideoProductOverlay(overlay: InsertVideoProductOverlay): Promise<VideoProductOverlay> {
+    const [created] = await db.insert(videoProductOverlays).values(overlay).returning();
+    return created;
+  }
+  async updateVideoProductOverlay(id: number, data: Partial<InsertVideoProductOverlay>): Promise<VideoProductOverlay | undefined> {
+    const [updated] = await db.update(videoProductOverlays).set(data).where(eq(videoProductOverlays.id, id)).returning();
+    return updated;
+  }
+  async deleteVideoProductOverlay(id: number): Promise<void> {
+    await db.delete(videoProductOverlays).where(eq(videoProductOverlays.id, id));
   }
 
   // Creator Invitations

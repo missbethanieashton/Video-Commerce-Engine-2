@@ -1697,6 +1697,104 @@ Identify which products from the catalog are most likely to appear or be feature
     }
   });
 
+  // ==================== VIDEO PRODUCT OVERLAYS ====================
+
+  app.get("/api/videos/:id/overlays", async (req, res) => {
+    try {
+      const overlays = await storage.getVideoProductOverlays(req.params.id);
+      res.json(overlays);
+    } catch {
+      res.status(500).json({ error: "Failed to get overlays" });
+    }
+  });
+
+  app.post("/api/videos/:id/overlays", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    try {
+      const { name, productUrl, imageUrl, price, brandName, position, startTime, endTime, source, productId } = req.body;
+      if (!name) return res.status(400).json({ error: "name is required" });
+      const overlay = await storage.createVideoProductOverlay({
+        videoId: req.params.id,
+        productId: productId ?? null,
+        name,
+        productUrl: productUrl ?? null,
+        imageUrl: imageUrl ?? null,
+        price: price ?? null,
+        brandName: brandName ?? null,
+        position: position ?? "bottom",
+        startTime: String(startTime ?? "0"),
+        endTime: endTime != null ? String(endTime) : null,
+        source: source ?? "manual",
+      });
+      res.status(201).json(overlay);
+    } catch {
+      res.status(500).json({ error: "Failed to create overlay" });
+    }
+  });
+
+  app.patch("/api/videos/:id/overlays/:overlayId", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    try {
+      const id = parseInt(req.params.overlayId, 10);
+      const { position, startTime, endTime, name, productUrl, imageUrl, price, brandName } = req.body;
+      const update: Record<string, unknown> = {};
+      if (position !== undefined) update.position = position;
+      if (startTime !== undefined) update.startTime = String(startTime);
+      if (endTime !== undefined) update.endTime = endTime != null ? String(endTime) : null;
+      if (name !== undefined) update.name = name;
+      if (productUrl !== undefined) update.productUrl = productUrl;
+      if (imageUrl !== undefined) update.imageUrl = imageUrl;
+      if (price !== undefined) update.price = price;
+      if (brandName !== undefined) update.brandName = brandName;
+      const updated = await storage.updateVideoProductOverlay(id, update as any);
+      if (!updated) return res.status(404).json({ error: "Overlay not found" });
+      res.json(updated);
+    } catch {
+      res.status(500).json({ error: "Failed to update overlay" });
+    }
+  });
+
+  app.delete("/api/videos/:id/overlays/:overlayId", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    try {
+      const id = parseInt(req.params.overlayId, 10);
+      await storage.deleteVideoProductOverlay(id);
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ error: "Failed to delete overlay" });
+    }
+  });
+
+  // Import AI-detected products as overlays for a video
+  app.post("/api/videos/:id/overlays/import-detections", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    try {
+      const results = await storage.getDetectionResultsByVideo(req.params.id);
+      const created = [];
+      for (const r of results) {
+        const product = r.productId ? await storage.getProduct(r.productId) : null;
+        const brand = product?.brandId ? await storage.getBrand(product.brandId) : null;
+        const overlay = await storage.createVideoProductOverlay({
+          videoId: req.params.id,
+          productId: r.productId,
+          name: product?.name ?? "Detected Product",
+          productUrl: product?.productUrl ?? null,
+          imageUrl: product?.imageUrl ?? null,
+          price: product?.price ?? null,
+          brandName: brand?.name ?? null,
+          position: (req.body.position ?? "bottom") as any,
+          startTime: r.startTime ?? "0",
+          endTime: r.endTime ?? null,
+          source: "ai",
+        });
+        created.push(overlay);
+      }
+      res.json(created);
+    } catch {
+      res.status(500).json({ error: "Failed to import detections" });
+    }
+  });
+
   // ==================== VIDEO PUBLISH ROUTES ====================
 
   // Publish a video and generate embed code

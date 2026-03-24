@@ -17,7 +17,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { VideoProductCarousel, type CarouselConfig, type DetectedProduct } from "./VideoProductCarousel";
-import type { Video, VideoDetectionJob, VideoCarouselOverride, BrandKit } from "@shared/schema";
+import type { Video, VideoDetectionJob, VideoCarouselOverride, BrandKit, VideoProductOverlay } from "@shared/schema";
 
 interface VideoPlayerWithCarouselProps {
   video: Video;
@@ -141,6 +141,11 @@ export function VideoPlayerWithCarousel({
     queryKey: ["/api/brand-kit"],
   });
 
+  const { data: overlays = [] } = useQuery<VideoProductOverlay[]>({
+    queryKey: ["/api/videos", video.id, "overlays"],
+    enabled: !!video.id,
+  });
+
   const { data: detectionStatus, isLoading: isLoadingDetection } = useQuery<DetectionStatus>({
     queryKey: ["/api/videos", video.id, "detections"],
     enabled: !!video.id,
@@ -231,6 +236,32 @@ export function VideoPlayerWithCarousel({
   const products = carouselData?.products || detectionStatus?.results || [];
   const config = mergeCarouselConfig(defaultCarouselConfig, brandKit, carouselData?.override);
 
+  // Group overlays by position for multi-carousel rendering
+  function overlayToDetectedProduct(o: VideoProductOverlay): DetectedProduct {
+    return {
+      id: String(o.id),
+      productId: o.productId ?? String(o.id),
+      product: {
+        id: o.productId ?? String(o.id),
+        name: o.name,
+        productUrl: o.productUrl,
+        imageUrl: o.imageUrl,
+        price: o.price,
+      } as any,
+      brand: o.brandName ? ({ name: o.brandName } as any) : undefined,
+      confidence: 1,
+      startTime: parseFloat(o.startTime ?? "0"),
+      endTime: o.endTime != null ? parseFloat(o.endTime) : 999999,
+    };
+  }
+
+  const overlaysByPosition = overlays.reduce<Record<string, VideoProductOverlay[]>>((acc, o) => {
+    const pos = o.position ?? "bottom";
+    if (!acc[pos]) acc[pos] = [];
+    acc[pos].push(o);
+    return acc;
+  }, {});
+
   const getDetectionStatusBadge = () => {
     if (!detectionStatus?.job) return null;
 
@@ -307,7 +338,7 @@ export function VideoPlayerWithCarousel({
             data-testid="video-player"
           />
 
-          {products.length > 0 && (
+          {products.length > 0 && overlays.length === 0 && (
             <VideoProductCarousel
               products={products}
               config={config}
@@ -315,6 +346,16 @@ export function VideoPlayerWithCarousel({
               utmCode={video.utmCode || undefined}
             />
           )}
+
+          {Object.entries(overlaysByPosition).map(([pos, posOverlays]) => (
+            <VideoProductCarousel
+              key={pos}
+              products={posOverlays.map(overlayToDetectedProduct)}
+              config={{ ...defaultCarouselConfig, position: pos as any }}
+              currentTime={currentTime}
+              utmCode={video.utmCode || undefined}
+            />
+          ))}
 
           <div
             className={`absolute top-4 right-4 z-40 transition-opacity duration-300 ${
