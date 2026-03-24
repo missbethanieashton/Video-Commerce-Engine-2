@@ -17,7 +17,7 @@ import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
 import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import celineBagImage from "@assets/celine_bag_1773420370038.png";
-import { COUNTRIES, insertSubscriberIntakeSchema } from "@shared/schema";
+import { COUNTRIES } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video } from "lucide-react";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
@@ -27,7 +27,16 @@ import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
 
 const streetStyleVideo = "/street-style-ss26.mp4";
 
-const formSchema = insertSubscriberIntakeSchema.extend({
+const formSchema = z.object({
+  role: z.enum(["creator", "brand", "publisher"]),
+  firstName: z.string().min(1, "First name is required"),
+  surname: z.string().min(1, "Surname is required"),
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  instagramHandle: z.string().optional(),
+  tiktokHandle: z.string().optional(),
+  country: z.string().optional(),
+  city: z.string().optional(),
   accessCode: z.string().min(1, "Access code is required"),
 });
 type FormData = z.infer<typeof formSchema>;
@@ -921,6 +930,7 @@ function SignupSection() {
       firstName: "",
       surname: "",
       email: "",
+      password: "",
       instagramHandle: "",
       tiktokHandle: "",
       country: "",
@@ -931,7 +941,14 @@ function SignupSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/subscriber-intake", data);
+      const backendRole = data.role === "publisher" ? "affiliate" : data.role;
+      const response = await apiRequest("POST", "/api/auth/register", {
+        email: data.email,
+        password: data.password,
+        displayName: `${data.firstName} ${data.surname}`.trim(),
+        role: backendRole,
+        accessCode: data.accessCode,
+      });
       return response.json();
     },
     onSuccess: (_data, variables) => {
@@ -948,11 +965,13 @@ function SignupSection() {
         form.setError("accessCode", { message: "Invalid access code. Please try again." });
         return;
       }
+      if (error.message.includes("409")) {
+        form.setError("email", { message: "This email is already registered." });
+        return;
+      }
       toast({
         title: "Something went wrong",
-        description: error.message.includes("409") 
-          ? "This email is already registered." 
-          : "Please try again later.",
+        description: "Please try again later.",
         variant: "destructive",
       });
     },
@@ -1059,6 +1078,25 @@ function SignupSection() {
                         )}
                       />
                     </div>
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="password"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                              placeholder="Min. 6 characters"
+                              data-testid="input-password"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="email"
