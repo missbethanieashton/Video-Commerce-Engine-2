@@ -17,6 +17,7 @@ async function registerAffiliateUser() {
       password: AFFILIATE_PASSWORD,
       displayName: 'Affiliate E2E Test',
       role: 'affiliate',
+      accessCode: 'exclusiveaccess1233*',
     }),
   });
   if (res.ok) {

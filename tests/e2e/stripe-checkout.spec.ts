@@ -341,6 +341,7 @@ test.describe('Real Stripe Checkout E2E — Brand checkout', () => {
         displayName: 'Brand Checkout E2E',
         role: 'brand',
         username: `brand_checkout_${Date.now()}`,
+        accessCode: 'exclusiveaccess1233*',
       }),
     });
     expect(res.ok || res.status === 409, `brand registration status ${res.status}`).toBeTruthy();

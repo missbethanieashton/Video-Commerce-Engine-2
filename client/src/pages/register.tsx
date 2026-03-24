@@ -19,6 +19,7 @@ const schema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().min(1, "Display name is required"),
   role: z.enum(["creator", "brand", "affiliate"]),
+  accessCode: z.string().min(1, "Access code is required"),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -36,7 +37,7 @@ export default function Register() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", displayName: "", role: "creator" },
+    defaultValues: { email: "", password: "", displayName: "", role: "creator", accessCode: "" },
   });
 
   const registerMutation = useMutation({
@@ -70,6 +71,24 @@ export default function Register() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit((d) => registerMutation.mutate(d))} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="accessCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Access Code</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Enter your access code"
+                        data-testid="input-register-accessCode"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="displayName"

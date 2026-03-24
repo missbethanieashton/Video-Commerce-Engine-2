@@ -13,6 +13,7 @@ const registerSchema = z.object({
   password: z.string().min(6),
   displayName: z.string().min(1),
   role: z.enum(["creator", "brand", "affiliate"]).default("creator"),
+  accessCode: z.string().optional(),
 });
 
 export function registerAuthRoutes(app: Express) {
@@ -65,7 +66,12 @@ export function registerAuthRoutes(app: Express) {
       return res.status(400).json({ error: parsed.error.errors[0]?.message ?? "Invalid input" });
     }
 
-    const { email, password, displayName, role } = parsed.data;
+    const { email, password, displayName, role, accessCode } = parsed.data;
+
+    const validCode = process.env.ACCESS_CODE ?? "exclusiveaccess1233*";
+    if (!accessCode || accessCode.trim() !== validCode) {
+      return res.status(403).json({ error: "Invalid access code. Please enter the correct code to create an account." });
+    }
 
     const existing = await storage.getUserByEmail(email);
     if (existing) {

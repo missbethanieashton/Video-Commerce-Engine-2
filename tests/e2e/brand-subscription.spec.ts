@@ -25,6 +25,7 @@ async function registerBrandUser() {
       password: BRAND_PASSWORD,
       displayName: 'Brand E2E Test',
       role: 'brand',
+      accessCode: 'exclusiveaccess1233*',
     }),
   });
   if (res.ok) {

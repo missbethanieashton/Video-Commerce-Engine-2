@@ -175,7 +175,7 @@ describe('Webhook Integration — Brand checkout.session.completed → DB state'
     const regRes = await fetch(`${BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: 'BrandTest123!', displayName: 'Brand WH Test', role: 'brand' }),
+      body: JSON.stringify({ email, password: 'BrandTest123!', displayName: 'Brand WH Test', role: 'brand', accessCode: 'exclusiveaccess1233*' }),
     });
 
     if (regRes.status === 201 || regRes.status === 200) {

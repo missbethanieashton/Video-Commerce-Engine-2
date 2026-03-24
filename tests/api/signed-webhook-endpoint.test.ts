@@ -330,6 +330,7 @@ describe('Signed Webhook Endpoint — Brand: customer.subscription.updated via r
         displayName: 'Brand Signed Test',
         role: 'brand',
         username: `brand_signed_${timestamp}`,
+        accessCode: 'exclusiveaccess1233*',
       }),
     });
     expect(regRes.status, 'brand registration').toBe(201);

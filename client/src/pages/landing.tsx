@@ -27,7 +27,9 @@ import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
 
 const streetStyleVideo = "/street-style-ss26.mp4";
 
-const formSchema = insertSubscriberIntakeSchema;
+const formSchema = insertSubscriberIntakeSchema.extend({
+  accessCode: z.string().min(1, "Access code is required"),
+});
 type FormData = z.infer<typeof formSchema>;
 
 const contactSchema = z.object({
@@ -923,12 +925,14 @@ function SignupSection() {
       tiktokHandle: "",
       country: "",
       city: "",
+      accessCode: "",
     },
   });
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/subscriber-intake", data);
+      const { accessCode, ...intakeData } = data;
+      const response = await apiRequest("POST", "/api/subscriber-intake", intakeData);
       return response.json();
     },
     onSuccess: (_data, variables) => {
@@ -956,7 +960,13 @@ function SignupSection() {
     form.setValue("role", role);
   };
 
+  const VALID_ACCESS_CODE = "exclusiveaccess1233*";
+
   const onSubmit = (data: FormData) => {
+    if (data.accessCode.trim() !== VALID_ACCESS_CODE) {
+      form.setError("accessCode", { message: "Invalid access code. Please try again." });
+      return;
+    }
     mutation.mutate(data);
   };
 
@@ -1155,6 +1165,24 @@ function SignupSection() {
                         )}
                       />
                     </div>
+                    <FormField
+                      control={form.control}
+                      name="accessCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Access Code</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                              placeholder="Enter your access code"
+                              data-testid="input-access-code"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <Button
                       type="submit"
                       disabled={mutation.isPending}
