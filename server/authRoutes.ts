@@ -69,9 +69,7 @@ export function registerAuthRoutes(app: Express) {
     const { email, password, displayName, role, accessCode } = parsed.data;
 
     const validCode = process.env.ACCESS_CODE ?? "exclusiveaccess1233*";
-    if (!accessCode || accessCode.trim() !== validCode) {
-      return res.status(403).json({ error: "Invalid access code. Please enter the correct code to create an account." });
-    }
+    const hasFreeAccess = !!(accessCode && accessCode.trim() === validCode);
 
     const existing = await storage.getUserByEmail(email);
     if (existing) {
@@ -87,7 +85,8 @@ export function registerAuthRoutes(app: Express) {
       email,
       displayName,
       role,
-    });
+      freeAccess: hasFreeAccess,
+    } as any);
 
     (req.session as any).userId = user.id;
     await new Promise<void>((resolve, reject) =>

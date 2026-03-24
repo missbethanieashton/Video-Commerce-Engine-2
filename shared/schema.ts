@@ -65,6 +65,7 @@ export const users = pgTable("users", {
   stripeConnectAccountId: text("stripe_connect_account_id"),
   stripeConnectOnboarded: boolean("stripe_connect_onboarded").default(false),
   isAdmin: boolean("is_admin").default(false),
+  freeAccess: boolean("free_access").default(false),
 });
 
 // Brands table

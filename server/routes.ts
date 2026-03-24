@@ -87,7 +87,7 @@ export async function registerRoutes(
       if (!user) return res.status(401).json({ error: "Not authenticated" });
 
       const sub = await storage.getBrandSubscription(user.id);
-      const hasActiveSubscription = user.isAdmin || !!(sub && (sub.status === "active" || sub.status === "trialing"));
+      const hasActiveSubscription = user.isAdmin || !!user.freeAccess || !!(sub && (sub.status === "active" || sub.status === "trialing"));
       const videoCount = await storage.getVideoCountByUser(user.id);
 
       res.json({
@@ -323,7 +323,7 @@ export async function registerRoutes(
 
       // ─── Trial enforcement ─────────────────────────────────────────────────
       const sub = await storage.getBrandSubscription(user.id);
-      const hasActiveSubscription = user.isAdmin || !!(sub && (sub.status === "active" || sub.status === "trialing"));
+      const hasActiveSubscription = user.isAdmin || !!user.freeAccess || !!(sub && (sub.status === "active" || sub.status === "trialing"));
 
       if (!hasActiveSubscription) {
         const videoCount = await storage.getVideoCountByUser(user.id);

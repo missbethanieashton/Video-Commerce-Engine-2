@@ -37,7 +37,7 @@ const formSchema = z.object({
   tiktokHandle: z.string().optional(),
   country: z.string().optional(),
   city: z.string().optional(),
-  accessCode: z.string().min(1, "Access code is required"),
+  accessCode: z.string().optional(),
 });
 type FormData = z.infer<typeof formSchema>;
 
@@ -961,10 +961,6 @@ function SignupSection() {
       setLocation(destination);
     },
     onError: (error: Error) => {
-      if (error.message.includes("403")) {
-        form.setError("accessCode", { message: "Invalid access code. Please try again." });
-        return;
-      }
       if (error.message.includes("409")) {
         form.setError("email", { message: "This email is already registered." });
         return;
@@ -1205,12 +1201,12 @@ function SignupSection() {
                       name="accessCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white">Access Code</FormLabel>
+                          <FormLabel className="text-white">Access Code <span className="text-white/50 font-normal text-xs">(optional — grants free access)</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                              placeholder="Enter your access code"
+                              placeholder="Have a code? Enter it for free access"
                               data-testid="input-access-code"
                             />
                           </FormControl>

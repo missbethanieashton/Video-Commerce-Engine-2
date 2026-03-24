@@ -19,7 +19,7 @@ const schema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().min(1, "Display name is required"),
   role: z.enum(["creator", "brand", "affiliate"]),
-  accessCode: z.string().min(1, "Access code is required"),
+  accessCode: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -76,11 +76,11 @@ export default function Register() {
                 name="accessCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Access Code</FormLabel>
+                    <FormLabel>Access Code <span className="text-muted-foreground font-normal text-xs">(optional — grants free access)</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="Enter your access code"
+                        placeholder="Have a code? Enter it for free access"
                         data-testid="input-register-accessCode"
                       />
                     </FormControl>
