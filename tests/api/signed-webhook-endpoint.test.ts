@@ -22,11 +22,11 @@ import Stripe from 'stripe';
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
-const ACCESS_CODE = process.env.ACCESS_CODE ?? 'exclusiveaccess1233*';
+const ACCESS_CODE = process.env.ACCESS_CODE;
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
-if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD environment variables are required');
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !ACCESS_CODE) {
+  throw new Error('TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, and ACCESS_CODE environment variables are required');
 }
 
 if (!WEBHOOK_SECRET) {

@@ -17,10 +17,10 @@ import { describe, it, expect, beforeAll } from 'vitest';
 const BASE = process.env.API_BASE_URL ?? 'http://localhost:5000';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
-const ACCESS_CODE = process.env.ACCESS_CODE ?? 'exclusiveaccess1233*';
+const ACCESS_CODE = process.env.ACCESS_CODE;
 
-if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD environment variables are required to run these tests');
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !ACCESS_CODE) {
+  throw new Error('TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, and ACCESS_CODE environment variables are required to run these tests');
 }
 
 async function loginAsAdmin(): Promise<{ userId: string; cookie: string }> {

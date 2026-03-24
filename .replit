@@ -49,6 +49,7 @@ timeoutMs = 20000
 
 [userenv.shared]
 ADMIN_BOOTSTRAP_SECRET = "mat-admin-2026"
+ACCESS_CODE = "exclusiveaccess1233*"
 
 [userenv.development]
 TEST_ADMIN_EMAIL = "missbethanieashton@gmail.com"
