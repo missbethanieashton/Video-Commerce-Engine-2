@@ -1032,6 +1032,12 @@ export async function registerRoutes(
   // Create subscriber intake (landing page signup)
   app.post("/api/subscriber-intake", async (req, res) => {
     try {
+      const validAccessCode = process.env.ACCESS_CODE ?? "exclusiveaccess1233*";
+      const submittedCode = (req.body.accessCode ?? "").trim();
+      if (submittedCode !== validAccessCode) {
+        return res.status(403).json({ error: "Invalid access code" });
+      }
+
       const data = insertSubscriberIntakeSchema.parse(req.body);
       
       // Check if email already exists

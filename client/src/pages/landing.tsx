@@ -931,8 +931,7 @@ function SignupSection() {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const { accessCode, ...intakeData } = data;
-      const response = await apiRequest("POST", "/api/subscriber-intake", intakeData);
+      const response = await apiRequest("POST", "/api/subscriber-intake", data);
       return response.json();
     },
     onSuccess: (_data, variables) => {
@@ -945,6 +944,10 @@ function SignupSection() {
       setLocation(destination);
     },
     onError: (error: Error) => {
+      if (error.message.includes("403")) {
+        form.setError("accessCode", { message: "Invalid access code. Please try again." });
+        return;
+      }
       toast({
         title: "Something went wrong",
         description: error.message.includes("409") 
@@ -960,13 +963,7 @@ function SignupSection() {
     form.setValue("role", role);
   };
 
-  const VALID_ACCESS_CODE = "exclusiveaccess1233*";
-
   const onSubmit = (data: FormData) => {
-    if (data.accessCode.trim() !== VALID_ACCESS_CODE) {
-      form.setError("accessCode", { message: "Invalid access code. Please try again." });
-      return;
-    }
     mutation.mutate(data);
   };
 
