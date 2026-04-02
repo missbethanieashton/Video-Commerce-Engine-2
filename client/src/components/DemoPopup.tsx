@@ -145,7 +145,7 @@ export function DemoPopup({ open, onClose }: Props) {
             <div
               className="flex items-center justify-between px-5 py-3"
               style={{
-                background: "linear-gradient(135deg, #3D0610 0%, #1A0208 100%)",
+                background: "#470606",
                 borderBottom: "1px solid rgba(212,33,74,0.25)",
               }}
             >
@@ -228,7 +228,7 @@ export function DemoPopup({ open, onClose }: Props) {
             <div
               className="px-5 py-2.5 flex items-center gap-2"
               style={{
-                background: "linear-gradient(135deg, #3D0610 0%, #1A0208 100%)",
+                background: "#470606",
                 borderTop: "1px solid rgba(212,33,74,0.25)",
               }}
             >
