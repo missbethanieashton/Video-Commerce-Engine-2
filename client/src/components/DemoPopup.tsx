@@ -152,7 +152,7 @@ export function DemoPopup({ open, onClose }: Props) {
               <img
                 src="/croissant-logo.png"
                 alt="Croissant S'il Vous Plait"
-                className="h-10 object-contain"
+                className="h-[200px] object-contain"
                 data-testid="img-croissant-logo"
               />
               <button
