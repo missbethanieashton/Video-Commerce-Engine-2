@@ -86,7 +86,7 @@ function GimberCard({ side }: { side: "bottom-right" | "bottom-left" }) {
 
 function ForbúriCard() {
   return (
-    <div className="absolute z-30" style={{ bottom: 20, right: 20 }}>
+    <div className="absolute z-30" style={{ bottom: 20, left: 20 }}>
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
