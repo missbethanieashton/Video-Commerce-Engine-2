@@ -171,12 +171,20 @@ export function DemoPopup({ open, onClose }: Props) {
   }, [open]);
 
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const update = () => setCurrentTime(v.currentTime);
-    v.addEventListener("timeupdate", update);
-    return () => v.removeEventListener("timeupdate", update);
-  }, []);
+    if (!open) {
+      setCurrentTime(0);
+      return;
+    }
+    const attach = () => {
+      const v = videoRef.current;
+      if (!v) return;
+      const update = () => setCurrentTime(v.currentTime);
+      v.addEventListener("timeupdate", update);
+      return () => v.removeEventListener("timeupdate", update);
+    };
+    const cleanup = attach();
+    return cleanup;
+  }, [open]);
 
   const showBottomRight = currentTime >= 7 && currentTime <= 12;
   const showForburi = currentTime >= 19 && currentTime <= 30;
