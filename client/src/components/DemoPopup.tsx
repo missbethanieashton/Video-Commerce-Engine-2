@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const GIMBER_URL =
   "https://gimber.com/products/gimber-n1-original?srsltid=AfmBOoq8YJCyDbRKw7DA2emBhWw9FizzW0KQRz1sivyvGOxux9YhshCv";
 
+const FORBURI_URL =
+  "https://forburi.com/products/sequins-shirt?variant=45649179803838";
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -81,6 +84,72 @@ function GimberCard({ side }: { side: "bottom-right" | "bottom-left" }) {
   );
 }
 
+function ForbúriCard() {
+  return (
+    <div className="absolute z-30" style={{ bottom: 20, right: 20 }}>
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <a
+          href={FORBURI_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block no-underline"
+          style={{ width: "clamp(140px, 16vw, 180px)" }}
+          data-testid="link-forburi-card"
+        >
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{
+              background: "rgba(0,0,0,0.52)",
+              backdropFilter: "blur(14px)",
+              border: "1px solid rgba(255,255,255,0.13)",
+              boxShadow:
+                "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+            }}
+          >
+            <div className="p-3">
+              <div
+                className="w-full flex items-center justify-center overflow-hidden"
+                style={{
+                  height: 80,
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.04)",
+                }}
+              >
+                <img
+                  src="/forburi-solstice.png"
+                  alt="Forbúri Solstice Set"
+                  className="h-full w-full object-cover"
+                  style={{ borderRadius: 10 }}
+                />
+              </div>
+              <div className="mt-2 space-y-0.5">
+                <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">
+                  FORBÚRI
+                </div>
+                <div className="text-white text-[11px] font-semibold leading-tight">
+                  Solstice Set
+                </div>
+                <div className="text-white font-bold text-sm leading-tight">
+                  €348
+                </div>
+              </div>
+              <div
+                className="mt-2 w-full text-center text-[8px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.92)" }}
+              >
+                PRE ORDER
+              </div>
+            </div>
+          </div>
+        </a>
+      </motion.div>
+    </div>
+  );
+}
+
 export function DemoPopup({ open, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -110,6 +179,7 @@ export function DemoPopup({ open, onClose }: Props) {
   }, []);
 
   const showBottomRight = currentTime >= 7 && currentTime <= 12;
+  const showForburi = currentTime >= 19 && currentTime <= 30;
   const showBottomLeft = currentTime >= 49 && currentTime <= 62;
 
   return (
@@ -200,6 +270,24 @@ export function DemoPopup({ open, onClose }: Props) {
                   >
                     <div className="pointer-events-auto">
                       <GimberCard side="bottom-right" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Forbúri carousel — bottom-right, seconds 19–30 */}
+              <AnimatePresence>
+                {showForburi && (
+                  <motion.div
+                    key="forburi-br"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 12 }}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0 pointer-events-none"
+                  >
+                    <div className="pointer-events-auto">
+                      <ForbúriCard />
                     </div>
                   </motion.div>
                 )}
