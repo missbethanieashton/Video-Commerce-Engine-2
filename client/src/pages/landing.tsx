@@ -19,6 +19,7 @@ import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import celineBagImage from "@assets/celine_bag_1773420370038.png";
 import { COUNTRIES } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video, Volume2, VolumeX } from "lucide-react";
+import { DemoPopup } from "@/components/DemoPopup";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
@@ -1239,6 +1240,7 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
   const heroScale = useTransform(scrollY, [0, 400], [1, 1.1]);
   const [openFooterItem, setOpenFooterItem] = useState<string | null>(null);
+  const [showDemo, setShowDemo] = useState(false);
   const [miroMuted, setMiroMuted] = useState(true);
   const miroVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -1510,6 +1512,8 @@ export default function Landing() {
         </div>
       </section>
 
+      <DemoPopup open={showDemo} onClose={() => setShowDemo(false)} />
+
       <footer className="py-12 px-4 bg-[#202120] border-t border-white/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
@@ -1568,6 +1572,18 @@ export default function Landing() {
                 </div>
               </div>
             ))}
+
+            {/* Demo — opens video popup */}
+            <div className="border-b border-white/10">
+              <button
+                onClick={() => setShowDemo(true)}
+                className="w-full flex items-center justify-between py-3 text-white text-sm font-medium hover:text-[#677A67] transition-colors"
+                data-testid="button-footer-demo"
+              >
+                Demo
+                <Play className="w-4 h-4 text-[#677A67]" />
+              </button>
+            </div>
           </div>
 
           <div className="flex justify-center gap-4 mb-4">
