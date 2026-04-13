@@ -1168,7 +1168,7 @@ function SignupSection() {
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger
-                                  className="bg-white/10 border-white/20 text-white"
+                                  className="bg-white/10 border-white/20 text-white rounded-[30px]"
                                   style={{ borderRadius: 30 }}
                                   data-testid="select-country"
                                 >
