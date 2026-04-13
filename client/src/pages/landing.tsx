@@ -1235,6 +1235,27 @@ function SignupSection() {
   );
 }
 
+function RollingText({ children }: { children: string }) {
+  return (
+    <span
+      className="relative inline-flex flex-col overflow-hidden"
+      style={{ height: "1.2em", verticalAlign: "bottom" }}
+    >
+      <span
+        className="translate-y-0 transition-transform duration-300 ease-in-out group-hover:-translate-y-full"
+        aria-hidden="true"
+      >
+        {children}
+      </span>
+      <span
+        className="absolute inset-x-0 translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
 export default function Landing() {
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
@@ -1275,19 +1296,19 @@ export default function Landing() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white/80 hover:text-white hover:bg-white/10 rounded-full text-sm"
+                className="group text-white/80 hover:text-white hover:bg-white/10 rounded-full text-sm overflow-hidden"
                 data-testid="button-nav-signin"
               >
-                Sign In
+                <RollingText>Sign In</RollingText>
               </Button>
             </Link>
             <Button
               onClick={scrollToSignup}
               size="sm"
-              className="bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold rounded-full text-sm"
+              className="group bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold rounded-full text-sm overflow-hidden"
               data-testid="button-nav-get-started"
             >
-              Get Started
+              <RollingText>Get Started</RollingText>
             </Button>
           </div>
         </div>
