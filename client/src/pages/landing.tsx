@@ -1001,23 +1001,23 @@ function SignupSection() {
           {!selectedRole ? (
             <div className="grid md:grid-cols-3 gap-4">
               {[
-                { role: "creator" as const, title: "Creator", desc: "Import your videos, tag brands, and shopify your video assets in seconds" },
-                { role: "brand" as const, title: "Brand", desc: "Connect your inventory, import your recorded runways or fashion films and Materialized will deliver shoppable videos for your website" },
-                { role: "publisher" as const, title: "Publisher", desc: "Save on production costs! Search our global video library for categorized entertainment, curate a playlist of content that suits your niche, publish and generate a new revenue stream from affiliate royalties" },
+                { role: "creator" as const, title: "Creator", desc: "Import your videos, tag brands, and shopify your video assets in seconds", hoverBg: "rgba(167,210,167,0.28)", hoverBorder: "rgba(167,210,167,0.5)" },
+                { role: "brand" as const, title: "Brand", desc: "Connect your inventory, import your recorded runways or fashion films and Materialized will deliver shoppable videos for your website", hoverBg: "rgba(180,150,220,0.28)", hoverBorder: "rgba(180,150,220,0.5)" },
+                { role: "publisher" as const, title: "Publisher", desc: "Save on production costs! Search our global video library for categorized entertainment, curate a playlist of content that suits your niche, publish and generate a new revenue stream from affiliate royalties", hoverBg: "rgba(240,200,100,0.28)", hoverBorder: "rgba(240,200,100,0.5)" },
               ].map((item) => (
                 <motion.button
                   key={item.role}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, backgroundColor: item.hoverBg, borderColor: item.hoverBorder }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleRoleSelect(item.role)}
-                  className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-left hover:bg-white/20 transition-colors group"
+                  className="p-6 rounded-2xl backdrop-blur-sm text-left transition-colors"
+                  style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
                   data-testid={`button-role-${item.role}`}
                 >
                   <div className="text-xl font-semibold text-white mb-2">
                     {item.title}
                   </div>
                   <div className="text-white/60 text-sm">{item.desc}</div>
-                  <ArrowRight className="w-5 h-5 text-[#677A67] mt-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.button>
               ))}
             </div>
