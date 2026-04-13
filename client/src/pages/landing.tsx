@@ -411,13 +411,13 @@ function TestimonialCarousel() {
 
 function VideoOrientationSection() {
   return (
-    <section className="py-20 px-4 bg-white">
+    <section className="py-20 px-4 bg-[#1a1a1a]">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] text-[24px]"
+          className="md:text-4xl font-bold text-center mb-4 text-white text-[24px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           One Platform, Every Format
@@ -722,13 +722,13 @@ function VideoOfTheWeekSection() {
   ];
 
   return (
-    <section className="py-20 px-4 bg-white">
+    <section className="py-20 px-4 bg-[#1a1a1a]">
       <div className="max-w-4xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] text-[22px]"
+          className="md:text-4xl font-bold text-center mb-4 text-white text-[22px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video of the Week
@@ -1414,12 +1414,12 @@ export default function Landing() {
           <ParallaxImageSection />
         </div>
 
-        {/* One Platform, Every Format — white card */}
+        {/* One Platform, Every Format — dark card */}
         <div
-          className="overflow-hidden bg-white"
+          className="overflow-hidden bg-[#1a1a1a]"
           style={{
             borderRadius: 50,
-            boxShadow: "0 20px 70px rgba(0,0,0,0.45), 0 6px 20px rgba(0,0,0,0.2)",
+            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
           }}
         >
           <VideoOrientationSection />
@@ -1476,12 +1476,12 @@ export default function Landing() {
           })()}
         </div>
 
-        {/* Video of the Week — white card */}
+        {/* Video of the Week — dark card */}
         <div
-          className="overflow-hidden bg-white"
+          className="overflow-hidden bg-[#1a1a1a]"
           style={{
             borderRadius: 50,
-            boxShadow: "0 20px 70px rgba(0,0,0,0.45), 0 6px 20px rgba(0,0,0,0.2)",
+            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
           }}
         >
           <VideoOfTheWeekSection />
