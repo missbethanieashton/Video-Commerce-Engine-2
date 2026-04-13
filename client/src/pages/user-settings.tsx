@@ -19,6 +19,7 @@ import {
   Wallet,
   Building2,
   Save,
+  Instagram,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -36,6 +37,7 @@ type UserProfile = {
   locationCity?: string | null;
   locationCountry?: string | null;
   billingAddress?: string | null;
+  instagramHandle?: string | null;
 };
 
 type StripeConnectStatus = {
@@ -52,6 +54,7 @@ const profileSchema = z.object({
   locationCity: z.string().optional(),
   locationCountry: z.string().optional(),
   billingAddress: z.string().optional(),
+  instagramHandle: z.string().optional(),
 });
 
 export default function UserSettings() {
@@ -80,6 +83,7 @@ export default function UserSettings() {
       locationCity: profile?.locationCity ?? "",
       locationCountry: profile?.locationCountry ?? "",
       billingAddress: profile?.billingAddress ?? "",
+      instagramHandle: profile?.instagramHandle ?? "",
     },
   });
 
@@ -250,6 +254,21 @@ export default function UserSettings() {
                       <FormItem>
                         <FormControl>
                           <Input {...field} placeholder="Billing address (street, postcode, country)" data-testid="input-billing-address" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="instagramHandle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="relative">
+                            <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input {...field} placeholder="Instagram @handle" className="pl-9" data-testid="input-instagram-handle" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

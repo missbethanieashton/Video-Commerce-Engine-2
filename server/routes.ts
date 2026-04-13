@@ -110,7 +110,7 @@ export async function registerRoutes(
     try {
       const sessionUserId = (req.session as any)?.userId;
       if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
-      const allowed = ["locationCity", "locationCountry", "billingAddress", "bio"];
+      const allowed = ["locationCity", "locationCountry", "billingAddress", "bio", "instagramHandle"];
       const data: Record<string, string> = {};
       for (const key of allowed) {
         if (req.body[key] !== undefined) data[key] = req.body[key];
@@ -503,7 +503,10 @@ export async function registerRoutes(
   // Create brand outreach (creator sends email to brand PR contact)
   app.post("/api/brand-outreach", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("demo_creator");
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
       if (!user) return res.status(401).json({ error: "Not authenticated" });
 
       const data = insertBrandOutreachSchema.parse({
@@ -511,19 +514,41 @@ export async function registerRoutes(
         creatorId: user.id,
       });
 
+      // Fetch creator's profile to get Instagram handle
+      const creatorProfile = await storage.getUserProfile(user.id);
+      const instagramHandle = creatorProfile?.instagramHandle ?? null;
+      const creatorFirstName = user.displayName.split(" ")[0];
+
       const outreach = await storage.createBrandOutreach(data);
+
+      // Auto-save video as draft if videoUrl and videoTitle provided
+      let savedDraftId: string | null = null;
+      if (data.videoUrl && data.videoTitle) {
+        try {
+          const draft = await storage.createVideo({
+            creatorId: user.id,
+            title: data.videoTitle,
+            description: "",
+            videoUrl: data.videoUrl,
+            status: "draft",
+          } as any);
+          savedDraftId = draft?.id ?? null;
+        } catch (e) {
+          console.warn("[Brand Outreach] Could not auto-save draft:", e);
+        }
+      }
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       const authorizeUrl = `${baseUrl}/brand-authorize/${outreach.authToken}`;
-      const videoPreviewUrl = data.videoUrl
-        ? `${baseUrl}/creator/my-videos`
-        : `${baseUrl}/creator/my-videos`;
+      const videoPreviewUrl = `${baseUrl}/creator/my-videos`;
 
       if (isEmailConfigured()) {
         await sendBrandOutreachEmail({
           prContactName: outreach.prContactName,
           prContactEmail: outreach.prContactEmail,
           creatorDisplayName: user.displayName,
+          creatorFirstName,
+          creatorInstagramHandle: instagramHandle,
           brandName: outreach.brandName,
           videoTitle: outreach.videoTitle ?? "Video Preview",
           videoPreviewUrl,
@@ -536,7 +561,7 @@ export async function registerRoutes(
         await storage.updateBrandOutreachStatus(outreach.id, "email_sent");
       }
 
-      res.status(201).json({ ...outreach, authorizeUrl });
+      res.status(201).json({ ...outreach, authorizeUrl, savedToDraft: !!savedDraftId, draftId: savedDraftId });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });

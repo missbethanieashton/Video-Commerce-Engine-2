@@ -61,18 +61,24 @@ export async function sendBrandOutreachEmail(opts: {
   prContactName: string;
   prContactEmail: string;
   creatorDisplayName: string;
+  creatorFirstName?: string;
+  creatorInstagramHandle?: string | null;
   brandName: string;
   videoTitle: string;
   videoPreviewUrl: string;
   authorizeUrl: string;
   creatorMessage?: string;
 }): Promise<void> {
-  const firstName = opts.prContactName.split(" ")[0];
+  const recipientFirstName = opts.prContactName.split(" ")[0];
+  const creatorFirst = opts.creatorFirstName ?? opts.creatorDisplayName.split(" ")[0];
+  const igLine = opts.creatorInstagramHandle
+    ? `<span style="color:#677A67;font-weight:600;">@${opts.creatorInstagramHandle.replace(/^@/, "")}</span>`
+    : "";
 
   const body = `
-    <h1>Hey ${firstName},</h1>
+    <h1>Hey ${recipientFirstName},</h1>
     <p>
-      <strong>${opts.creatorDisplayName}</strong> would like to make their latest video featuring
+      <strong>${creatorFirst}${igLine ? ` (${igLine})` : ""}</strong> would like to make their latest video featuring
       <strong>${opts.brandName}</strong> products shoppable using Materialized — turning it into
       a fully interactive, commission-tracked experience your customers can shop directly from.
     </p>
@@ -82,7 +88,7 @@ export async function sendBrandOutreachEmail(opts: {
       <p style="margin-top:8px;">You can <a href="${opts.videoPreviewUrl}">preview the video here →</a></p>
     </div>
     <p>
-      Clicking the button below authorises ${opts.creatorDisplayName} to make this video shoppable
+      Clicking the button below authorises ${creatorFirst} to make this video shoppable
       with your brand's products. You'll then receive a <strong>Materialized Brand Agreement</strong>
       (via DocuSign) covering video marketplace commissions. Once signed, you'll receive the
       embeddable code to publish the shoppable video on your website.

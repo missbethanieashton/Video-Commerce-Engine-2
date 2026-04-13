@@ -363,11 +363,35 @@ export function VideoUploadModal({
   };
 
   const outreachMutation = useMutation({
-    mutationFn: (payload: object) => apiRequest("POST", "/api/brand-outreach", payload),
-    onSuccess: () => {
-      toast({ title: "Outreach Sent!", description: "Your message has been sent to the brand's PR contact." });
-      setStep("details");
-      referralForm.reset();
+    mutationFn: async (payload: object & { brandName?: string }) => {
+      const res = await apiRequest("POST", "/api/brand-outreach", payload);
+      return { data: await res.json(), brandName: (payload as any).brandName ?? "" };
+    },
+    onSuccess: async ({ data, brandName }) => {
+      // If the backend didn't auto-save a draft (no videoUrl sent), save it now
+      if (!data.savedToDraft && videoUrl) {
+        const formData = form.getValues();
+        if (formData.title?.trim()) {
+          try {
+            await apiRequest("POST", "/api/videos", {
+              title: formData.title.trim(),
+              description: formData.description || "",
+              videoUrl,
+              brandIds: selectedBrands,
+              status: "draft",
+              durationSeconds: videoDurationSeconds ?? undefined,
+            });
+          } catch { /* best-effort */ }
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+      toast({
+        title: "Saved to Drafts",
+        description: `Your video has been saved to Drafts while the Invitation to Shopify Your Video has been sent to the Influencer Manager at ${brandName}.`,
+        duration: 7000,
+      });
+      localStorage.removeItem("videoDraft");
+      resetAndClose();
     },
     onError: () => {
       toast({ title: "Failed to Send", description: "Could not send the outreach email.", variant: "destructive" });

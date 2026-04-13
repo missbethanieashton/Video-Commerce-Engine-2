@@ -397,6 +397,7 @@ export const userProfiles = pgTable("user_profiles", {
   locationCity: text("location_city"),
   locationCountry: text("location_country"),
   billingAddress: text("billing_address"),
+  instagramHandle: text("instagram_handle"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
