@@ -1358,15 +1358,25 @@ export default function Landing() {
               The all-in-one platform for creators, brands, and publishers to monetize video content with AI-powered product detection and seamless affiliate tracking.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={scrollToSignup}
-                size="lg"
-                className="bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold rounded-full"
-                style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
-                data-testid="button-hero-cta"
+              <motion.div
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 300, damping: 18 }}
               >
-                Try Now
-              </Button>
+                <Button
+                  onClick={scrollToSignup}
+                  size="lg"
+                  className="text-white font-semibold rounded-full border-0"
+                  style={{
+                    paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px",
+                    background: "#f0c86447",
+                    backdropFilter: "blur(8px)",
+                  }}
+                  data-testid="button-hero-cta"
+                >
+                  Try Now
+                </Button>
+              </motion.div>
               <Button
                 variant="outline"
                 size="lg"
