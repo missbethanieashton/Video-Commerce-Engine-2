@@ -417,10 +417,11 @@ function VideoOrientationSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:text-4xl font-bold text-center mb-4 text-white text-[24px]"
+          className="md:text-4xl font-bold text-center mb-4 text-white text-[24px] px-[10px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
-          One Platform, Every Format
+          One Platform,<br />
+          <span style={{ color: "transparent", WebkitTextStroke: "1.5px white" }}>Every Format</span>
         </motion.h2>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
           Whether you create vertical Reels or horizontal long-form content, our platform adapts to your style. Materialized offers multiple customization options, including the layout of your product carousel and branded video players
