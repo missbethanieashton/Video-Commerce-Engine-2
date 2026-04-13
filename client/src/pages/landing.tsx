@@ -1365,7 +1365,7 @@ export default function Landing() {
                 style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
                 data-testid="button-hero-cta"
               >
-                Free Trial
+                Try Now
               </Button>
               <Button
                 variant="outline"
