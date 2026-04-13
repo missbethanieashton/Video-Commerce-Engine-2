@@ -1477,14 +1477,8 @@ export default function Landing() {
           <VideoOrientationSection />
         </div>
 
-        {/* Marquee strip — dark card */}
-        <div
-          className="overflow-hidden"
-          style={{
-            borderRadius: 50,
-            boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
-          }}
-        >
+        {/* Marquee strip — full bleed */}
+        <div className="w-full">
           {(() => {
             const items = [
               "creator content",
@@ -1564,7 +1558,7 @@ export default function Landing() {
               );
 
             return (
-              <div className="w-full overflow-hidden bg-[#202120] border-y border-white/10 py-4">
+              <div className="w-full overflow-hidden bg-[#202120] py-4">
                 <div className="marquee-track">
                   {renderTrack("a")}
                   {renderTrack("b")}
