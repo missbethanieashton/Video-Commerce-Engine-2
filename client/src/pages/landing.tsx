@@ -1009,8 +1009,9 @@ function SignupSection() {
                   key={item.role}
                   whileHover={{ scale: 1.02, backgroundColor: item.hoverBg, borderColor: item.hoverBorder }}
                   whileTap={{ scale: 0.98 }}
+                  transition={{ backgroundColor: { duration: 0 }, borderColor: { duration: 0 }, scale: { type: "spring", stiffness: 300, damping: 20 } }}
                   onClick={() => handleRoleSelect(item.role)}
-                  className="p-6 rounded-2xl backdrop-blur-sm text-left transition-colors"
+                  className="p-6 rounded-2xl backdrop-blur-sm text-left"
                   style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
                   data-testid={`button-role-${item.role}`}
                 >
