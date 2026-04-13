@@ -1265,6 +1265,12 @@ export default function Landing() {
   const [showDemo, setShowDemo] = useState(false);
   const [miroMuted, setMiroMuted] = useState(true);
   const miroVideoRef = useRef<HTMLVideoElement>(null);
+  const miroSectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: miroScrollProgress } = useScroll({
+    target: miroSectionRef,
+    offset: ["start end", "end start"],
+  });
+  const miroParallaxY = useTransform(miroScrollProgress, [0, 1], ["15%", "-15%"]);
 
   const scrollToSignup = () => {
     document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
@@ -1523,16 +1529,16 @@ export default function Landing() {
       </div>
 
       {/* Miro Misljen — full-width bottom-of-page video hero */}
-      <section className="relative w-full overflow-hidden" style={{ minHeight: "80vh" }}>
-        <video
+      <section ref={miroSectionRef} className="relative w-full overflow-hidden" style={{ minHeight: "80vh" }}>
+        <motion.video
           ref={miroVideoRef}
           src="/miro-misljen-dress.mp4?v=25s"
           autoPlay
           loop
           playsInline
           muted={miroMuted}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ minHeight: "100%" }}
+          className="absolute inset-0 w-full object-cover"
+          style={{ y: miroParallaxY, minHeight: "120%", top: "-10%" }}
           data-testid="video-miro-misljen"
         />
         {/* dark overlay for legibility */}
