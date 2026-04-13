@@ -1456,24 +1456,20 @@ export default function Landing() {
           <TestimonialCarousel />
         </div>
 
-        {/* Parallax video — full-bleed dark card */}
-        <div
-          className="overflow-hidden"
-          style={{
-            borderRadius: 50,
-            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
-          }}
-        >
+        {/* Parallax video — true full-bleed, breaks out of container padding */}
+        <div className="overflow-hidden -mx-3 md:-mx-6">
           <ParallaxImageSection />
         </div>
 
-        {/* One Platform, Every Format — dark card */}
+        {/* One Platform, Every Format — grows over parallax on scroll */}
         <div
-          className="overflow-hidden"
+          className="overflow-hidden relative"
           style={{
             borderRadius: 50,
             boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
             background: "#b496dc47",
+            marginTop: -48,
+            zIndex: 10,
           }}
         >
           <VideoOrientationSection />
