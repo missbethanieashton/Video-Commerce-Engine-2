@@ -741,10 +741,9 @@ function VideoOfTheWeekSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:text-4xl font-bold text-center mb-4 text-white text-[22px]"
-          style={{ fontFamily: "'Public Pixel', sans-serif" }}
+          className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-center"
         >
-          Video of the Week
+          Data &amp; Analytics
         </motion.h2>
         <p className="text-center text-muted-foreground mb-12">
           See how top creators drive engagement with shoppable content
