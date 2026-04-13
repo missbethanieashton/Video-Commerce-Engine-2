@@ -591,16 +591,28 @@ function ParallaxImageSection() {
         >
           Shopifying Creator Content
         </motion.p>
-        <motion.h2
+        <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.25 }}
-          className="text-white font-bold leading-tight max-w-2xl"
-          style={{ fontFamily: "'Public Pixel', sans-serif", fontSize: "clamp(18px, 4vw, 36px)" }}
+          className="text-white leading-relaxed max-w-3xl text-center"
+          style={{ fontFamily: "inherit", fontSize: 28 }}
         >
-          Buy directly from creator content, music videos, or film series
-        </motion.h2>
+          Buy directly from{" "}
+          <span
+            className="inline-flex items-center overflow-hidden align-middle"
+            style={{ background: "#AAED3C", borderRadius: 50, height: 44, width: 230, verticalAlign: "middle", position: "relative", top: -2 }}
+          >
+            <span
+              className="pill-marquee-track"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 18, whiteSpace: "nowrap", color: "#1a1a1a", paddingLeft: 16 }}
+            >
+              creator content &nbsp;&nbsp;&nbsp;&nbsp; creator content &nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+          </span>
+          , music videos, or film series
+        </motion.p>
       </div>
     </section>
   );
