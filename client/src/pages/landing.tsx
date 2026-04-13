@@ -596,7 +596,7 @@ function ParallaxImageSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.25 }}
-          className="text-white leading-relaxed max-w-3xl text-center"
+          className="text-white leading-relaxed max-w-3xl text-center pl-[10px] pr-[10px]"
           style={{ fontFamily: "inherit", fontSize: 28 }}
         >
           Buy directly from{" "}
