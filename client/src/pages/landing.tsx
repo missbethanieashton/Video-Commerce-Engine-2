@@ -1167,13 +1167,14 @@ function SignupSection() {
                           <FormItem>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger
-                                  className="bg-white/10 border-white/20 text-white rounded-[30px]"
-                                  style={{ borderRadius: 30 }}
-                                  data-testid="select-country"
-                                >
-                                  <SelectValue placeholder="Country" />
-                                </SelectTrigger>
+                                <div style={{ borderRadius: 30, overflow: "hidden" }}>
+                                  <SelectTrigger
+                                    className="bg-white/10 border-white/20 text-white !rounded-[30px]"
+                                    data-testid="select-country"
+                                  >
+                                    <SelectValue placeholder="Country" />
+                                  </SelectTrigger>
+                                </div>
                               </FormControl>
                               <SelectContent className="max-h-[200px]">
                                 {COUNTRIES.map((country) => (
