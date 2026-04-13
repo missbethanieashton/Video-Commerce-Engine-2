@@ -18,7 +18,7 @@ import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import celineBagImage from "@assets/celine_bag_1773420370038.png";
 import { COUNTRIES } from "@shared/schema";
-import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video, Volume2, VolumeX } from "lucide-react";
+import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video, Volume2, VolumeX, CircleUserRound } from "lucide-react";
 import { DemoPopup } from "@/components/DemoPopup";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
@@ -1328,9 +1328,10 @@ export default function Landing() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="group text-white/80 hover:text-white hover:bg-white/10 rounded-full text-sm overflow-hidden"
+                className="group text-white/80 hover:text-white hover:bg-white/10 rounded-full text-sm overflow-hidden flex items-center gap-1.5"
                 data-testid="button-nav-signin"
               >
+                <CircleUserRound className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                 <RollingText>Sign In</RollingText>
               </Button>
             </Link>
