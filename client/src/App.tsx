@@ -33,6 +33,7 @@ import BrandLibrary from "@/pages/brand-library";
 import PlaylistsPage from "@/pages/playlists";
 import AffiliateCampaigns from "@/pages/affiliate-campaigns";
 import AffiliateSettings from "@/pages/affiliate-settings";
+import UserSettings from "@/pages/user-settings";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import Affiliates from "@/pages/affiliates";
 import Landing from "@/pages/landing";
@@ -75,6 +76,7 @@ function CreatorRouter() {
       <Route path="/creator/help" component={Help} />
       <Route path="/creator/mailbox" component={Mailbox} />
       <Route path="/creator/more" component={More} />
+      <Route path="/creator/settings" component={UserSettings} />
       <Route path="/creator/settings/subscription" component={CreatorSettingsSubscription} />
       <Route component={NotFound} />
     </Switch>
@@ -116,7 +118,7 @@ function AffiliateRouter() {
       <Route path="/affiliate/library" component={AffiliateLibrary} />
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
-      <Route path="/affiliate/settings" component={AffiliateSettings} />
+      <Route path="/affiliate/settings" component={UserSettings} />
       <Route path="/affiliate/playlists" component={PlaylistsPage} />
       <Route path="/affiliate/wishlist" component={WishlistPage} />
       <Route path="/affiliate/brand-kit" component={BrandKit} />

@@ -17,6 +17,7 @@ import {
   Bell,
   Heart,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useCurrentUser";
 import {
@@ -66,6 +67,7 @@ const rewardsItems = [
 
 const accountItems = [
   { path: "/creator/profile", label: "Personal Details", icon: UserCircle },
+  { path: "/creator/settings", label: "Settings", icon: Settings },
 ];
 
 const communicationItems = [

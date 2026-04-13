@@ -75,8 +75,6 @@ export default function AffiliateDashboard() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
-      <AnnouncementBanner />
-      
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-welcome">
           Welcome back, {currentUser?.displayName || "Affiliate"}

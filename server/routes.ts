@@ -77,6 +77,51 @@ export async function registerRoutes(
     }
   });
 
+  // Update current user display name
+  app.patch("/api/users/me", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const { displayName } = req.body;
+      if (!displayName || typeof displayName !== "string" || !displayName.trim()) {
+        return res.status(400).json({ error: "displayName is required" });
+      }
+      const updated = await storage.updateUser(sessionUserId, { displayName: displayName.trim() } as any);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  // Get current user profile
+  app.get("/api/users/me/profile", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const profile = await storage.getUserProfile(sessionUserId);
+      res.json(profile || {});
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get profile" });
+    }
+  });
+
+  // Update current user profile (location, billing address)
+  app.patch("/api/users/me/profile", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const allowed = ["locationCity", "locationCountry", "billingAddress", "bio"];
+      const data: Record<string, string> = {};
+      for (const key of allowed) {
+        if (req.body[key] !== undefined) data[key] = req.body[key];
+      }
+      const profile = await storage.updateUserProfile(sessionUserId, data as any);
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
   // Trial status — is the user on free trial, and have they used it?
   app.get("/api/users/me/trial-status", async (req, res) => {
     try {

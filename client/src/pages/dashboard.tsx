@@ -127,10 +127,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
-      <div className="-mx-4 md:-mx-6 -mt-6 mb-4 overflow-hidden">
-        <AnnouncementBanner />
-      </div>
-
       <CreatorRewardNotification />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

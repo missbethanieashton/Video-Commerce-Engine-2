@@ -396,6 +396,7 @@ export const userProfiles = pgTable("user_profiles", {
   profileMediaType: text("profile_media_type"), // "image" or "video"
   locationCity: text("location_city"),
   locationCountry: text("location_country"),
+  billingAddress: text("billing_address"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
