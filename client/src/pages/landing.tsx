@@ -1475,26 +1475,66 @@ export default function Landing() {
               "fashion week",
               "creator content",
             ];
+
+            const pillText = "creator content  •  creator content  •  creator content  •  creator content  •  ";
+
             const track = (
               <>
-                {items.map((item, i) => (
-                  <span key={i} className="flex items-center shrink-0">
-                    <span className="whitespace-nowrap text-white text-sm font-medium tracking-wide uppercase px-4">
-                      {item}
+                {items.map((item, i) =>
+                  item === "creator content" ? (
+                    <span key={i} className="flex items-center shrink-0 px-3">
+                      {/* Lime-green pill with inner scrolling script text */}
+                      <span
+                        className="inline-flex items-center overflow-hidden shrink-0"
+                        style={{
+                          background: "#AAED3C",
+                          borderRadius: 50,
+                          height: 44,
+                          width: 220,
+                          verticalAlign: "middle",
+                        }}
+                      >
+                        <span className="pill-marquee-track">
+                          {[pillText, pillText].map((t, ti) => (
+                            <span
+                              key={ti}
+                              className="whitespace-nowrap px-4"
+                              style={{
+                                fontFamily: "Georgia, 'Times New Roman', serif",
+                                fontStyle: "italic",
+                                fontSize: 18,
+                                color: "#1a1a1a",
+                                letterSpacing: "0.01em",
+                              }}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
                     </span>
-                    <img
-                      src="/blob-divider.png"
-                      alt=""
-                      aria-hidden="true"
-                      className={`shrink-0${i % 2 === 1 ? " blob-spin-ccw" : ""}`}
-                      style={{ width: 28, height: 28, objectFit: "contain" }}
-                    />
-                  </span>
-                ))}
+                  ) : (
+                    <span key={i} className="flex items-center shrink-0">
+                      <span
+                        className="whitespace-nowrap text-white font-normal px-4"
+                        style={{ fontSize: 28 }}
+                      >
+                        {item}
+                      </span>
+                      <img
+                        src="/blob-divider.png"
+                        alt=""
+                        aria-hidden="true"
+                        className={`shrink-0${i % 2 === 1 ? " blob-spin-ccw" : ""}`}
+                        style={{ width: 28, height: 28, objectFit: "contain" }}
+                      />
+                    </span>
+                  )
+                )}
               </>
             );
             return (
-              <div className="w-full overflow-hidden bg-[#202120] border-y border-white/10 py-3">
+              <div className="w-full overflow-hidden bg-[#202120] border-y border-white/10 py-4">
                 <div className="marquee-track">
                   {track}
                   {track}

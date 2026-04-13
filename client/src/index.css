@@ -305,6 +305,17 @@
   animation: marquee-scroll 35s linear infinite;
 }
 
+/* Pill inner marquee */
+@keyframes pill-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.pill-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: pill-scroll 6s linear infinite;
+}
+
 @keyframes blob-spin-ccw {
   from { transform: rotate(0deg); }
   to   { transform: rotate(-360deg); }
