@@ -1035,21 +1035,24 @@ function SignupSection() {
                 <ChevronDown className="w-4 h-4 rotate-90" />
                 Back to role selection
               </button>
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6">
+              <Card
+                className="bg-white/10 backdrop-blur-sm border-white/20 p-6"
+                style={{ borderRadius: 50 }}
+              >
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">First Name</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                                placeholder="John"
+                                style={{ borderRadius: 30 }}
+                                placeholder="First name"
                                 data-testid="input-first-name"
                               />
                             </FormControl>
@@ -1062,12 +1065,12 @@ function SignupSection() {
                         name="surname"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Surname</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                                placeholder="Doe"
+                                style={{ borderRadius: 30 }}
+                                placeholder="Surname"
                                 data-testid="input-surname"
                               />
                             </FormControl>
@@ -1078,17 +1081,17 @@ function SignupSection() {
                     </div>
                     <FormField
                       control={form.control}
-                      name="password"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white">Password</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              type="password"
+                              type="email"
                               className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                              placeholder="Min. 6 characters"
-                              data-testid="input-password"
+                              style={{ borderRadius: 30 }}
+                              placeholder="Email address"
+                              data-testid="input-email"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1097,36 +1100,36 @@ function SignupSection() {
                     />
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white">Email</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              type="email"
+                              type="password"
                               className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                              placeholder="john@example.com"
-                              data-testid="input-email"
+                              style={{ borderRadius: 30 }}
+                              placeholder="Password (min. 6 characters)"
+                              data-testid="input-password"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="instagramHandle"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Instagram (optional)</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 value={field.value || ""}
                                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                                placeholder="@yourhandle"
+                                style={{ borderRadius: 30 }}
+                                placeholder="Instagram @handle"
                                 data-testid="input-instagram"
                               />
                             </FormControl>
@@ -1139,13 +1142,13 @@ function SignupSection() {
                         name="tiktokHandle"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">TikTok (optional)</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 value={field.value || ""}
                                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                                placeholder="@yourhandle"
+                                style={{ borderRadius: 30 }}
+                                placeholder="TikTok @handle"
                                 data-testid="input-tiktok"
                               />
                             </FormControl>
@@ -1154,17 +1157,20 @@ function SignupSection() {
                         )}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="country"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Country</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger className="bg-white/10 border-white/20 text-white" data-testid="select-country">
-                                  <SelectValue placeholder="Select country" />
+                                <SelectTrigger
+                                  className="bg-white/10 border-white/20 text-white"
+                                  style={{ borderRadius: 30 }}
+                                  data-testid="select-country"
+                                >
+                                  <SelectValue placeholder="Country" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="max-h-[200px]">
@@ -1184,12 +1190,12 @@ function SignupSection() {
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">City</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                                placeholder="New York"
+                                style={{ borderRadius: 30 }}
+                                placeholder="City"
                                 data-testid="input-city"
                               />
                             </FormControl>
@@ -1203,12 +1209,12 @@ function SignupSection() {
                       name="accessCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white">Access Code <span className="text-white/50 font-normal text-xs">If you have an access code, enter it here</span></FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                              placeholder="Have a code? Enter it for free access"
+                              style={{ borderRadius: 30 }}
+                              placeholder="Access code (optional — enter for free access)"
                               data-testid="input-access-code"
                             />
                           </FormControl>
@@ -1216,15 +1222,18 @@ function SignupSection() {
                         </FormItem>
                       )}
                     />
-                    <Button
+                    <motion.button
                       type="submit"
                       disabled={mutation.isPending}
-                      className="w-full bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold py-6 rounded-full mt-6"
-                      style={{ paddingLeft: "30px", paddingRight: "30px" }}
+                      whileHover={{ scale: 1.03, boxShadow: "0 0 32px rgba(103,122,103,0.7), 0 8px 24px rgba(0,0,0,0.3)" }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      className="w-full bg-[#677A67] text-white font-semibold rounded-full mt-4 disabled:opacity-60"
+                      style={{ fontSize: 18, padding: "16px 30px" }}
                       data-testid="button-submit-signup"
                     >
                       {mutation.isPending ? "Creating Account..." : "Create Free Account"}
-                    </Button>
+                    </motion.button>
                   </form>
                 </Form>
               </Card>
