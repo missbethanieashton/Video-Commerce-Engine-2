@@ -411,7 +411,7 @@ function TestimonialCarousel() {
 
 function VideoOrientationSection() {
   return (
-    <section className="py-20 px-4 bg-white dark:bg-[#1a1a1a]">
+    <section className="py-20 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -722,13 +722,13 @@ function VideoOfTheWeekSection() {
   ];
 
   return (
-    <section className="py-20 px-4 bg-white dark:bg-[#1a1a1a]">
+    <section className="py-20 px-4 bg-white">
       <div className="max-w-4xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] dark:text-white text-[22px]"
+          className="md:text-4xl font-bold text-center mb-4 text-[#43484D] text-[22px]"
           style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video of the Week
@@ -1388,55 +1388,117 @@ export default function Landing() {
         </div>
       </section>
 
-      <StatsSection />
-      <ParallaxImageSection />
-      <VideoOrientationSection />
-      {/* Announcement marquee bar */}
-      {(() => {
-        const items = [
-          "documentaries",
-          "music videos",
-          "beauty tutorials",
-          "panels and stage performances",
-          "theatre productions",
-          "advertorials",
-          "fashion runways",
-          "in-flight entertainment",
-          "travel blogs",
-          "fashion week",
-          "creator content",
-        ];
-        const track = (
-          <>
-            {items.map((item, i) => (
-              <span key={i} className="flex items-center shrink-0">
-                <span className="whitespace-nowrap text-white text-sm font-medium tracking-wide uppercase px-4">
-                  {item}
-                </span>
-                <img
-                  src="/blob-divider.png"
-                  alt=""
-                  aria-hidden="true"
-                  className={`shrink-0${i % 2 === 1 ? " blob-spin-ccw" : ""}`}
-                  style={{ width: 28, height: 28, objectFit: "contain" }}
-                />
-              </span>
-            ))}
-          </>
-        );
-        return (
-          <div className="w-full overflow-hidden bg-[#202120] border-y border-white/10 py-3">
-            <div className="marquee-track">
-              {track}
-              {track}
-            </div>
-          </div>
-        );
-      })()}
+      {/* ── Section cards ── all float on #202120 background with 50px radius */}
+      <div className="bg-[#202120] px-3 md:px-6 space-y-3 py-3">
 
-      <TestimonialCarousel />
-      <VideoOfTheWeekSection />
-      <SignupSection />
+        {/* Stats + Testimonials — dark card */}
+        <div
+          className="overflow-hidden"
+          style={{
+            borderRadius: 50,
+            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          <StatsSection />
+          <TestimonialCarousel />
+        </div>
+
+        {/* Parallax video — full-bleed dark card */}
+        <div
+          className="overflow-hidden"
+          style={{
+            borderRadius: 50,
+            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          <ParallaxImageSection />
+        </div>
+
+        {/* One Platform, Every Format — white card */}
+        <div
+          className="overflow-hidden bg-white"
+          style={{
+            borderRadius: 50,
+            boxShadow: "0 20px 70px rgba(0,0,0,0.45), 0 6px 20px rgba(0,0,0,0.2)",
+          }}
+        >
+          <VideoOrientationSection />
+        </div>
+
+        {/* Marquee strip — dark card */}
+        <div
+          className="overflow-hidden"
+          style={{
+            borderRadius: 50,
+            boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
+          }}
+        >
+          {(() => {
+            const items = [
+              "documentaries",
+              "music videos",
+              "beauty tutorials",
+              "panels and stage performances",
+              "theatre productions",
+              "advertorials",
+              "fashion runways",
+              "in-flight entertainment",
+              "travel blogs",
+              "fashion week",
+              "creator content",
+            ];
+            const track = (
+              <>
+                {items.map((item, i) => (
+                  <span key={i} className="flex items-center shrink-0">
+                    <span className="whitespace-nowrap text-white text-sm font-medium tracking-wide uppercase px-4">
+                      {item}
+                    </span>
+                    <img
+                      src="/blob-divider.png"
+                      alt=""
+                      aria-hidden="true"
+                      className={`shrink-0${i % 2 === 1 ? " blob-spin-ccw" : ""}`}
+                      style={{ width: 28, height: 28, objectFit: "contain" }}
+                    />
+                  </span>
+                ))}
+              </>
+            );
+            return (
+              <div className="w-full overflow-hidden bg-[#202120] border-y border-white/10 py-3">
+                <div className="marquee-track">
+                  {track}
+                  {track}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Video of the Week — white card */}
+        <div
+          className="overflow-hidden bg-white"
+          style={{
+            borderRadius: 50,
+            boxShadow: "0 20px 70px rgba(0,0,0,0.45), 0 6px 20px rgba(0,0,0,0.2)",
+          }}
+        >
+          <VideoOfTheWeekSection />
+        </div>
+
+        {/* Sign up — dark card */}
+        <div
+          className="overflow-hidden"
+          style={{
+            borderRadius: 50,
+            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          <SignupSection />
+        </div>
+
+      </div>
 
       {/* Miro Misljen — full-width bottom-of-page video hero */}
       <section className="relative w-full overflow-hidden" style={{ minHeight: "80vh" }}>
