@@ -1242,13 +1242,13 @@ function RollingText({ children }: { children: string }) {
       style={{ height: "1.2em", verticalAlign: "bottom" }}
     >
       <span
-        className="translate-y-0 transition-transform duration-300 ease-in-out group-hover:-translate-y-full"
+        className="translate-y-0 transition-transform duration-500 ease-in-out group-hover:-translate-y-full"
         aria-hidden="true"
       >
         {children}
       </span>
       <span
-        className="absolute inset-x-0 translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+        className="absolute inset-x-0 translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0"
       >
         {children}
       </span>
