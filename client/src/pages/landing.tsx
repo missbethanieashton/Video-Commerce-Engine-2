@@ -411,7 +411,7 @@ function TestimonialCarousel() {
 
 function VideoOrientationSection() {
   return (
-    <section className="py-20 px-4 bg-[#1a1a1a]">
+    <section className="py-20 px-4 bg-transparent">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -579,7 +579,6 @@ function ParallaxImageSection() {
 
       {/* Gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />
-      <div className="absolute inset-0" style={{ background: "#b496dc47" }} />
 
       {/* Text overlay */}
       <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
@@ -1469,10 +1468,11 @@ export default function Landing() {
 
         {/* One Platform, Every Format — dark card */}
         <div
-          className="overflow-hidden bg-[#1a1a1a]"
+          className="overflow-hidden"
           style={{
             borderRadius: 50,
             boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
+            background: "#b496dc47",
           }}
         >
           <VideoOrientationSection />
