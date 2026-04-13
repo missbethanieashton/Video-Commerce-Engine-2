@@ -1079,44 +1079,46 @@ function SignupSection() {
                         )}
                       />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="email"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                              style={{ borderRadius: 30 }}
-                              placeholder="Email address"
-                              data-testid="input-email"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="password"
-                              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                              style={{ borderRadius: 30 }}
-                              placeholder="Password (min. 6 characters)"
-                              data-testid="input-password"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="email"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                                style={{ borderRadius: 30 }}
+                                placeholder="Email address"
+                                data-testid="input-email"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="password"
+                                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                                style={{ borderRadius: 30 }}
+                                placeholder="Password (min. 6 characters)"
+                                data-testid="input-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
