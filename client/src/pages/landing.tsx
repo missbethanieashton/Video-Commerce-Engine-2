@@ -21,7 +21,6 @@ import { COUNTRIES } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video, Volume2, VolumeX, CircleUserRound } from "lucide-react";
 import { DemoPopup } from "@/components/DemoPopup";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
-import heroVideo from "@assets/Materialized_APP_Intro_Screen_1767864559824.mp4";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
@@ -619,311 +618,6 @@ function ParallaxImageSection() {
   );
 }
 
-function VideoOfTheWeekSection() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [activeProduct, setActiveProduct] = useState<number | null>(null);
-
-  const sceneProducts = [
-    {
-      id: 0,
-      name: "Aesop",
-      detail: "Hand & Body Wash",
-      price: "€33",
-      cta: "BUY NOW",
-      href: null,
-      color: "#c8a97e",
-      windows: [{ start: 1, end: 9 }, { start: 25, end: 33 }, { start: 49, end: 57 }],
-    },
-    {
-      id: 1,
-      name: "High Stay Paris",
-      detail: "Corporate Leasing",
-      price: null,
-      cta: "BOOK NOW",
-      href: "https://www.highstay.com",
-      color: "#677A67",
-      windows: [{ start: 9, end: 17 }, { start: 33, end: 41 }, { start: 57, end: 65 }],
-    },
-    {
-      id: 2,
-      name: "GHD Air Wrap",
-      detail: "Professional Styler",
-      price: "€649",
-      cta: "BUY NOW",
-      href: null,
-      color: "#8a7090",
-      windows: [{ start: 17, end: 25 }, { start: 41, end: 49 }, { start: 65, end: 73 }],
-    },
-  ];
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const handleTimeUpdate = () => {
-      const t = video.currentTime;
-      let found: number | null = null;
-      for (const p of sceneProducts) {
-        if (p.windows.some(w => t >= w.start && t < w.end)) { found = p.id; break; }
-      }
-      setActiveProduct(prev => prev !== found ? found : prev);
-    };
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
-  }, []);
-
-  const engagementBubbles = [
-    { label: "Clicks", value: "12.4K", top: "10%", left: "5%", delay: 0, size: 90 },
-    { label: "Sales", value: "$8,200", top: "30%", right: "5%", delay: 0.5, size: 100 },
-    { label: "Shares", value: "3.2K", bottom: "20%", left: "10%", delay: 1.0, size: 90 },
-    { label: "ROI", value: "420%", bottom: "10%", right: "10%", delay: 1.5, size: 85 },
-  ];
-
-  const chromeBlobs: Array<{
-    size: number;
-    anchor: { top?: string; bottom?: string; left?: string; right?: string };
-    travelX: number[];
-    travelY: number[];
-    travelDuration: number;
-    rotateDuration: number;
-    dir: number;
-  }> = [
-    {
-      size: 230,
-      anchor: { top: "2%", left: "1%" },
-      travelX: [0, 70, 40, -35, 20, 0],
-      travelY: [0, 50, -40, 35, -22, 0],
-      travelDuration: 42,
-      rotateDuration: 18,
-      dir: 1,
-    },
-    {
-      size: 200,
-      anchor: { bottom: "2%", right: "1%" },
-      travelX: [0, -60, -32, 25, -15, 0],
-      travelY: [0, -45, 35, -32, 18, 0],
-      travelDuration: 52,
-      rotateDuration: 24,
-      dir: -1,
-    },
-    {
-      size: 155,
-      anchor: { bottom: "8%", left: "2%" },
-      travelX: [0, 50, 28, -38, 12, 0],
-      travelY: [0, -32, 28, 18, -18, 0],
-      travelDuration: 34,
-      rotateDuration: 14,
-      dir: 1,
-    },
-    {
-      size: 135,
-      anchor: { top: "8%", right: "2%" },
-      travelX: [0, -42, -22, 32, -8, 0],
-      travelY: [0, 28, 48, -28, 12, 0],
-      travelDuration: 40,
-      rotateDuration: 16,
-      dir: -1,
-    },
-    {
-      size: 88,
-      anchor: { top: "2%", left: "40%" },
-      travelX: [0, 38, -28, 22, -10, 0],
-      travelY: [0, 28, 42, 22, 10, 0],
-      travelDuration: 26,
-      rotateDuration: 10,
-      dir: 1,
-    },
-  ];
-
-  return (
-    <section className="py-20 px-4 bg-[#1a1a1a]">
-      <div className="max-w-4xl mx-auto">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-center"
-        >
-          Data &amp; Analytics
-        </motion.h2>
-        <p className="text-center text-muted-foreground mb-12">
-          See how top creators drive engagement with shoppable content
-        </p>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="relative flex justify-center"
-        >
-          {/* Chrome blobs — travel diagonally, spin independently, behind phone + bubbles */}
-          {chromeBlobs.map((blob, i) => (
-            <motion.div
-              key={i}
-              animate={{ x: blob.travelX, y: blob.travelY }}
-              transition={{
-                duration: blob.travelDuration,
-                repeat: Infinity,
-                ease: "easeInOut",
-                repeatType: "loop",
-              }}
-              className="absolute pointer-events-none select-none"
-              style={{
-                top: blob.anchor.top,
-                bottom: blob.anchor.bottom,
-                left: blob.anchor.left,
-                right: blob.anchor.right,
-                zIndex: 0,
-              }}
-            >
-              <motion.img
-                src={chromeBlobIcon}
-                alt=""
-                aria-hidden="true"
-                animate={{ rotate: [0, blob.dir * 360] }}
-                transition={{
-                  duration: blob.rotateDuration,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                style={{
-                  width: blob.size,
-                  height: blob.size,
-                  opacity: 0.22,
-                  mixBlendMode: "multiply",
-                  display: "block",
-                }}
-              />
-            </motion.div>
-          ))}
-
-          {/* Mobile Phone Frame */}
-          <div className="relative w-[280px] md:w-[320px]" style={{ zIndex: 1 }}>
-            {/* Phone bezel */}
-            <div className="relative bg-[#1a1a1a] rounded-[3rem] p-3 shadow-2xl">
-              {/* Notch */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-[#1a1a1a] rounded-b-2xl z-20" />
-              {/* Screen */}
-              <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full aspect-[9/16] object-cover"
-                  aria-label="Discovery Packs video"
-                >
-                  <source src={discoveryPacksVideo} type="video/mp4" />
-                </video>
-
-                {/* Timed product bubbles */}
-                <AnimatePresence mode="wait">
-                  {activeProduct !== null && (() => {
-                    const p = sceneProducts[activeProduct];
-                    return (
-                      <motion.div
-                        key={p.id}
-                        initial={{ opacity: 0, y: 18, scale: 0.92 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 340, damping: 28 }}
-                        className="absolute left-2.5 right-2.5 z-10"
-                        style={{ bottom: "68px" }}
-                      >
-                        <div
-                          className="rounded-2xl px-3 py-2 flex items-center gap-2.5"
-                          style={{
-                            background: "rgba(0,0,0,0.55)",
-                            backdropFilter: "blur(12px)",
-                            border: `1px solid ${p.color}55`,
-                            boxShadow: `0 0 12px ${p.color}33`,
-                          }}
-                        >
-                          {/* Colour dot */}
-                          <div
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ background: p.color }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-semibold text-[10px] leading-tight truncate">{p.name}</div>
-                            <div className="text-white/55 text-[8px] leading-tight">{p.detail}</div>
-                          </div>
-                          {p.price && (
-                            <div className="text-white font-bold text-xs flex-shrink-0">{p.price}</div>
-                          )}
-                          {p.href ? (
-                            <a
-                              href={p.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white"
-                              style={{ background: p.color }}
-                            >
-                              {p.cta}
-                            </a>
-                          ) : (
-                            <button
-                              className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white"
-                              style={{ background: p.color }}
-                            >
-                              {p.cta}
-                            </button>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })()}
-                </AnimatePresence>
-
-                {/* Video overlay info */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <div className="text-white font-semibold text-sm">Discovery Packs</div>
-                  <div className="text-white/70 text-xs">@join.materialized</div>
-                </div>
-              </div>
-              {/* Home indicator */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/30 rounded-full" />
-            </div>
-          </div>
-          {engagementBubbles.map((bubble, index) => (
-            <motion.div
-              key={bubble.label}
-              initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              whileHover={{
-                scale: [1, 1.2, 1],
-                transition: {
-                  duration: 0.6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-              transition={{
-                delay: bubble.delay,
-                type: "spring",
-                stiffness: 200,
-              }}
-              className="absolute bg-white shadow-lg flex flex-col items-center justify-center cursor-pointer"
-              style={{
-                top: bubble.top,
-                left: bubble.left,
-                right: bubble.right,
-                bottom: bubble.bottom,
-                width: bubble.size,
-                height: bubble.size,
-                borderRadius: "50%",
-                zIndex: 2,
-              }}
-            >
-              <div className="text-base font-bold text-[#43484D] leading-tight">{bubble.value}</div>
-              <div className="text-[10px] text-muted-foreground leading-tight">{bubble.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  );
-}
 
 const ROLE_ROUTES: Record<string, string> = {
   creator: "/creator",
@@ -1296,30 +990,73 @@ export default function Landing() {
   });
   const miroParallaxY = useTransform(miroScrollProgress, [0, 1], ["15%", "-15%"]);
 
+  // Hero phone mockup
+  const heroPhoneRef = useRef<HTMLVideoElement>(null);
+  const [activeProduct, setActiveProduct] = useState<number | null>(null);
+
+  const sceneProducts = [
+    { id: 0, name: "Aesop", detail: "Hand & Body Wash", price: "€33", cta: "BUY NOW", href: null as string | null, color: "#c8a97e", windows: [{ start: 1, end: 9 }, { start: 25, end: 33 }, { start: 49, end: 57 }] },
+    { id: 1, name: "High Stay Paris", detail: "Corporate Leasing", price: null as string | null, cta: "BOOK NOW", href: "https://www.highstay.com" as string | null, color: "#677A67", windows: [{ start: 9, end: 17 }, { start: 33, end: 41 }, { start: 57, end: 65 }] },
+    { id: 2, name: "GHD Air Wrap", detail: "Professional Styler", price: "€649", cta: "BUY NOW", href: null as string | null, color: "#8a7090", windows: [{ start: 17, end: 25 }, { start: 41, end: 49 }, { start: 65, end: 73 }] },
+  ];
+
+  const engagementBubbles = [
+    { label: "Clicks", value: "12.4K", top: "8%", left: "2%", delay: 0, size: 86 },
+    { label: "Sales", value: "$8,200", top: "28%", right: "2%", delay: 0.5, size: 96 },
+    { label: "Shares", value: "3.2K", bottom: "22%", left: "4%", delay: 1.0, size: 86 },
+    { label: "ROI", value: "420%", bottom: "10%", right: "4%", delay: 1.5, size: 82 },
+  ];
+
+  const heroBlobs = [
+    { size: 320, anchor: { top: "5%", left: "2%" }, travelX: [0, 60, 30, -25, 15, 0], travelY: [0, 40, -30, 28, -18, 0], travelDuration: 44, rotateDuration: 20, dir: 1 },
+    { size: 260, anchor: { bottom: "5%", right: "2%" }, travelX: [0, -50, -28, 20, -12, 0], travelY: [0, -38, 28, -26, 14, 0], travelDuration: 54, rotateDuration: 26, dir: -1 },
+    { size: 180, anchor: { top: "10%", right: "5%" }, travelX: [0, -36, -18, 28, -6, 0], travelY: [0, 22, 40, -24, 10, 0], travelDuration: 38, rotateDuration: 15, dir: -1 },
+    { size: 140, anchor: { bottom: "10%", left: "5%" }, travelX: [0, 42, 22, -32, 10, 0], travelY: [0, -26, 22, 14, -14, 0], travelDuration: 32, rotateDuration: 12, dir: 1 },
+  ];
+
+  useEffect(() => {
+    const video = heroPhoneRef.current;
+    if (!video) return;
+    const handleTimeUpdate = () => {
+      const t = video.currentTime;
+      let found: number | null = null;
+      for (const p of sceneProducts) {
+        if (p.windows.some(w => t >= w.start && t < w.end)) { found = p.id; break; }
+      }
+      setActiveProduct(prev => prev !== found ? found : prev);
+    };
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, []);
+
   const scrollToSignup = () => {
     document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1a]">
-      <section className="relative h-screen overflow-hidden">
-        <motion.div
-          style={{ opacity: heroOpacity, scale: heroScale }}
-          className="absolute inset-0"
-        >
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-            aria-hidden="true"
+      <section className="relative min-h-screen overflow-hidden bg-[#1a1a1a]">
+        {/* Animated chrome blobs — background decoration */}
+        {heroBlobs.map((blob, i) => (
+          <motion.div
+            key={i}
+            animate={{ x: blob.travelX, y: blob.travelY }}
+            transition={{ duration: blob.travelDuration, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
+            className="absolute pointer-events-none select-none"
+            style={{ top: blob.anchor.top, bottom: blob.anchor.bottom, left: blob.anchor.left, right: blob.anchor.right, zIndex: 0 }}
           >
-            <source src={heroVideo} type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
-        </motion.div>
+            <motion.img
+              src={chromeBlobIcon}
+              alt=""
+              aria-hidden="true"
+              animate={{ rotate: [0, blob.dir * 360] }}
+              transition={{ duration: blob.rotateDuration, repeat: Infinity, ease: "linear" }}
+              style={{ width: blob.size, height: blob.size, opacity: 0.14, display: "block" }}
+            />
+          </motion.div>
+        ))}
 
+        {/* Nav bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
           <img src={materializedLogo} alt="Materialized" style={{ height: 140, width: "auto", filter: "invert(1)" }} />
           <div className="flex items-center gap-3">
@@ -1345,110 +1082,163 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
-              <TypewriterText />
-            </h1>
-            <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
-              The all-in-one platform for creators, brands, and publishers to monetize video content with AI-powered product detection and seamless affiliate tracking.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 300, damping: 18 }}
-              >
-                <Button
-                  onClick={scrollToSignup}
-                  size="lg"
-                  className="text-white font-semibold rounded-full border-0"
-                  style={{
-                    paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px",
-                    background: "#f0c86447",
-                    backdropFilter: "blur(8px)",
-                  }}
-                  data-testid="button-hero-cta"
-                >
-                  Try Now
-                </Button>
-              </motion.div>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-white/30 text-white hover:bg-white/10 rounded-full backdrop-blur-sm"
-                style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
-                data-testid="button-hero-learn-more"
-              >
-                Learn More
-              </Button>
-            </div>
-          </motion.div>
+        {/* Main hero content — two columns */}
+        <div className="relative z-10 flex items-center min-h-screen px-6 pt-20 pb-12">
+          <div className="max-w-6xl mx-auto w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          >
-            <ChevronDown className="w-8 h-8 text-white/60 animate-bounce" />
-          </motion.div>
-
-          {/* Floating Celine product card */}
-          <motion.div
-            initial={{ opacity: 0, x: 60, y: 20 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            transition={{ delay: 1.6, duration: 0.9, ease: "easeOut" }}
-            className="absolute right-4 md:right-14 bottom-20 md:bottom-28 z-30"
-          >
+            {/* Left: text + CTAs */}
             <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="flex-1 text-center lg:text-left"
             >
-              <a
-                href="https://www.celine.com/en-us/celine-shop-women/handbags/luggage/little-luggage-in-supple-shiny-lambskin-124213GW2.38NO.html?utm_source=google&utm_medium=cpc&utm_content=brand&utm_campaign=Celine_FLG_USA_PLA-ROAS_UNI_MUL_OGOING_EC_SHOP_GSHO_CRD_ENG_USD_NAPP_NAMER&gad_source=1&gad_campaignid=1967889563&gbraid=0AAAAACy3BrUR7lpoRa4RGLZsSi5GjmurM&gclid=CjwKCAjw687NBhB4EiwAQ645du4KCYfGj5HR2GwL_eGWWGT6zv2O2E7stnYZBULz2xtfBQdd7l8RuRoCnCMQAvD_BwE"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block no-underline"
-                style={{ width: "clamp(140px, 18vw, 188px)" }}
-              >
-                <div
-                  className="rounded-2xl overflow-hidden"
-                  style={{
-                    background: "rgba(0,0,0,0.52)",
-                    backdropFilter: "blur(14px)",
-                    border: "1px solid rgba(255,255,255,0.13)",
-                    boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
-                  }}
+              <p className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
+                Data &amp; Analytics
+              </p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
+                <TypewriterText />
+              </h1>
+              <p className="text-lg md:text-xl text-white/70 max-w-xl mb-10">
+                The all-in-one platform for creators, brands, and publishers to monetize video content with AI-powered product detection and seamless affiliate tracking.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <motion.div
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 18 }}
                 >
-                  <div className="p-3">
-                    <img
-                      src={celineBagImage}
-                      alt="Celine Little Luggage Lambskin"
-                      className="w-full rounded-xl"
-                      style={{ aspectRatio: "1/1", objectFit: "contain", background: "transparent" }}
-                    />
-                    <div className="mt-2.5 space-y-0.5">
-                      <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">Celine Paris</div>
-                      <div className="text-white text-[11px] font-semibold leading-tight">Little Luggage</div>
-                      <div className="text-white font-bold text-base leading-tight">$3,600</div>
+                  <Button
+                    onClick={scrollToSignup}
+                    size="lg"
+                    className="text-white font-semibold rounded-full border-0"
+                    style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px", background: "#f0c86447", backdropFilter: "blur(8px)" }}
+                    data-testid="button-hero-cta"
+                  >
+                    Try Now
+                  </Button>
+                </motion.div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-white/30 text-white hover:bg-white/10 rounded-full backdrop-blur-sm"
+                  style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
+                  data-testid="button-hero-learn-more"
+                >
+                  Learn More
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Right: phone mockup + analytics bubbles */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.2 }}
+              className="flex-1 flex justify-center"
+            >
+              <div className="relative">
+                {/* Analytics bubbles */}
+                {engagementBubbles.map((bubble) => (
+                  <motion.div
+                    key={bubble.label}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: bubble.delay + 0.6, type: "spring", stiffness: 200 }}
+                    whileHover={{ scale: [1, 1.18, 1], transition: { duration: 0.6, repeat: Infinity } }}
+                    className="absolute bg-white shadow-xl flex flex-col items-center justify-center cursor-pointer"
+                    style={{
+                      top: bubble.top, left: (bubble as any).left, right: (bubble as any).right, bottom: (bubble as any).bottom,
+                      width: bubble.size, height: bubble.size, borderRadius: "50%", zIndex: 2,
+                    }}
+                  >
+                    <div className="text-sm font-bold text-[#43484D] leading-tight">{bubble.value}</div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">{bubble.label}</div>
+                  </motion.div>
+                ))}
+
+                {/* Phone bezel */}
+                <div className="relative w-[260px] md:w-[300px]" style={{ zIndex: 1 }}>
+                  <div
+                    className="relative bg-[#111] rounded-[3rem] p-3 shadow-2xl"
+                    style={{ border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)" }}
+                  >
+                    {/* Notch */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-[#111] rounded-b-2xl z-20" />
+                    {/* Screen */}
+                    <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
+                      <video
+                        ref={heroPhoneRef}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full aspect-[9/16] object-cover"
+                        aria-label="Discovery Packs video"
+                      >
+                        <source src={discoveryPacksVideo} type="video/mp4" />
+                      </video>
+
+                      {/* Timed product bubbles */}
+                      <AnimatePresence mode="wait">
+                        {activeProduct !== null && (() => {
+                          const p = sceneProducts[activeProduct];
+                          return (
+                            <motion.div
+                              key={p.id}
+                              initial={{ opacity: 0, y: 18, scale: 0.92 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                              transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                              className="absolute left-2.5 right-2.5 z-10"
+                              style={{ bottom: "68px" }}
+                            >
+                              <div
+                                className="rounded-2xl px-3 py-2 flex items-center gap-2.5"
+                                style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)", border: `1px solid ${p.color}55`, boxShadow: `0 0 12px ${p.color}33` }}
+                              >
+                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.color }} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-white font-semibold text-[10px] leading-tight truncate">{p.name}</div>
+                                  <div className="text-white/55 text-[8px] leading-tight">{p.detail}</div>
+                                </div>
+                                {p.price && <div className="text-white font-bold text-xs flex-shrink-0">{p.price}</div>}
+                                {p.href ? (
+                                  <a href={p.href} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white" style={{ background: p.color }}>{p.cta}</a>
+                                ) : (
+                                  <button className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white" style={{ background: p.color }}>{p.cta}</button>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })()}
+                      </AnimatePresence>
+
+                      {/* Video overlay info */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                        <div className="text-white font-semibold text-sm">Discovery Packs</div>
+                        <div className="text-white/70 text-xs">@join.materialized</div>
+                      </div>
                     </div>
-                    <div
-                      className="mt-2.5 w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                      style={{ background: "rgba(255,255,255,0.92)" }}
-                    >
-                      BUY NOW
-                    </div>
+                    {/* Home indicator */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/30 rounded-full" />
                   </div>
                 </div>
-              </a>
+              </div>
             </motion.div>
-          </motion.div>
+
+          </div>
         </div>
+
+        {/* Scroll chevron */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4, duration: 1 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        >
+          <ChevronDown className="w-8 h-8 text-white/50 animate-bounce" />
+        </motion.div>
       </section>
 
       {/* ── Section cards ── all float on #202120 background with 50px radius */}
@@ -1574,17 +1364,6 @@ export default function Landing() {
               </div>
             );
           })()}
-        </div>
-
-        {/* Video of the Week — dark card */}
-        <div
-          className="overflow-hidden bg-[#1a1a1a]"
-          style={{
-            borderRadius: 50,
-            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
-          }}
-        >
-          <VideoOfTheWeekSection />
         </div>
 
         {/* Sign up — dark card */}
