@@ -908,29 +908,29 @@ function EventVoucherSection() {
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="submit"
-                    disabled={claimMutation.isPending}
-                    data-testid="btn-voucher-claim"
-                    className="w-full font-bold text-white rounded-xl h-12 text-base transition-all mt-1"
-                    style={{ background: cfg.color, border: "none" }}
-                  >
-                    {claimMutation.isPending ? "Sending…" : "GO!"}
-                  </Button>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      type="submit"
+                      disabled={claimMutation.isPending}
+                      data-testid="btn-voucher-claim"
+                      className="flex-1 font-bold text-white rounded-xl h-12 text-base transition-all"
+                      style={{ background: cfg.color, border: "none" }}
+                    >
+                      {claimMutation.isPending ? "Sending…" : "GO!"}
+                    </Button>
+                    <a
+                      href="https://www.linkedin.com/showcase/join-materialized/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="link-voucher-linkedin-materialized"
+                      className="flex items-center justify-center h-12 w-12 rounded-xl text-white/40 hover:text-white/80 transition-colors flex-shrink-0"
+                      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
+                    >
+                      <SiLinkedin className="w-6 h-6" />
+                    </a>
+                  </div>
                 </form>
               </Form>
-              {/* Materialized LinkedIn — bottom right */}
-              <div className="flex justify-end mt-3">
-                <a
-                  href="https://www.linkedin.com/showcase/join-materialized/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="link-voucher-linkedin-materialized"
-                  className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-xs"
-                >
-                  <SiLinkedin className="w-3.5 h-3.5" />
-                </a>
-              </div>
             </motion.div>
           ) : (
             <motion.div
