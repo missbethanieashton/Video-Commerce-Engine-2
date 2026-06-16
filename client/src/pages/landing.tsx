@@ -719,10 +719,10 @@ function SignupSection() {
                   role: "brand" as const,
                   title: "Brand",
                   tagline: "Designed for Brands and eCommerce Stores",
-                  accentColor: "#314d3b",
+                  accentColor: "#6dbf7e",
                   hoverBg: "rgba(49,77,59,0.28)",
-                  hoverBorder: "rgba(49,77,59,0.8)",
-                  glowColor: "rgba(49,77,59,0.4)",
+                  hoverBorder: "rgba(109,191,126,0.7)",
+                  glowColor: "rgba(109,191,126,0.3)",
                   icon: "🛍️",
                 },
                 {
