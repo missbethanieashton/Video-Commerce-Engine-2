@@ -1419,7 +1419,8 @@ export default function Landing() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="group text-white/80 hover:text-white hover:bg-white/10 rounded-full text-sm overflow-hidden flex items-center gap-1.5"
+                className="group text-white/80 hover:text-white rounded-full text-sm overflow-hidden flex items-center gap-1.5"
+                style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
                 data-testid="button-nav-signin"
               >
                 <CircleUserRound className="w-4 h-4 shrink-0" strokeWidth={1.5} />
@@ -1428,8 +1429,10 @@ export default function Landing() {
             </Link>
             <Button
               onClick={scrollToSignup}
+              variant="ghost"
               size="sm"
-              className="hidden sm:inline-flex group bg-[#314d3b] hover:bg-[#24372b] text-white font-semibold rounded-full text-sm overflow-hidden"
+              className="hidden sm:inline-flex group text-white font-semibold rounded-full text-sm overflow-hidden"
+              style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
               data-testid="button-nav-get-started"
             >
               <RollingText>Get Started</RollingText>
@@ -1483,43 +1486,63 @@ export default function Landing() {
               transition={{ duration: 0.9, delay: 0.2 }}
               className="flex-1 flex justify-center"
             >
-              <div className="relative w-full">
-                {/* Audio toggle */}
-                <button
-                  onClick={() => {
-                    const v = miroVideoRef.current;
-                    if (!v) return;
-                    const next = !miroMuted;
-                    v.muted = next;
-                    setMiroMuted(next);
-                  }}
-                  className="absolute top-4 left-4 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2.5 transition-colors backdrop-blur-sm"
-                  data-testid="button-miro-audio-toggle"
-                  title={miroMuted ? "Enable audio" : "Mute"}
-                >
-                  {miroMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </button>
-
-                {/* Video */}
+              <div className="relative w-full max-w-[380px] mx-auto">
+                {/* iPad portrait tablet frame */}
                 <div
-                  className="overflow-hidden"
+                  className="relative rounded-[44px] p-[16px]"
                   style={{
-                    borderRadius: 32,
-                    height: "70vh",
-                    maxHeight: 700,
-                    boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+                    background: "#1c1c1e",
+                    boxShadow: "0 50px 120px rgba(0,0,0,0.65), 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.35)",
                   }}
                 >
-                  <video
-                    ref={miroVideoRef}
-                    src="/miro-misljen-dress.mp4"
-                    autoPlay
-                    loop
-                    playsInline
-                    muted={miroMuted}
-                    className="w-full h-full object-cover"
-                    data-testid="video-miro-misljen"
-                  />
+                  {/* Front camera */}
+                  <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#2e2e2e]" />
+                  {/* Power button (right) */}
+                  <div className="absolute right-[-4px] top-[90px] w-[4px] h-10 rounded-r-full bg-[#2a2a2a]" />
+                  {/* Volume up (left) */}
+                  <div className="absolute left-[-4px] top-[70px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
+                  {/* Volume down (left) */}
+                  <div className="absolute left-[-4px] top-[106px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
+
+                  {/* Screen */}
+                  <div
+                    className="relative rounded-[30px] overflow-hidden bg-black"
+                    style={{ height: "62vh", maxHeight: 640 }}
+                  >
+                    {/* Audio toggle inside screen */}
+                    <button
+                      onClick={() => {
+                        const v = miroVideoRef.current;
+                        if (!v) return;
+                        const next = !miroMuted;
+                        v.muted = next;
+                        setMiroMuted(next);
+                      }}
+                      className="absolute top-3 left-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors backdrop-blur-sm"
+                      data-testid="button-miro-audio-toggle"
+                      title={miroMuted ? "Enable audio" : "Mute"}
+                    >
+                      {miroMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                    </button>
+
+                    <video
+                      ref={miroVideoRef}
+                      src="/miro-misljen-dress.mp4"
+                      autoPlay
+                      loop
+                      playsInline
+                      muted={miroMuted}
+                      className="w-full h-full object-cover"
+                      data-testid="video-miro-misljen"
+                      onLoadedMetadata={(e) => {
+                        const v = e.currentTarget;
+                        v.currentTime = 3;
+                        v.play().catch(() => {});
+                      }}
+                    />
+                    {/* Screen glare */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/4 via-transparent to-transparent pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* Floating product card */}
