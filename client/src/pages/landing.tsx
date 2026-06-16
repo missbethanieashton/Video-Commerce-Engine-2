@@ -698,31 +698,76 @@ function SignupSection() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
             Join the Revolution
           </h2>
-          <p className="text-center text-white/70 mb-12">
-            Create your free account to see how AI is transforming entertainment & building new wealth today
+          <p className="text-center text-white/70 mb-12 text-lg">
+            Subscribe and experience just how AI is transforming entertainment
           </p>
 
           {!selectedRole ? (
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-3 gap-6">
               {[
-                { role: "creator" as const, title: "Creator", desc: "Import your videos, tag brands, and shopify your video assets in seconds", hoverBg: "rgba(167,210,167,0.28)", hoverBorder: "rgba(167,210,167,0.5)" },
-                { role: "brand" as const, title: "Brand", desc: "Connect your inventory, import your recorded runways or fashion films and Materialized will deliver shoppable videos for your website", hoverBg: "rgba(180,150,220,0.28)", hoverBorder: "rgba(180,150,220,0.5)" },
-                { role: "publisher" as const, title: "Publisher", desc: "Save on production costs! Search our global video library for categorized entertainment, curate a playlist of content that suits your niche, publish and generate a new revenue stream from affiliate royalties", hoverBg: "rgba(240,200,100,0.28)", hoverBorder: "rgba(240,200,100,0.5)" },
+                {
+                  role: "creator" as const,
+                  title: "Creator",
+                  tagline: "Built for Content Creators and Filmmakers",
+                  accentColor: "#1351aa",
+                  hoverBg: "rgba(19,81,170,0.22)",
+                  hoverBorder: "rgba(19,81,170,0.7)",
+                  glowColor: "rgba(19,81,170,0.35)",
+                  icon: "🎬",
+                },
+                {
+                  role: "brand" as const,
+                  title: "Brand",
+                  tagline: "Designed for Brands and eCommerce Stores",
+                  accentColor: "#314d3b",
+                  hoverBg: "rgba(49,77,59,0.28)",
+                  hoverBorder: "rgba(49,77,59,0.8)",
+                  glowColor: "rgba(49,77,59,0.4)",
+                  icon: "🛍️",
+                },
+                {
+                  role: "publisher" as const,
+                  title: "Publisher",
+                  tagline: "Affiliate benefits for Publishers who repost from the Global Video Library",
+                  accentColor: "#c8a54a",
+                  hoverBg: "rgba(200,165,74,0.2)",
+                  hoverBorder: "rgba(200,165,74,0.65)",
+                  glowColor: "rgba(200,165,74,0.35)",
+                  icon: "📡",
+                },
               ].map((item) => (
                 <motion.button
                   key={item.role}
-                  whileHover={{ scale: 1.02, backgroundColor: item.hoverBg, borderColor: item.hoverBorder }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ backgroundColor: { duration: 0 }, borderColor: { duration: 0 }, scale: { type: "spring", stiffness: 300, damping: 20 } }}
+                  initial={{ boxShadow: "0 0 0px transparent" }}
+                  whileHover={{
+                    scale: 1.04,
+                    backgroundColor: item.hoverBg,
+                    borderColor: item.hoverBorder,
+                    boxShadow: `0 8px 40px ${item.glowColor}, 0 0 0 1px ${item.hoverBorder}`,
+                  }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
                   onClick={() => handleRoleSelect(item.role)}
-                  className="p-6 rounded-2xl backdrop-blur-sm text-left"
-                  style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+                  className="p-8 rounded-3xl backdrop-blur-sm text-left flex flex-col gap-5 group"
+                  style={{ background: "rgba(255,255,255,0.07)", border: `1px solid rgba(255,255,255,0.15)`, minHeight: 220 }}
                   data-testid={`button-role-${item.role}`}
                 >
-                  <div className="text-xl font-semibold text-white mb-2">
-                    {item.title}
+                  <div className="text-4xl">{item.icon}</div>
+                  <div>
+                    <div
+                      className="text-2xl font-bold text-white mb-3 tracking-tight"
+                      style={{ fontFamily: "'Aileron', sans-serif" }}
+                    >
+                      {item.title}
+                    </div>
+                    <div className="text-white/75 text-base leading-relaxed">{item.tagline}</div>
                   </div>
-                  <div className="text-white/60 text-sm">{item.desc}</div>
+                  <div
+                    className="mt-auto text-sm font-semibold flex items-center gap-1.5 transition-colors"
+                    style={{ color: item.accentColor }}
+                  >
+                    Get started <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+                  </div>
                 </motion.button>
               ))}
             </div>
