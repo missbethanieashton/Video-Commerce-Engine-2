@@ -752,7 +752,6 @@ function SignupSection() {
                   style={{ background: "rgba(255,255,255,0.07)", border: `1px solid rgba(255,255,255,0.15)`, minHeight: 220 }}
                   data-testid={`button-role-${item.role}`}
                 >
-                  <div className="text-4xl">{item.icon}</div>
                   <div>
                     <div
                       className="text-2xl font-bold text-white mb-3 tracking-tight"
