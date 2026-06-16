@@ -929,7 +929,6 @@ function EventVoucherSection() {
                   className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-xs"
                 >
                   <SiLinkedin className="w-3.5 h-3.5" />
-                  <span>Materialized</span>
                 </a>
               </div>
             </motion.div>
