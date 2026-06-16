@@ -41,6 +41,7 @@ import Rewards from "@/pages/rewards";
 import Profile from "@/pages/profile";
 import BrandAuthorize from "@/pages/brand-authorize";
 import AdminPipeline from "@/pages/admin-pipeline";
+import AdminDashboard from "@/pages/admin-dashboard";
 import BrandSettingsSubscription from "@/pages/brand-settings-subscription";
 import CreatorSettingsSubscription from "@/pages/creator-settings-subscription";
 import BrandSettingsBillingHistory from "@/pages/brand-settings-billing-history";
@@ -233,6 +234,7 @@ function AppContent() {
   if (isAdminRoute) {
     return (
       <Switch>
+        <Route path="/admin-dashboard" component={AdminDashboard} />
         <Route path="/admin" component={AdminPipeline} />
       </Switch>
     );

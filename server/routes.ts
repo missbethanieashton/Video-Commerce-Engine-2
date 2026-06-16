@@ -34,6 +34,7 @@ import {
   sendGlobalPitchEmail,
   sendSubscriptionNudgeEmail,
   sendContactEnquiryEmail,
+  sendVoucherEmail,
   isEmailConfigured,
 } from "./emailService";
 import { setupPdfAnalysisRoutes } from "./replit_integrations/pdf_analysis";
@@ -2644,6 +2645,97 @@ Identify which products from the catalog are most likely to appear or be feature
       }
       console.error("Contact form error:", err);
       res.status(500).json({ error: "Failed to send enquiry" });
+    }
+  });
+
+  // ==================== EVENT VOUCHER ROUTES ====================
+
+  app.post("/api/event-voucher/claim", async (req, res) => {
+    try {
+      const schema = z.object({
+        firstName: z.string().min(1).max(100),
+        email: z.string().email(),
+        linkedin: z.string().optional(),
+        event: z.enum(["vivatech", "cannes"]),
+      });
+      const data = schema.parse(req.body);
+
+      // Check if already claimed
+      const existing = await storage.getEventVoucherByEmail(data.email);
+      if (existing) {
+        return res.status(409).json({ error: "A voucher has already been sent to this email address.", code: existing.code });
+      }
+
+      // Generate unique code
+      const prefix = data.event === "vivatech" ? "VIVA2026" : "LIONS2026";
+      const suffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const code = `${prefix}-${suffix}`;
+      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+      await storage.createEventVoucher({ code, event: data.event, firstName: data.firstName, email: data.email, linkedin: data.linkedin, expiresAt });
+
+      if (isEmailConfigured()) {
+        await sendVoucherEmail({ firstName: data.firstName, email: data.email, event: data.event, code, expiresAt });
+      }
+
+      res.json({ success: true, code });
+    } catch (err: any) {
+      if (err?.name === "ZodError") return res.status(400).json({ error: "Invalid data", details: err.errors });
+      console.error("Voucher claim error:", err);
+      res.status(500).json({ error: "Failed to process voucher" });
+    }
+  });
+
+  // Validate a voucher code at registration
+  app.get("/api/event-voucher/validate/:code", async (req, res) => {
+    try {
+      const voucher = await storage.getEventVoucherByCode(req.params.code);
+      if (!voucher) return res.status(404).json({ error: "Invalid voucher code" });
+      if (voucher.usedAt) return res.status(409).json({ error: "Voucher already used" });
+      if (new Date() > new Date(voucher.expiresAt)) return res.status(410).json({ error: "Voucher expired" });
+      res.json({ valid: true, event: voucher.event, expiresAt: voucher.expiresAt });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to validate voucher" });
+    }
+  });
+
+  // ==================== ADMIN DASHBOARD ROUTES ====================
+
+  const ADMIN_DASHBOARD_PASSWORD = "Conscious123*";
+
+  app.post("/api/admin-dashboard/auth", (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_DASHBOARD_PASSWORD) {
+      res.json({ token: Buffer.from(ADMIN_DASHBOARD_PASSWORD).toString("base64") });
+    } else {
+      res.status(401).json({ error: "Invalid password" });
+    }
+  });
+
+  function requireDashboardAuth(req: any, res: any, next: any) {
+    const auth = req.headers["x-dashboard-token"];
+    if (auth !== Buffer.from(ADMIN_DASHBOARD_PASSWORD).toString("base64")) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    next();
+  }
+
+  app.get("/api/admin-dashboard/stats", requireDashboardAuth, async (req, res) => {
+    try {
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (e: any) {
+      console.error("Admin dashboard stats error:", e);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  app.get("/api/admin-dashboard/vouchers", requireDashboardAuth, async (req, res) => {
+    try {
+      const vouchers = await storage.getAllEventVouchers();
+      res.json(vouchers);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch vouchers" });
     }
   });
 

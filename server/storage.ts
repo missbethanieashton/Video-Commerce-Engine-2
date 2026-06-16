@@ -2,6 +2,8 @@ import { randomUUID } from "crypto";
 import { eq, desc, sql, and } from "drizzle-orm";
 import { db } from "./db";
 import {
+  type EventVoucher,
+  eventVouchers,
   type User, type InsertUser,
   type Brand, type InsertBrand,
   type Product, type InsertProduct,
@@ -305,6 +307,16 @@ export interface IStorage {
   addToWishlist(data: InsertWishlist): Promise<Wishlist>;
   removeFromWishlist(userId: string, globalListingId: string): Promise<void>;
   isInWishlist(userId: string, globalListingId: string): Promise<boolean>;
+
+  // Event Vouchers
+  createEventVoucher(data: { code: string; event: string; firstName: string; email: string; linkedin?: string; expiresAt: Date }): Promise<EventVoucher>;
+  getEventVoucherByCode(code: string): Promise<EventVoucher | undefined>;
+  getEventVoucherByEmail(email: string): Promise<EventVoucher | undefined>;
+  redeemEventVoucher(code: string, userId: string): Promise<void>;
+  getAllEventVouchers(): Promise<EventVoucher[]>;
+
+  // Admin dashboard
+  getAdminDashboardStats(): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1676,6 +1688,21 @@ export class MemStorage implements IStorage {
   async isInWishlist(userId: string, globalListingId: string): Promise<boolean> {
     return this.wishlistItems.some(w => w.userId === userId && w.globalListingId === globalListingId);
   }
+
+  private eventVouchersList: EventVoucher[] = [];
+  async createEventVoucher(data: { code: string; event: string; firstName: string; email: string; linkedin?: string; expiresAt: Date }): Promise<EventVoucher> {
+    const v: EventVoucher = { id: Date.now(), claimedAt: new Date(), usedByUserId: null, usedAt: null, isActive: true, linkedin: data.linkedin ?? null, ...data } as any;
+    this.eventVouchersList.push(v);
+    return v;
+  }
+  async getEventVoucherByCode(code: string): Promise<EventVoucher | undefined> { return this.eventVouchersList.find(v => v.code === code); }
+  async getEventVoucherByEmail(email: string): Promise<EventVoucher | undefined> { return this.eventVouchersList.find(v => v.email === email); }
+  async redeemEventVoucher(code: string, userId: string): Promise<void> {
+    const v = this.eventVouchersList.find(v => v.code === code);
+    if (v) { v.usedByUserId = userId; v.usedAt = new Date(); }
+  }
+  async getAllEventVouchers(): Promise<EventVoucher[]> { return this.eventVouchersList; }
+  async getAdminDashboardStats(): Promise<any> { return {}; }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -2505,6 +2532,139 @@ export class DatabaseStorage implements IStorage {
       and(eq(wishlists.userId, userId), eq(wishlists.globalListingId, globalListingId))
     );
     return !!entry;
+  }
+
+  // Event Vouchers
+  async createEventVoucher(data: { code: string; event: string; firstName: string; email: string; linkedin?: string; expiresAt: Date }): Promise<EventVoucher> {
+    const [v] = await db.insert(eventVouchers).values(data).returning();
+    return v;
+  }
+  async getEventVoucherByCode(code: string): Promise<EventVoucher | undefined> {
+    const [v] = await db.select().from(eventVouchers).where(eq(eventVouchers.code, code));
+    return v;
+  }
+  async getEventVoucherByEmail(email: string): Promise<EventVoucher | undefined> {
+    const [v] = await db.select().from(eventVouchers).where(eq(eventVouchers.email, email));
+    return v;
+  }
+  async redeemEventVoucher(code: string, userId: string): Promise<void> {
+    await db.update(eventVouchers).set({ usedByUserId: userId, usedAt: new Date() }).where(eq(eventVouchers.code, code));
+  }
+  async getAllEventVouchers(): Promise<EventVoucher[]> {
+    return db.select().from(eventVouchers).orderBy(desc(eventVouchers.claimedAt));
+  }
+
+  async getAdminDashboardStats(): Promise<any> {
+    const [userStats] = await db.execute(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE role = 'creator') as creator_count,
+        COUNT(*) FILTER (WHERE role = 'brand') as brand_count,
+        COUNT(*) FILTER (WHERE role = 'affiliate') as affiliate_count,
+        COUNT(*) as total_users
+      FROM users
+    `);
+
+    const [videoStats] = await db.execute(sql`
+      SELECT
+        COUNT(*) as total_videos,
+        COUNT(*) FILTER (WHERE is_trial = true) as trial_videos,
+        COALESCE(SUM(total_views), 0) as total_views,
+        COALESCE(SUM(total_clicks), 0) as total_clicks
+      FROM videos
+    `);
+
+    const [globalLibStats] = await db.execute(sql`
+      SELECT COUNT(*) as total_listed FROM global_video_library
+    `);
+
+    const [referralStats] = await db.execute(sql`
+      SELECT
+        COUNT(*) as total_referrals,
+        COUNT(*) FILTER (WHERE status = 'subscribed') as converted_referrals
+      FROM brand_referrals
+    `);
+
+    const [embedStats] = await db.execute(sql`
+      SELECT
+        COUNT(*) as total_embeds,
+        COALESCE(SUM(total_loads), 0) as total_embed_loads,
+        COUNT(DISTINCT domain) as unique_domains
+      FROM embed_deployments
+    `);
+
+    const [revenueStats] = await db.execute(sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN type = 'listing_fee' THEN amount ELSE 0 END), 0) as listing_revenue,
+        COALESCE(SUM(CASE WHEN type = 'license_fee' THEN amount ELSE 0 END), 0) as license_revenue,
+        COALESCE(SUM(amount), 0) as total_revenue
+      FROM brand_billing_records
+    `);
+
+    const subscriptionRevenue = await db.execute(sql`
+      SELECT
+        DATE_TRUNC('month', subscribed_at) as month,
+        plan,
+        COUNT(*) as count
+      FROM brand_subscriptions
+      WHERE status = 'active'
+      GROUP BY DATE_TRUNC('month', subscribed_at), plan
+      ORDER BY month DESC
+      LIMIT 24
+    `);
+
+    const usersByRole = await db.execute(sql`
+      SELECT role, COUNT(*) as count, DATE_TRUNC('week', created_at) as week
+      FROM users
+      GROUP BY role, DATE_TRUNC('week', created_at)
+      ORDER BY week DESC
+      LIMIT 52
+    `);
+
+    const topVideosByViews = await db.execute(sql`
+      SELECT v.id, v.title, v.total_views, v.total_clicks,
+        CASE WHEN v.total_views > 0 THEN ROUND((v.total_clicks::numeric / v.total_views) * 100, 2) ELSE 0 END as ctr,
+        u.email as creator_email, u.display_name as creator_name
+      FROM videos v
+      JOIN users u ON v.user_id = u.id
+      ORDER BY v.total_views DESC
+      LIMIT 20
+    `);
+
+    const voucherStats = await db.execute(sql`
+      SELECT event, COUNT(*) as claimed, COUNT(used_at) as redeemed
+      FROM event_vouchers
+      GROUP BY event
+    `);
+
+    const allUsers = await db.execute(sql`
+      SELECT u.id, u.email, u.display_name, u.role, u.created_at, u.is_admin,
+        COUNT(DISTINCT v.id) as video_count,
+        COUNT(DISTINCT gvl.id) as library_count,
+        COUNT(DISTINCT br.id) as referral_count,
+        COUNT(DISTINCT ed.id) as embed_count,
+        COALESCE(SUM(v.total_views), 0) as total_views
+      FROM users u
+      LEFT JOIN videos v ON v.user_id = u.id
+      LEFT JOIN global_video_library gvl ON gvl.creator_id = u.id
+      LEFT JOIN brand_referrals br ON br.creator_id = u.id
+      LEFT JOIN embed_deployments ed ON ed.user_id = u.id
+      GROUP BY u.id, u.email, u.display_name, u.role, u.created_at, u.is_admin
+      ORDER BY u.created_at DESC
+    `);
+
+    return {
+      userStats: userStats.rows?.[0] ?? userStats,
+      videoStats: videoStats.rows?.[0] ?? videoStats,
+      globalLibStats: globalLibStats.rows?.[0] ?? globalLibStats,
+      referralStats: referralStats.rows?.[0] ?? referralStats,
+      embedStats: embedStats.rows?.[0] ?? embedStats,
+      revenueStats: revenueStats.rows?.[0] ?? revenueStats,
+      subscriptionRevenue: subscriptionRevenue.rows ?? subscriptionRevenue,
+      usersByRole: usersByRole.rows ?? usersByRole,
+      topVideosByViews: topVideosByViews.rows ?? topVideosByViews,
+      voucherStats: voucherStats.rows ?? voucherStats,
+      allUsers: allUsers.rows ?? allUsers,
+    };
   }
 }
 

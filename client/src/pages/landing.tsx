@@ -729,6 +729,228 @@ const ROLE_ROUTES: Record<string, string> = {
   publisher: "/affiliate",
 };
 
+// ─── Event Voucher Section ───────────────────────────────────────────────────
+
+const voucherSchema = z.object({
+  firstName: z.string().min(1, "First name required").max(100),
+  email: z.string().email("Valid email required"),
+  linkedin: z.string().optional(),
+  event: z.enum(["vivatech", "cannes"]),
+});
+type VoucherFormData = z.infer<typeof voucherSchema>;
+
+const EVENT_CONFIG = {
+  vivatech: {
+    label: "VivaTech 2026",
+    badge: "VivaTech",
+    description: "Get 14 days free access — upload your first shoppable video from the show floor.",
+    color: "#1351aa",
+    codePrefix: "VIVA2026",
+    emoji: "⚡",
+  },
+  cannes: {
+    label: "Cannes Lions 2026",
+    badge: "Cannes Lions",
+    description: "Claim your free 14-day trial and launch your first shoppable video from the Croisette.",
+    color: "#c8962a",
+    codePrefix: "LIONS2026",
+    emoji: "🦁",
+  },
+};
+
+function EventVoucherSection() {
+  const { toast } = useToast();
+  const [activeEvent, setActiveEvent] = useState<"vivatech" | "cannes">("vivatech");
+  const [claimed, setClaimed] = useState<{ code: string; event: string } | null>(null);
+
+  const form = useForm<VoucherFormData>({
+    resolver: zodResolver(voucherSchema),
+    defaultValues: { firstName: "", email: "", linkedin: "", event: "vivatech" },
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: (data: VoucherFormData) =>
+      apiRequest("POST", "/api/event-voucher/claim", data).then((r) => r.json()),
+    onSuccess: (data, variables) => {
+      setClaimed({ code: data.code, event: variables.event });
+    },
+    onError: async (err: any) => {
+      try {
+        const body = err?.response ? await err.response.json() : null;
+        if (body?.code) {
+          setClaimed({ code: body.code, event: activeEvent });
+          return;
+        }
+        toast({ title: body?.error ?? "Something went wrong", variant: "destructive" });
+      } catch {
+        toast({ title: "Something went wrong", variant: "destructive" });
+      }
+    },
+  });
+
+  const cfg = EVENT_CONFIG[activeEvent];
+
+  const onSubmit = (data: VoucherFormData) => {
+    claimMutation.mutate({ ...data, event: activeEvent });
+  };
+
+  return (
+    <section className="py-20 px-4" style={{ background: "#0f1010" }}>
+      <div className="max-w-2xl mx-auto text-center mb-10">
+        <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">Exclusive Event Access</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Aileron', sans-serif" }}>
+          Attending an event?<br />Claim your free trial
+        </h2>
+        <p className="text-white/60 text-base">
+          Get 14 days free access to Materialized — zero credit card needed.<br />Upload your first shoppable video right from the event floor.
+        </p>
+      </div>
+
+      {/* Event toggle */}
+      <div className="flex justify-center mb-10">
+        <div className="inline-flex rounded-full p-1" style={{ background: "#1a1b1b", border: "1px solid rgba(255,255,255,0.1)" }}>
+          {(["vivatech", "cannes"] as const).map((ev) => {
+            const c = EVENT_CONFIG[ev];
+            const active = activeEvent === ev;
+            return (
+              <button
+                key={ev}
+                onClick={() => { setActiveEvent(ev); form.setValue("event", ev); setClaimed(null); }}
+                data-testid={`btn-event-${ev}`}
+                className="px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+                style={{
+                  background: active ? c.color : "transparent",
+                  color: active ? "#fff" : "rgba(255,255,255,0.45)",
+                }}
+              >
+                {c.emoji} {c.badge}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto">
+        <AnimatePresence mode="wait">
+          {!claimed ? (
+            <motion.div
+              key={activeEvent}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22 }}
+              className="rounded-2xl p-6"
+              style={{ background: "#1a1b1b", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <p className="text-white/60 text-sm text-center mb-6">{cfg.description}</p>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white/70 text-xs">First Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Your first name"
+                            data-testid="input-voucher-firstname"
+                            className="bg-[#252626] border-white/10 text-white placeholder:text-white/30 focus:border-[#1351aa]"
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white/70 text-xs">Work Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="you@company.com"
+                            data-testid="input-voucher-email"
+                            className="bg-[#252626] border-white/10 text-white placeholder:text-white/30 focus:border-[#1351aa]"
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="linkedin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white/70 text-xs">LinkedIn URL <span className="text-white/30">(optional)</span></FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="linkedin.com/in/yourprofile"
+                            data-testid="input-voucher-linkedin"
+                            className="bg-[#252626] border-white/10 text-white placeholder:text-white/30 focus:border-[#1351aa]"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={claimMutation.isPending}
+                    data-testid="btn-voucher-claim"
+                    className="w-full font-bold text-white rounded-xl py-3 transition-all"
+                    style={{ background: cfg.color, border: "none" }}
+                  >
+                    {claimMutation.isPending ? "Sending your voucher…" : `Claim Free Trial → ${cfg.codePrefix}-XXXXX`}
+                  </Button>
+                  <p className="text-white/30 text-xs text-center">No credit card required. 14-day trial, 1 video.</p>
+                </form>
+              </Form>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="rounded-2xl p-8 text-center"
+              style={{ background: "#1a1b1b", border: `1px solid ${cfg.color}40` }}
+            >
+              <div className="text-4xl mb-4">🎉</div>
+              <h3 className="text-white font-bold text-xl mb-2">Your voucher is on the way!</h3>
+              <p className="text-white/60 text-sm mb-5">Check your inbox. Use this code at sign-up:</p>
+              <div
+                className="rounded-xl px-5 py-3 font-mono text-lg font-bold tracking-widest text-white mb-5"
+                style={{ background: "#252626", border: `1px solid ${cfg.color}60` }}
+                data-testid="text-voucher-code"
+              >
+                {claimed.code}
+              </div>
+              <a href="/register" className="inline-block">
+                <Button
+                  className="font-bold text-white rounded-xl px-8"
+                  style={{ background: cfg.color, border: "none" }}
+                  data-testid="btn-voucher-register"
+                >
+                  Sign Up Now →
+                </Button>
+              </a>
+              <p className="text-white/30 text-xs mt-4">Valid for 14 days · 1 free video upload · No card needed</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
+
+// ─── Signup Section ──────────────────────────────────────────────────────────
+
 function SignupSection() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -1477,6 +1699,9 @@ export default function Landing() {
         >
           <SignupSection />
         </div>
+
+        {/* Event Voucher Section */}
+        <EventVoucherSection />
 
       </div>
 

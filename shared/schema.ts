@@ -895,6 +895,26 @@ export const insertWishlistSchema = createInsertSchema(wishlists).omit({ id: tru
 export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
 export type Wishlist = typeof wishlists.$inferSelect;
 
+// ─── Event Vouchers ──────────────────────────────────────────────────────────
+
+export const eventVouchers = pgTable("event_vouchers", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  event: text("event").notNull(), // "vivatech" | "cannes"
+  firstName: text("first_name").notNull(),
+  email: text("email").notNull(),
+  linkedin: text("linkedin"),
+  claimedAt: timestamp("claimed_at").default(sql`CURRENT_TIMESTAMP`),
+  usedByUserId: varchar("used_by_user_id").references(() => users.id),
+  usedAt: timestamp("used_at"),
+  expiresAt: timestamp("expires_at").notNull(),
+  isActive: boolean("is_active").default(true),
+});
+
+export const insertEventVoucherSchema = createInsertSchema(eventVouchers).omit({ id: true, claimedAt: true, usedAt: true });
+export type InsertEventVoucher = z.infer<typeof insertEventVoucherSchema>;
+export type EventVoucher = typeof eventVouchers.$inferSelect;
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Country list for dropdown

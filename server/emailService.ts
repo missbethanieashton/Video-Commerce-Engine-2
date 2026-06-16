@@ -335,6 +335,44 @@ export async function sendContactEnquiryEmail(opts: {
   });
 }
 
+export async function sendVoucherEmail(opts: {
+  firstName: string;
+  email: string;
+  event: "vivatech" | "cannes";
+  code: string;
+  expiresAt: Date;
+}): Promise<void> {
+  const eventLabel = opts.event === "vivatech" ? "VivaTech Paris 2026" : "Cannes Lions 2026";
+  const expiryStr = opts.expiresAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const body = `
+    <h1>Your Materialized Free Pass 🎬</h1>
+    <p>Hi ${opts.firstName},</p>
+    <p>It was great meeting you at <strong>${eventLabel}</strong>! Here is your exclusive free-trial voucher code — valid for 14 days, giving you full access to experience the platform hands-on.</p>
+    <div style="background:#f0f4ff;border:2px solid #1351aa;border-radius:12px;padding:24px 32px;text-align:center;margin:28px 0;">
+      <p style="font-size:13px;color:#1351aa;letter-spacing:2px;font-weight:700;margin:0 0 8px;">YOUR VOUCHER CODE</p>
+      <p style="font-size:32px;font-weight:900;letter-spacing:6px;color:#202120;margin:0;">${opts.code}</p>
+      <p style="font-size:12px;color:#888;margin:12px 0 0;">Valid until ${expiryStr}</p>
+    </div>
+    <p><strong>What's included in your free pass:</strong></p>
+    <ul style="color:#555;font-size:15px;line-height:2;">
+      <li>1 video upload to trial shoppable video technology</li>
+      <li>Full analytics dashboard (views, clicks, conversions)</li>
+      <li>Affiliate payout ledger access</li>
+      <li>14 days of full platform access</li>
+    </ul>
+    <div class="cta-wrap">
+      <a href="https://join.materialized.com/register?voucher=${opts.code}" class="cta">Activate Your Free Pass →</a>
+    </div>
+    <p class="note">Enter your voucher code at registration to activate your free pass. Questions? Reply to this email.</p>
+  `;
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: opts.email,
+    subject: `Your Materialized Free Pass — ${opts.code}`,
+    html: baseTemplate(body),
+  });
+}
+
 export function isEmailConfigured(): boolean {
   return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }
