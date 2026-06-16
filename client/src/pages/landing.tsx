@@ -616,7 +616,7 @@ function ParallaxImageSection() {
       </div>
 
       {/* Floating product card */}
-      <div className="absolute bottom-12 right-6 z-30" style={{ width: "clamp(160px, 19vw, 210px)" }}>
+      <div className="absolute right-6 z-30" style={{ bottom: "calc(3rem + 20px)", width: "clamp(160px, 19vw, 210px)" }}>
         <motion.div
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1017,7 +1017,7 @@ function SignupSection() {
 
   return (
     <section id="signup" className="py-20 px-4 bg-[#202120]">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
