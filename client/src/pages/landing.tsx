@@ -72,7 +72,7 @@ function ContactForm() {
   if (sent) {
     return (
       <div className="text-center py-4">
-        <p className="text-[#677A67] font-semibold text-sm">Message sent!</p>
+        <p className="text-[#1351aa] font-semibold text-sm">Message sent!</p>
         <p className="text-white/50 text-xs mt-1">We'll be in touch soon.</p>
         <button onClick={() => setSent(false)} className="mt-3 text-xs text-white/40 underline">Send another</button>
       </div>
@@ -89,7 +89,7 @@ function ContactForm() {
               <FormLabel className="text-white/60 text-xs">First Name *</FormLabel>
               <FormControl>
                 <input {...field} data-testid="input-contact-firstName" placeholder="Jane"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors" />
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors" />
               </FormControl>
               <FormMessage className="text-xs text-red-400" />
             </FormItem>
@@ -99,7 +99,7 @@ function ContactForm() {
               <FormLabel className="text-white/60 text-xs">Surname *</FormLabel>
               <FormControl>
                 <input {...field} data-testid="input-contact-surname" placeholder="Smith"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors" />
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors" />
               </FormControl>
               <FormMessage className="text-xs text-red-400" />
             </FormItem>
@@ -112,7 +112,7 @@ function ContactForm() {
             <FormLabel className="text-white/60 text-xs">Email *</FormLabel>
             <FormControl>
               <input {...field} type="email" data-testid="input-contact-email" placeholder="you@example.com"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors" />
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors" />
             </FormControl>
             <FormMessage className="text-xs text-red-400" />
           </FormItem>
@@ -131,7 +131,7 @@ function ContactForm() {
                   data-testid={`radio-role-${r}`}
                   className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all ${
                     field.value === r
-                      ? "border-[#677A67] bg-[#677A67]/20 text-[#8fb08f]"
+                      ? "border-[#1351aa] bg-[#1351aa]/20 text-[#6b8fd6]"
                       : "border-white/10 text-white/40 hover:border-white/30 hover:text-white/60"
                   }`}
                 >
@@ -148,7 +148,7 @@ function ContactForm() {
           <FormItem className="space-y-1">
             <FormLabel className="text-white/60 text-xs">Instagram Handle *</FormLabel>
             <FormControl>
-              <div className="flex items-center bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-[#677A67] transition-colors">
+              <div className="flex items-center bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-[#1351aa] transition-colors">
                 <span className="px-3 text-white/30 text-sm select-none">@</span>
                 <input {...field} data-testid="input-contact-igHandle" placeholder="yourhandle"
                   className="flex-1 bg-transparent py-2 pr-3 text-white text-sm placeholder:text-white/30 focus:outline-none"
@@ -169,7 +169,7 @@ function ContactForm() {
             <FormControl>
               <textarea {...field} data-testid="textarea-contact-message" rows={3} maxLength={200}
                 placeholder="Tell us a bit about yourself and what you're looking for..."
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#677A67] transition-colors resize-none" />
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors resize-none" />
             </FormControl>
             <FormMessage className="text-xs text-red-400" />
           </FormItem>
@@ -179,7 +179,7 @@ function ContactForm() {
           type="submit"
           disabled={mutation.isPending}
           data-testid="button-contact-submit"
-          className="w-full py-2.5 rounded-full bg-[#677A67] text-white font-semibold text-sm hover:bg-[#556655] transition-colors disabled:opacity-50 mt-1"
+          className="w-full py-2.5 rounded-full bg-[#314d3b] text-white font-semibold text-sm hover:bg-[#24372b] transition-colors disabled:opacity-50 mt-1"
         >
           {mutation.isPending ? "Sending..." : "Connect"}
         </button>
@@ -232,10 +232,10 @@ function TypewriterText() {
 }
 
 const STATS = [
-  { icon: Users, value: "50K+", label: "Active Creators", color: "text-[#677A67]" },
-  { icon: DollarSign, value: "$12M", label: "Creator Earnings", color: "text-[#677A67]" },
+  { icon: Users, value: "50K+", label: "Active Creators", color: "text-[#1351aa]" },
+  { icon: DollarSign, value: "$12M", label: "Creator Earnings", color: "text-[#1351aa]" },
   { icon: TrendingUp, value: "340%", label: "Avg. ROI Increase", color: "text-[#43484D]" },
-  { icon: ShoppingBag, value: "2.1M", label: "Products Tagged", color: "text-[#677A67]" },
+  { icon: ShoppingBag, value: "2.1M", label: "Products Tagged", color: "text-[#1351aa]" },
 ];
 
 const TESTIMONIALS = [
@@ -313,7 +313,6 @@ function StatsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-center mb-6 text-white"
-          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           Video Commerce
         </motion.h2>
@@ -382,7 +381,7 @@ function TestimonialCarousel() {
               <p className="text-lg md:text-xl text-white/90 mb-3 italic leading-relaxed">
                 {TESTIMONIALS[activeIndex].quote}
               </p>
-              <div className="text-[#677A67] font-semibold text-sm mt-2">
+              <div className="text-[#1351aa] font-semibold text-sm mt-2">
                 <span className="text-white/30 mr-2">|</span>{TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
@@ -394,7 +393,7 @@ function TestimonialCarousel() {
               key={index}
               onClick={() => setActiveIndex(index)}
               className={`h-[2px] rounded-full transition-all ${
-                index === activeIndex ? "bg-[#677A67] w-6" : "bg-white/20 w-4"
+                index === activeIndex ? "bg-[#1351aa] w-6" : "bg-white/20 w-4"
               }`}
               data-testid={`button-testimonial-${index}`}
               role="tab"
@@ -417,7 +416,6 @@ function VideoOrientationSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="md:text-4xl font-bold text-center mb-8 text-white text-[24px] px-[10px]"
-          style={{ fontFamily: "'Public Pixel', sans-serif" }}
         >
           One Platform,<br />
           <span style={{ color: "transparent", WebkitTextStroke: "1.5px white" }}>Every Format</span>
@@ -587,7 +585,7 @@ function ParallaxImageSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-4"
+          className="text-[#6b8fd6] text-xs font-semibold tracking-[0.25em] uppercase mb-4"
         >
           Shopifying Creator Content
         </motion.p>
@@ -697,7 +695,7 @@ function SignupSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
             Join the Revolution
           </h2>
           <p className="text-center text-white/70 mb-12">
@@ -937,7 +935,7 @@ function SignupSection() {
                       whileHover={{ scale: 1.03, boxShadow: "0 0 32px rgba(103,122,103,0.7), 0 8px 24px rgba(0,0,0,0.3)" }}
                       whileTap={{ scale: 0.97 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      className="w-full bg-[#677A67] text-white font-semibold rounded-full mt-4 disabled:opacity-60"
+                      className="w-full bg-[#314d3b] text-white font-semibold rounded-full mt-4 disabled:opacity-60"
                       style={{ fontSize: 18, padding: "16px 30px" }}
                       data-testid="button-submit-signup"
                     >
@@ -996,8 +994,8 @@ export default function Landing() {
 
   const sceneProducts = [
     { id: 0, name: "Aesop", detail: "Hand & Body Wash", price: "€33", cta: "BUY NOW", href: null as string | null, color: "#c8a97e", windows: [{ start: 1, end: 9 }, { start: 25, end: 33 }, { start: 49, end: 57 }] },
-    { id: 1, name: "High Stay Paris", detail: "Corporate Leasing", price: null as string | null, cta: "BOOK NOW", href: "https://www.highstay.com" as string | null, color: "#677A67", windows: [{ start: 9, end: 17 }, { start: 33, end: 41 }, { start: 57, end: 65 }] },
-    { id: 2, name: "GHD Air Wrap", detail: "Professional Styler", price: "€649", cta: "BUY NOW", href: null as string | null, color: "#8a7090", windows: [{ start: 17, end: 25 }, { start: 41, end: 49 }, { start: 65, end: 73 }] },
+    { id: 1, name: "High Stay Paris", detail: "Corporate Leasing", price: null as string | null, cta: "BOOK NOW", href: "https://www.highstay.com" as string | null, color: "#1351aa", windows: [{ start: 9, end: 17 }, { start: 33, end: 41 }, { start: 57, end: 65 }] },
+    { id: 2, name: "GHD Air Wrap", detail: "Professional Styler", price: "€649", cta: "BUY NOW", href: null as string | null, color: "#1351aa", windows: [{ start: 17, end: 25 }, { start: 41, end: 49 }, { start: 65, end: 73 }] },
   ];
 
   const engagementBubbles = [
@@ -1074,7 +1072,7 @@ export default function Landing() {
             <Button
               onClick={scrollToSignup}
               size="sm"
-              className="group bg-[#677A67] hover:bg-[#5a6d5a] text-white font-semibold rounded-full text-sm overflow-hidden"
+              className="group bg-[#314d3b] hover:bg-[#24372b] text-white font-semibold rounded-full text-sm overflow-hidden"
               data-testid="button-nav-get-started"
             >
               <RollingText>Get Started</RollingText>
@@ -1093,7 +1091,7 @@ export default function Landing() {
               transition={{ duration: 0.8 }}
               className="flex-1 text-center lg:text-left"
             >
-              <p className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
+              <p className="text-[#6b8fd6] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
                 Data &amp; Analytics
               </p>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
@@ -1112,7 +1110,7 @@ export default function Landing() {
                     onClick={scrollToSignup}
                     size="lg"
                     className="text-white font-semibold rounded-full border-0"
-                    style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px", background: "#f0c86447", backdropFilter: "blur(8px)" }}
+                    style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px", background: "#1351aa47", backdropFilter: "blur(8px)" }}
                     data-testid="button-hero-cta"
                   >
                     Try Now
@@ -1267,7 +1265,7 @@ export default function Landing() {
           style={{
             borderRadius: 50,
             boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
-            background: "#4a3e5b",
+            background: "#1351aa",
             marginTop: -48,
             zIndex: 10,
           }}
@@ -1470,11 +1468,11 @@ export default function Landing() {
                   <div className="text-white/60 text-sm leading-relaxed">
                     <p className="mb-3">Need help? Visit our Help Centre for guides and FAQs, or browse the Creator, Brand, and Publisher dashboards to get started.</p>
                     <div className="flex flex-wrap gap-3 mb-3">
-                      <Link href="/creator" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-creator">Creator Portal</Link>
-                      <Link href="/brand" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-brand">Brand Portal</Link>
-                      <Link href="/affiliate" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-publisher">Publisher Portal</Link>
+                      <Link href="/creator" className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-creator">Creator Portal</Link>
+                      <Link href="/brand" className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-brand">Brand Portal</Link>
+                      <Link href="/affiliate" className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-publisher">Publisher Portal</Link>
                     </div>
-                    <p>Not registered yet? <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-support-signup">Sign Up &rarr;</a> to access full support resources.</p>
+                    <p>Not registered yet? <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-support-signup">Sign Up &rarr;</a> to access full support resources.</p>
                   </div>
                 ),
               },
@@ -1485,11 +1483,11 @@ export default function Landing() {
                   <div className="text-white/60 text-sm leading-relaxed">
                     <p className="mb-3">Shoppable videos are exported as embedded code, which can be published on any website or platform. UTM codes provide video performance analytics, and reward the affiliate eco-system. API Keys are used to sync product inventories, that in turn make video imports shoppable.</p>
                     <div className="flex flex-wrap gap-3 mb-3">
-                      <Link href="/creator" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-creator">Creator Portal</Link>
-                      <Link href="/brand" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-brand">Brand Portal</Link>
-                      <Link href="/affiliate" className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-publisher">Publisher Portal</Link>
+                      <Link href="/creator" className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-integrations-creator">Creator Portal</Link>
+                      <Link href="/brand" className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-integrations-brand">Brand Portal</Link>
+                      <Link href="/affiliate" className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-integrations-publisher">Publisher Portal</Link>
                     </div>
-                    <p>Ready to connect? <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#677A67] hover:text-[#8a9e8a] underline" data-testid="link-footer-integrations-signup">Sign Up &rarr;</a> to get started.</p>
+                    <p>Ready to connect? <a href="#signup" onClick={(e) => { e.preventDefault(); document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" }); }} className="text-[#1351aa] hover:text-[#4a7ed6] underline" data-testid="link-footer-integrations-signup">Sign Up &rarr;</a> to get started.</p>
                   </div>
                 ),
               },
@@ -1502,7 +1500,7 @@ export default function Landing() {
               <div key={item.key} className="border-b border-white/10">
                 <button
                   onClick={() => setOpenFooterItem(openFooterItem === item.key ? null : item.key)}
-                  className="w-full flex items-center justify-between py-3 text-white text-sm font-medium hover:text-[#677A67] transition-colors"
+                  className="w-full flex items-center justify-between py-3 text-white text-sm font-medium hover:text-[#1351aa] transition-colors"
                   data-testid={`button-footer-${item.key}`}
                 >
                   {item.label}
@@ -1518,11 +1516,11 @@ export default function Landing() {
             <div className="border-b border-white/10">
               <button
                 onClick={() => setShowDemo(true)}
-                className="w-full flex items-center justify-between py-3 text-white text-sm font-medium hover:text-[#677A67] transition-colors"
+                className="w-full flex items-center justify-between py-3 text-white text-sm font-medium hover:text-[#1351aa] transition-colors"
                 data-testid="button-footer-demo"
               >
                 Demo
-                <Play className="w-4 h-4 text-[#677A67]" />
+                <Play className="w-4 h-4 text-[#1351aa]" />
               </button>
             </div>
           </div>

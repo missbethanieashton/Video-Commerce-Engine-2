@@ -1,0 +1,53 @@
+Update the sitewide styles with the following changes. Override all existing CSS/SCSS/Tailwind/styled-component rules that conflict with these new values — do not leave legacy values that could override these through specificity or cascade.
+
+1. H1 TYPOGRAPHY
+   - Font: Aileron (import from Google Fonts or self-hosted if already in the project)
+   - Letter spacing: -0.055em (equivalent to -55 tracking)
+   - Apply to all h1 elements sitewide, including any h1 classes or heading components
+   - If Aileron is not available via Google Fonts, use @font-face to load it or flag it for manual upload
+   - Add to CSS variables:
+     --font-heading: 'Aileron', sans-serif;
+   - Override any existing font-family and letter-spacing on h1
+
+2. MAIN CTA BUTTONS
+   - Default background: #314d3b
+   - Hover background: #24372b
+   - Apply to all primary/CTA button classes and any inline styles targeting main action buttons
+   - Ensure text on these buttons is white (#ffffff) for contrast
+   - Override any existing button background, hover, and focus states
+
+3. ACCENT & TOGGLE COLOR
+   - New global accent color: #1351aa
+   - Apply to: toggle switches (active state), links, focus rings, active states, checkboxes, radio buttons, progress indicators, and any UI element currently using a generic accent/primary color
+   - Override all existing accent/primary color variables
+
+4. REMOVE & REPLACE COLORS
+   - Identify and remove ALL instances of purple, yellow, and green from:
+     • CSS/SCSS variables and custom properties
+     • Tailwind config (theme > colors / extend > colors)
+     • Hard-coded hex values in stylesheets and component files
+     • Inline styles in JSX/HTML
+     • The homepage and all other pages/components
+   - Replace removed colors as follows:
+     • Purple → #1351aa (the new accent blue)
+     • Yellow → #1351aa (the new accent blue)
+     • Green (except the CTA buttons #314d3b/#24372b) → #1351aa (the new accent blue)
+   - Do NOT remove #314d3b or #24372b — those are the new CTA button greens, keep them
+
+5. CSS VARIABLE DEFINITIONS
+   Add or update the following root-level CSS variables so the entire app inherits them:
+   --font-heading: 'Aileron', sans-serif;
+   --color-cta: #314d3b;
+   --color-cta-hover: #24372b;
+   --color-accent: #1351aa;
+
+   If the project uses a Tailwind config, also add:
+   cta: { DEFAULT: '#314d3b', hover: '#24372b' }
+   accent: { DEFAULT: '#1351aa' }
+
+6. SEARCH SCOPE
+   - Check all files: *.css, *.scss, *.sass, *.less, *.styled.ts/js, *.module.css, tailwind.config.*, globals.css, index.css, theme files, and any component-level style blocks
+   - Search for color names ("purple", "yellow", "green") AND common hex values for those colors
+   - Confirm the homepage component/page file is also updated
+
+Make all changes, then summarize which files were modified and which color/font values were replaced.

@@ -293,7 +293,7 @@ export default function AdminPipeline() {
                           <div
                             key={s}
                             className={`w-2 h-2 rounded-full ${
-                              stage >= s ? "bg-[#677A67]" : "bg-border"
+                              stage >= s ? "bg-[#1351aa]" : "bg-border"
                             }`}
                           />
                         ))}
@@ -361,8 +361,8 @@ export default function AdminPipeline() {
                             { label: "Agmt Signed", ts: entry.agreementSignedAt, done: stage >= 4 },
                             { label: "Subscribed", ts: entry.brandSubscribedAt, done: stage >= 5 },
                           ].map((step, i) => (
-                            <div key={i} className={`rounded-lg p-2 text-center border ${step.done ? "border-[#677A67]/40 bg-[#677A67]/10" : "border-border bg-background"}`}>
-                              <p className={`text-xs font-medium ${step.done ? "text-[#677A67]" : "text-muted-foreground"}`}>{step.label}</p>
+                            <div key={i} className={`rounded-lg p-2 text-center border ${step.done ? "border-[#1351aa]/40 bg-[#1351aa]/10" : "border-border bg-background"}`}>
+                              <p className={`text-xs font-medium ${step.done ? "text-[#1351aa]" : "text-muted-foreground"}`}>{step.label}</p>
                               {step.ts ? (
                                 <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(step.ts), "d MMM")}</p>
                               ) : (
@@ -466,13 +466,13 @@ export default function AdminPipeline() {
                 onClick={() => setSelectedFollowUp(opt.value)}
                 className={`w-full text-left p-3 rounded-xl border transition-all ${
                   selectedFollowUp === opt.value
-                    ? "border-[#677A67] bg-[#677A67]/10"
+                    ? "border-[#1351aa] bg-[#1351aa]/10"
                     : "border-border hover:border-muted-foreground/50"
                 }`}
                 data-testid={`followup-option-${opt.value}`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <opt.icon className={`h-4 w-4 ${selectedFollowUp === opt.value ? "text-[#677A67]" : "text-muted-foreground"}`} />
+                  <opt.icon className={`h-4 w-4 ${selectedFollowUp === opt.value ? "text-[#1351aa]" : "text-muted-foreground"}`} />
                   <span className="text-sm font-semibold">{opt.label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground pl-6">{opt.desc}</p>

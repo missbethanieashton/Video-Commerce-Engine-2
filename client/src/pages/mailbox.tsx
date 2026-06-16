@@ -47,7 +47,7 @@ const BRAND_NOTIFICATIONS: Notification[] = [
 ];
 
 const BRAND_MESSAGES: Message[] = [
-  { id: 1, sender: "Emma Style", senderInitials: "ES", avatarColor: "#677A67", subject: "First video is ready for review", preview: "Hi, I've just uploaded the 'Morning Routine' video and tagged all your products. Let me know if you'd like any changes...", time: subHours(new Date(), 3), read: false },
+  { id: 1, sender: "Emma Style", senderInitials: "ES", avatarColor: "#1351aa", subject: "First video is ready for review", preview: "Hi, I've just uploaded the 'Morning Routine' video and tagged all your products. Let me know if you'd like any changes...", time: subHours(new Date(), 3), read: false },
   { id: 2, sender: "Luca Ferretti", senderInitials: "LF", avatarColor: "#5b7fa6", subject: "Campaign brief question", preview: "Quick question about the colour palette — should I stick strictly to the brand kit or can I use complementary shades?", time: subDays(new Date(), 1), read: false },
   { id: 3, sender: "Materialized Support", senderInitials: "MS", avatarColor: "#43484D", subject: "API key configured successfully", preview: "Your Shopify API key has been verified and your inventory sync is active. You can manage webhook settings from the Developer tab.", time: subDays(new Date(), 2), read: true },
   { id: 4, sender: "Sofia Osei", senderInitials: "SO", avatarColor: "#a67c5b", subject: "Re: Campaign review feedback", preview: "Thanks for the feedback! I've adjusted the lighting and recut the product close-up as requested. The updated video is now live.", time: subDays(new Date(), 4), read: true },
@@ -82,7 +82,7 @@ const PUBLISHER_MESSAGES: Message[] = [
   { id: 1, sender: "Luminance Brand", senderInitials: "LB", avatarColor: "#7a6b9a", subject: "Your publishing access has been paused", preview: "Hi, we've noticed your 'Winter Glow' campaign performance is below our threshold. We've temporarily paused your access. You can request a 48-hour grace period...", time: subMinutes(new Date(), 50), read: false },
   { id: 2, sender: "Glow Cosmetics", senderInitials: "GC", avatarColor: "#b07d6e", subject: "Congrats — top performer this week!", preview: "Your embed of the 'Morning Routine' video drove the highest conversions across all our publishers this week. We'd love to discuss extending your campaign.", time: subDays(new Date(), 2), read: false },
   { id: 3, sender: "Materialized Support", senderInitials: "MS", avatarColor: "#43484D", subject: "Stripe Connect verification complete", preview: "Great news — your Stripe Connect account has been verified and is ready to receive payouts. Your first payout will be scheduled for this Friday.", time: subDays(new Date(), 3), read: true },
-  { id: 4, sender: "Emma Style", senderInitials: "ES", avatarColor: "#677A67", subject: "New video listed in library", preview: "Hi! I've just listed 'Evening Ritual' in the Global Video Library. It's my best performing skincare video with a 4.8% CVR — hope it works great for your audience.", time: subDays(new Date(), 6), read: true },
+  { id: 4, sender: "Emma Style", senderInitials: "ES", avatarColor: "#1351aa", subject: "New video listed in library", preview: "Hi! I've just listed 'Evening Ritual' in the Global Video Library. It's my best performing skincare video with a 4.8% CVR — hope it works great for your audience.", time: subDays(new Date(), 6), read: true },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

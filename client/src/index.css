@@ -1,5 +1,6 @@
 @import url('https://fonts.cdnfonts.com/css/public-pixel');
 @import url('https://fonts.cdnfonts.com/css/neue-haas-grotesk-display');
+@import url('https://fonts.cdnfonts.com/css/aileron');
 
 @tailwind base;
 @tailwind components;
@@ -7,15 +8,21 @@
 
 @layer base {
   h1 {
-    font-family: 'Neue Haas Grotesk Display', sans-serif;
+    font-family: 'Aileron', sans-serif;
     font-weight: 700;
+    letter-spacing: -0.055em;
+  }
+  h2 {
+    font-family: 'Aileron', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.055em;
   }
 }
 
-/* LIGHT MODE - Dark Charcoal, White, Black with Sage Accent
+/* LIGHT MODE - Dark Charcoal, White, Black with Blue Accent
  * Background: White (#FFFFFF)
  * Foreground: Dark Charcoal (#43484D)
- * Accent: Sage Green (#677A67)
+ * Accent: Blue (#1351aa)
  */
 :root {
   --button-outline: rgba(0,0,0, .10);
@@ -32,34 +39,38 @@
   --sidebar: 0 0% 96%;
   --sidebar-foreground: 210 7% 28%;
   --sidebar-border: 210 5% 88%;
-  --sidebar-primary: 120 10% 44%;
+  --sidebar-primary: 218 60% 37%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 5% 92%;
   --sidebar-accent-foreground: 210 7% 28%;
-  --sidebar-ring: 120 10% 44%;
+  --sidebar-ring: 218 60% 37%;
   --popover: 0 0% 100%;
   --popover-foreground: 210 7% 28%;
   --popover-border: 210 5% 85%;
-  --primary: 120 10% 44%;
+  --primary: 218 60% 37%;
   --primary-foreground: 0 0% 100%;
   --secondary: 210 5% 94%;
   --secondary-foreground: 210 7% 28%;
   --muted: 210 5% 92%;
   --muted-foreground: 210 5% 45%;
-  --accent: 120 10% 44%;
+  --accent: 218 60% 37%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 48%;
   --destructive-foreground: 0 0% 100%;
   --input: 210 5% 85%;
-  --ring: 120 10% 44%;
-  --chart-1: 120 10% 44%;
-  --chart-2: 120 10% 55%;
-  --chart-3: 120 10% 35%;
+  --ring: 218 60% 37%;
+  --chart-1: 218 60% 37%;
+  --chart-2: 218 60% 50%;
+  --chart-3: 218 60% 27%;
   --chart-4: 210 7% 40%;
   --chart-5: 210 7% 50%;
   --font-sans: Open Sans, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
+  --font-heading: 'Aileron', sans-serif;
+  --color-cta: #314d3b;
+  --color-cta-hover: #24372b;
+  --color-accent: #1351aa;
   --radius: .5rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(240 4% 10% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(240 4% 10% / 0.00);
@@ -117,29 +128,29 @@
   --sidebar: 210 7% 10%;
   --sidebar-foreground: 0 0% 94%;
   --sidebar-border: 210 5% 18%;
-  --sidebar-primary: 120 10% 50%;
+  --sidebar-primary: 218 60% 47%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 7% 18%;
   --sidebar-accent-foreground: 0 0% 94%;
-  --sidebar-ring: 120 10% 50%;
+  --sidebar-ring: 218 60% 47%;
   --popover: 210 7% 14%;
   --popover-foreground: 0 0% 96%;
   --popover-border: 210 5% 24%;
-  --primary: 120 10% 50%;
+  --primary: 218 60% 47%;
   --primary-foreground: 0 0% 100%;
   --secondary: 210 7% 20%;
   --secondary-foreground: 0 0% 94%;
   --muted: 210 5% 20%;
   --muted-foreground: 0 0% 65%;
-  --accent: 120 10% 50%;
+  --accent: 218 60% 47%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 48%;
   --destructive-foreground: 0 0% 100%;
   --input: 210 5% 28%;
-  --ring: 120 10% 50%;
-  --chart-1: 120 10% 50%;
-  --chart-2: 120 10% 60%;
-  --chart-3: 120 10% 40%;
+  --ring: 218 60% 47%;
+  --chart-1: 218 60% 47%;
+  --chart-2: 218 60% 58%;
+  --chart-3: 218 60% 37%;
   --chart-4: 210 7% 45%;
   --chart-5: 210 7% 55%;
   --shadow-2xs: 0px 2px 0px 0px hsl(240 4% 95% / 0.00);

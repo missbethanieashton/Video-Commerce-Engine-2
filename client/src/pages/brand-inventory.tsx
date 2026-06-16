@@ -31,7 +31,7 @@ const PLATFORMS = [
   { id: "woocommerce", label: "WooCommerce",  placeholder: "ck_xxxxxxxxxxxxxxxxxxxxxxxx",       Icon: SiWoocommerce, color: "#7f54b3" },
   { id: "bigcommerce", label: "BigCommerce",  placeholder: "your BigCommerce API key",          Icon: SiBigcommerce, color: "#121118" },
   { id: "magento",     label: "Magento",      placeholder: "your Magento integration token",    Icon: SiMagento,     color: "#ee672f" },
-  { id: "custom",      label: "Custom API",   placeholder: "your custom API key or token",      Icon: Code2,         color: "#677A67" },
+  { id: "custom",      label: "Custom API",   placeholder: "your custom API key or token",      Icon: Code2,         color: "#1351aa" },
 ] as const;
 
 type PlatformId = (typeof PLATFORMS)[number]["id"];
