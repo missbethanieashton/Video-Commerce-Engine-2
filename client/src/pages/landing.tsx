@@ -557,7 +557,7 @@ function ParallaxImageSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
 
   return (
-    <section ref={ref} className="relative h-[80vh] overflow-hidden">
+    <section ref={ref} className="relative h-[160vh] overflow-hidden">
       {/* Parallax video layer */}
       <motion.div
         style={{ y }}
@@ -981,30 +981,6 @@ export default function Landing() {
   const [showDemo, setShowDemo] = useState(false);
   const [miroMuted, setMiroMuted] = useState(true);
   const miroVideoRef = useRef<HTMLVideoElement>(null);
-  const miroSectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: miroScrollProgress } = useScroll({
-    target: miroSectionRef,
-    offset: ["start end", "end start"],
-  });
-  const miroParallaxY = useTransform(miroScrollProgress, [0, 1], ["15%", "-15%"]);
-
-  // Hero phone mockup
-  const heroPhoneRef = useRef<HTMLVideoElement>(null);
-  const [activeProduct, setActiveProduct] = useState<number | null>(null);
-
-  const sceneProducts = [
-    { id: 0, name: "Aesop", detail: "Hand & Body Wash", price: "€33", cta: "BUY NOW", href: null as string | null, color: "#c8a97e", windows: [{ start: 1, end: 9 }, { start: 25, end: 33 }, { start: 49, end: 57 }] },
-    { id: 1, name: "High Stay Paris", detail: "Corporate Leasing", price: null as string | null, cta: "BOOK NOW", href: "https://www.highstay.com" as string | null, color: "#1351aa", windows: [{ start: 9, end: 17 }, { start: 33, end: 41 }, { start: 57, end: 65 }] },
-    { id: 2, name: "GHD Air Wrap", detail: "Professional Styler", price: "€649", cta: "BUY NOW", href: null as string | null, color: "#1351aa", windows: [{ start: 17, end: 25 }, { start: 41, end: 49 }, { start: 65, end: 73 }] },
-  ];
-
-  const engagementBubbles = [
-    { label: "Clicks", value: "12.4K", top: "8%", left: "2%", delay: 0, size: 86 },
-    { label: "Sales", value: "$8,200", top: "28%", right: "2%", delay: 0.5, size: 96 },
-    { label: "Shares", value: "3.2K", bottom: "22%", left: "4%", delay: 1.0, size: 86 },
-    { label: "ROI", value: "420%", bottom: "10%", right: "4%", delay: 1.5, size: 82 },
-  ];
-
   const heroBlobs = [
     { size: 320, anchor: { top: "5%", left: "2%" }, travelX: [0, 60, 30, -25, 15, 0], travelY: [0, 40, -30, 28, -18, 0], travelDuration: 44, rotateDuration: 20, dir: 1 },
     { size: 260, anchor: { bottom: "5%", right: "2%" }, travelX: [0, -50, -28, 20, -12, 0], travelY: [0, -38, 28, -26, 14, 0], travelDuration: 54, rotateDuration: 26, dir: -1 },
@@ -1012,20 +988,6 @@ export default function Landing() {
     { size: 140, anchor: { bottom: "10%", left: "5%" }, travelX: [0, 42, 22, -32, 10, 0], travelY: [0, -26, 22, 14, -14, 0], travelDuration: 32, rotateDuration: 12, dir: 1 },
   ];
 
-  useEffect(() => {
-    const video = heroPhoneRef.current;
-    if (!video) return;
-    const handleTimeUpdate = () => {
-      const t = video.currentTime;
-      let found: number | null = null;
-      for (const p of sceneProducts) {
-        if (p.windows.some(w => t >= w.start && t < w.end)) { found = p.id; break; }
-      }
-      setActiveProduct(prev => prev !== found ? found : prev);
-    };
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
-  }, []);
 
   const scrollToSignup = () => {
     document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
@@ -1116,111 +1078,94 @@ export default function Landing() {
                     Try Now
                   </Button>
                 </motion.div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-white/30 text-white hover:bg-white/10 rounded-full backdrop-blur-sm"
-                  style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px" }}
-                  data-testid="button-hero-learn-more"
-                >
-                  Learn More
-                </Button>
               </div>
             </motion.div>
 
-            {/* Right: phone mockup + analytics bubbles */}
+            {/* Right: Miro Misljen product video */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.9, delay: 0.2 }}
               className="flex-1 flex justify-center"
             >
-              <div className="relative">
-                {/* Analytics bubbles */}
-                {engagementBubbles.map((bubble) => (
+              <div className="relative w-full max-w-sm lg:max-w-none">
+                {/* Audio toggle */}
+                <button
+                  onClick={() => {
+                    const v = miroVideoRef.current;
+                    if (!v) return;
+                    const next = !miroMuted;
+                    v.muted = next;
+                    setMiroMuted(next);
+                  }}
+                  className="absolute top-4 left-4 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2.5 transition-colors backdrop-blur-sm"
+                  data-testid="button-miro-audio-toggle"
+                  title={miroMuted ? "Enable audio" : "Mute"}
+                >
+                  {miroMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+
+                {/* Video */}
+                <div
+                  className="overflow-hidden"
+                  style={{
+                    borderRadius: 32,
+                    height: "70vh",
+                    maxHeight: 700,
+                    boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <video
+                    ref={miroVideoRef}
+                    src="/miro-misljen-dress.mp4?v=25s"
+                    autoPlay
+                    loop
+                    playsInline
+                    muted={miroMuted}
+                    className="w-full h-full object-cover"
+                    data-testid="video-miro-misljen"
+                  />
+                </div>
+
+                {/* Floating product card */}
+                <div className="absolute bottom-8 right-4 z-30">
                   <motion.div
-                    key={bubble.label}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: bubble.delay + 0.6, type: "spring", stiffness: 200 }}
-                    whileHover={{ scale: [1, 1.18, 1], transition: { duration: 0.6, repeat: Infinity } }}
-                    className="absolute bg-white shadow-xl flex flex-col items-center justify-center cursor-pointer"
-                    style={{
-                      top: bubble.top, left: (bubble as any).left, right: (bubble as any).right, bottom: (bubble as any).bottom,
-                      width: bubble.size, height: bubble.size, borderRadius: "50%", zIndex: 2,
-                    }}
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <div className="text-sm font-bold text-[#43484D] leading-tight">{bubble.value}</div>
-                    <div className="text-[10px] text-muted-foreground leading-tight">{bubble.label}</div>
-                  </motion.div>
-                ))}
-
-                {/* Phone bezel */}
-                <div className="relative w-[260px] md:w-[300px]" style={{ zIndex: 1 }}>
-                  <div
-                    className="relative bg-[#111] rounded-[3rem] p-3 shadow-2xl"
-                    style={{ border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)" }}
-                  >
-                    {/* Notch */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-[#111] rounded-b-2xl z-20" />
-                    {/* Screen */}
-                    <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
-                      <video
-                        ref={heroPhoneRef}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full aspect-[9/16] object-cover"
-                        aria-label="Discovery Packs video"
+                    <a
+                      href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block no-underline"
+                      style={{ width: "clamp(148px, 18vw, 196px)" }}
+                      data-testid="link-miro-product-card"
+                    >
+                      <div
+                        className="rounded-2xl overflow-hidden"
+                        style={{
+                          background: "rgba(0,0,0,0.52)",
+                          backdropFilter: "blur(14px)",
+                          border: "1px solid rgba(255,255,255,0.13)",
+                          boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                        }}
                       >
-                        <source src={discoveryPacksVideo} type="video/mp4" />
-                      </video>
-
-                      {/* Timed product bubbles */}
-                      <AnimatePresence mode="wait">
-                        {activeProduct !== null && (() => {
-                          const p = sceneProducts[activeProduct];
-                          return (
-                            <motion.div
-                              key={p.id}
-                              initial={{ opacity: 0, y: 18, scale: 0.92 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              transition={{ type: "spring", stiffness: 340, damping: 28 }}
-                              className="absolute left-2.5 right-2.5 z-10"
-                              style={{ bottom: "68px" }}
-                            >
-                              <div
-                                className="rounded-2xl px-3 py-2 flex items-center gap-2.5"
-                                style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)", border: `1px solid ${p.color}55`, boxShadow: `0 0 12px ${p.color}33` }}
-                              >
-                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.color }} />
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-white font-semibold text-[10px] leading-tight truncate">{p.name}</div>
-                                  <div className="text-white/55 text-[8px] leading-tight">{p.detail}</div>
-                                </div>
-                                {p.price && <div className="text-white font-bold text-xs flex-shrink-0">{p.price}</div>}
-                                {p.href ? (
-                                  <a href={p.href} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white" style={{ background: p.color }}>{p.cta}</a>
-                                ) : (
-                                  <button className="flex-shrink-0 text-[7px] font-black tracking-wide px-2 py-1 rounded-lg text-white" style={{ background: p.color }}>{p.cta}</button>
-                                )}
-                              </div>
-                            </motion.div>
-                          );
-                        })()}
-                      </AnimatePresence>
-
-                      {/* Video overlay info */}
-                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                        <div className="text-white font-semibold text-sm">Discovery Packs</div>
-                        <div className="text-white/70 text-xs">@join.materialized</div>
+                        <div className="p-3 space-y-2.5">
+                          <div className="space-y-0.5">
+                            <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
+                            <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
+                            <div className="text-white font-bold text-base leading-tight">€1,129</div>
+                          </div>
+                          <div
+                            className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                            style={{ background: "rgba(255,255,255,0.92)" }}
+                          >
+                            BUY NOW
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    {/* Home indicator */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/30 rounded-full" />
-                  </div>
+                    </a>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
@@ -1265,7 +1210,7 @@ export default function Landing() {
           style={{
             borderRadius: 50,
             boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
-            background: "#1351aa",
+            background: "rgba(19, 81, 170, 0.9)",
             marginTop: -48,
             zIndex: 10,
           }}
@@ -1377,79 +1322,6 @@ export default function Landing() {
 
       </div>
 
-      {/* Miro Misljen — full-width bottom-of-page video hero */}
-      <section ref={miroSectionRef} className="relative w-full overflow-hidden" style={{ minHeight: "80vh" }}>
-        <motion.video
-          ref={miroVideoRef}
-          src="/miro-misljen-dress.mp4?v=25s"
-          autoPlay
-          loop
-          playsInline
-          muted={miroMuted}
-          className="absolute inset-0 w-full object-cover"
-          style={{ y: miroParallaxY, minHeight: "120%", top: "-10%" }}
-          data-testid="video-miro-misljen"
-        />
-        {/* dark overlay for legibility */}
-        <div className="absolute inset-0 bg-black/30" />
-
-        {/* audio toggle — top-left */}
-        <button
-          onClick={() => {
-            const v = miroVideoRef.current;
-            if (!v) return;
-            const next = !miroMuted;
-            v.muted = next;
-            setMiroMuted(next);
-          }}
-          className="absolute top-5 left-5 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2.5 transition-colors backdrop-blur-sm"
-          data-testid="button-miro-audio-toggle"
-          title={miroMuted ? "Enable audio" : "Mute"}
-        >
-          {miroMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-        </button>
-
-        {/* floating product card — bottom-right, same style as hero Celine card */}
-        <div className="absolute bottom-10 right-6 md:right-14 z-30">
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <a
-              href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block no-underline"
-              style={{ width: "clamp(148px, 18vw, 196px)" }}
-              data-testid="link-miro-product-card"
-            >
-              <div
-                className="rounded-2xl overflow-hidden"
-                style={{
-                  background: "rgba(0,0,0,0.52)",
-                  backdropFilter: "blur(14px)",
-                  border: "1px solid rgba(255,255,255,0.13)",
-                  boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
-                }}
-              >
-                <div className="p-3 space-y-2.5">
-                  <div className="space-y-0.5">
-                    <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
-                    <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
-                    <div className="text-white font-bold text-base leading-tight">€1,129</div>
-                  </div>
-                  <div
-                    className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                    style={{ background: "rgba(255,255,255,0.92)" }}
-                  >
-                    BUY NOW
-                  </div>
-                </div>
-              </div>
-            </a>
-          </motion.div>
-        </div>
-      </section>
 
       <DemoPopup open={showDemo} onClose={() => setShowDemo(false)} />
 
