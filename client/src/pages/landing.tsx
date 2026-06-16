@@ -421,7 +421,7 @@ function VideoOrientationSection() {
           <span style={{ color: "transparent", WebkitTextStroke: "1.5px white" }}>Every Format</span>
         </motion.h2>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Whether you create vertical Reels or horizontal long-form content, our platform adapts to your style. Materialized offers multiple customization options, including the layout of your product carousel and branded video players
+          Upload your Reels or Film Series for dynamic product carousels on all content formats
         </p>
         <div className="grid md:grid-cols-2 gap-8">
           <motion.div
