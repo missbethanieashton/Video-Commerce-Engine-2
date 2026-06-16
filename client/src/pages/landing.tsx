@@ -851,7 +851,7 @@ function EventVoucherSection() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="rounded-2xl p-6"
+              className="relative rounded-2xl p-6"
               style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(12px)" }}
             >
               <Form {...form}>
@@ -908,12 +908,13 @@ function EventVoucherSection() {
                       </FormItem>
                     )}
                   />
-                  <div className="flex items-center gap-2 mt-1">
+                  {/* Button row with LinkedIn circle flush right */}
+                  <div className="relative mt-1">
                     <Button
                       type="submit"
                       disabled={claimMutation.isPending}
                       data-testid="btn-voucher-claim"
-                      className="flex-1 font-bold text-white rounded-xl h-12 text-base transition-all"
+                      className="w-full font-bold text-white rounded-xl h-12 text-base transition-all pr-16"
                       style={{ background: cfg.color, border: "none" }}
                     >
                       {claimMutation.isPending ? "Sending…" : "GO!"}
@@ -923,10 +924,10 @@ function EventVoucherSection() {
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid="link-voucher-linkedin-materialized"
-                      className="flex items-center justify-center h-12 w-12 rounded-xl text-white/40 hover:text-white/80 transition-colors flex-shrink-0"
-                      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
+                      className="absolute right-0 top-0 flex items-center justify-center w-12 h-12 rounded-full text-white hover:opacity-80 transition-opacity"
+                      style={{ background: "#0077b5" }}
                     >
-                      <SiLinkedin className="w-6 h-6" />
+                      <SiLinkedin className="w-5 h-5" />
                     </a>
                   </div>
                 </form>
