@@ -734,7 +734,7 @@ const ROLE_ROUTES: Record<string, string> = {
 const voucherSchema = z.object({
   firstName: z.string().min(1, "First name required").max(100),
   email: z.string().email("Valid email required"),
-  linkedin: z.string().optional(),
+  linkedin: z.string().min(1, "LinkedIn URL required"),
   event: z.enum(["vivatech", "cannes"]),
 });
 type VoucherFormData = z.infer<typeof voucherSchema>;
@@ -899,11 +899,12 @@ function EventVoucherSection() {
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="LinkedIn URL (optional)"
+                            placeholder="LinkedIn URL"
                             data-testid="input-voucher-linkedin"
                             className="bg-white/10 border-white/15 text-white placeholder:text-white/40 focus:border-white/50 h-11"
                           />
                         </FormControl>
+                        <FormMessage className="text-red-400 text-xs" />
                       </FormItem>
                     )}
                   />
@@ -918,6 +919,19 @@ function EventVoucherSection() {
                   </Button>
                 </form>
               </Form>
+              {/* Materialized LinkedIn — bottom right */}
+              <div className="flex justify-end mt-3">
+                <a
+                  href="https://www.linkedin.com/showcase/join-materialized/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="link-voucher-linkedin-materialized"
+                  className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-xs"
+                >
+                  <SiLinkedin className="w-3.5 h-3.5" />
+                  <span>Materialized</span>
+                </a>
+              </div>
             </motion.div>
           ) : (
             <motion.div
