@@ -1096,7 +1096,7 @@ export default function Landing() {
               <p className="text-[#8fb08f] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
                 Data &amp; Analytics
               </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6" style={{ fontFamily: "'Public Pixel', sans-serif" }}>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
                 <TypewriterText />
               </h1>
               <p className="text-lg md:text-xl text-white/70 max-w-xl mb-10">
