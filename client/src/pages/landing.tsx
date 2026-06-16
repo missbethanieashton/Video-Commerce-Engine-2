@@ -1131,6 +1131,14 @@ export default function Landing() {
   const [showDemo, setShowDemo] = useState(false);
   const [miroMuted, setMiroMuted] = useState(true);
   const miroVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = miroVideoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.play().catch(() => {});
+  }, []);
+
   const heroBlobs = [
     { size: 320, anchor: { top: "5%", left: "2%" }, travelX: [0, 60, 30, -25, 15, 0], travelY: [0, 40, -30, 28, -18, 0], travelDuration: 44, rotateDuration: 20, dir: 1 },
     { size: 260, anchor: { bottom: "5%", right: "2%" }, travelX: [0, -50, -28, 20, -12, 0], travelY: [0, -38, 28, -26, 14, 0], travelDuration: 54, rotateDuration: 26, dir: -1 },
@@ -1267,7 +1275,7 @@ export default function Landing() {
                 >
                   <video
                     ref={miroVideoRef}
-                    src="/miro-misljen-dress.mp4?v=25s"
+                    src="/miro-misljen-dress.mp4"
                     autoPlay
                     loop
                     playsInline
