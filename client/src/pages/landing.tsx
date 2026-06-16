@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
+import meleMarieBagImage from "@assets/Screenshot_2026-06-16_at_6.25.26_PM_1781627140311.png";
 import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import celineBagImage from "@assets/celine_bag_1773420370038.png";
@@ -611,6 +612,53 @@ function ParallaxImageSection() {
           </span>
           , music videos, or film series
         </motion.p>
+      </div>
+
+      {/* Floating product card */}
+      <div className="absolute bottom-12 right-6 z-30">
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <a
+            href="https://www.meleandmarie.com/collections/hannah-air-collection/products/hannah-air-hazael"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block no-underline"
+            style={{ width: "clamp(148px, 18vw, 196px)" }}
+            data-testid="link-mele-marie-product-card"
+          >
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "rgba(0,0,0,0.52)",
+                backdropFilter: "blur(14px)",
+                border: "1px solid rgba(255,255,255,0.13)",
+                boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+              }}
+            >
+              <img
+                src={meleMarieBagImage}
+                alt="Hannah & Hazel bag by Mele + Marie"
+                className="w-full object-cover"
+                style={{ height: 110 }}
+              />
+              <div className="p-3 space-y-2.5">
+                <div className="space-y-0.5">
+                  <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MELE + MARIE</div>
+                  <div className="text-white text-[11px] font-semibold leading-tight">Hannah &amp; Hazel</div>
+                  <div className="text-white font-bold text-base leading-tight">$1,500</div>
+                </div>
+                <div
+                  className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.92)" }}
+                >
+                  BUY NOW
+                </div>
+              </div>
+            </div>
+          </a>
+        </motion.div>
       </div>
     </section>
   );
