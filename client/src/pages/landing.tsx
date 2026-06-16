@@ -1192,7 +1192,7 @@ export default function Landing() {
             <Button
               onClick={scrollToSignup}
               size="sm"
-              className="group bg-[#314d3b] hover:bg-[#24372b] text-white font-semibold rounded-full text-sm overflow-hidden"
+              className="hidden sm:inline-flex group bg-[#314d3b] hover:bg-[#24372b] text-white font-semibold rounded-full text-sm overflow-hidden"
               data-testid="button-nav-get-started"
             >
               <RollingText>Get Started</RollingText>
@@ -1246,7 +1246,7 @@ export default function Landing() {
               transition={{ duration: 0.9, delay: 0.2 }}
               className="flex-1 flex justify-center"
             >
-              <div className="relative w-full max-w-sm lg:max-w-none">
+              <div className="relative w-full">
                 {/* Audio toggle */}
                 <button
                   onClick={() => {
