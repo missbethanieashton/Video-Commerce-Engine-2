@@ -1410,26 +1410,20 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1a]">
-      <section className="relative min-h-screen overflow-hidden bg-[#1a1a1a]">
-        {/* Animated chrome blobs — background decoration */}
-        {heroBlobs.map((blob, i) => (
-          <motion.div
-            key={i}
-            animate={{ x: blob.travelX, y: blob.travelY }}
-            transition={{ duration: blob.travelDuration, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
-            className="absolute pointer-events-none select-none"
-            style={{ top: blob.anchor.top, bottom: blob.anchor.bottom, left: blob.anchor.left, right: blob.anchor.right, zIndex: 0 }}
-          >
-            <motion.img
-              src={chromeBlobIcon}
-              alt=""
-              aria-hidden="true"
-              animate={{ rotate: [0, blob.dir * 360] }}
-              transition={{ duration: blob.rotateDuration, repeat: Infinity, ease: "linear" }}
-              style={{ width: blob.size, height: blob.size, opacity: 0.14, display: "block" }}
-            />
-          </motion.div>
-        ))}
+      <section className="relative min-h-screen overflow-hidden">
+        {/* Full-screen street-style video background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          aria-label="Street style fashion video"
+        >
+          <source src={streetStyleVideo} type="video/mp4" />
+        </video>
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/25 to-black/70" />
 
         {/* Nav bar */}
         <div
@@ -1469,163 +1463,82 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Main hero content — two columns */}
-        <div className="relative z-10 flex items-center min-h-screen px-6 pt-20 pb-12">
-          <div className="max-w-6xl mx-auto w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
-
-            {/* Left: text + CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="flex-1 text-center lg:text-left"
+        {/* Hero text — bottom left */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9 }}
+          className="relative z-10 flex flex-col justify-end min-h-screen px-6 sm:px-10 pb-20 pt-24"
+        >
+          <p className="text-[#6b8fd6] text-xs font-semibold tracking-[0.25em] uppercase mb-4">
+            Shoppable Creator Content
+          </p>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6 max-w-2xl">
+            Turn Video<br />Into Revenue
+          </h1>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            className="inline-flex"
+          >
+            <Button
+              onClick={scrollToSignup}
+              size="lg"
+              className="text-white font-semibold rounded-full border-0"
+              style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.25)" }}
+              data-testid="button-hero-cta"
             >
-              <p className="text-[#6b8fd6] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
-                Data &amp; Analytics
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-                <TypewriterText />
-              </h1>
-              <p className="text-lg md:text-xl text-white/70 max-w-xl mb-10">
-                The all-in-one platform for creators, brands, and publishers to monetize video content with AI-powered product detection and seamless affiliate tracking.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <motion.div
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                >
-                  <Button
-                    onClick={scrollToSignup}
-                    size="lg"
-                    className="text-white font-semibold rounded-full border-0"
-                    style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px", background: "#1351aa47", backdropFilter: "blur(8px)" }}
-                    data-testid="button-hero-cta"
-                  >
-                    Try Now
-                  </Button>
-                </motion.div>
-              </div>
-            </motion.div>
+              Get Started
+            </Button>
+          </motion.div>
+        </motion.div>
 
-            {/* Right: Miro Misljen product video */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.2 }}
-              className="flex-1 flex justify-center"
+        {/* Celine bag floating product card */}
+        <div className="absolute bottom-16 right-6 z-30" style={{ width: "clamp(160px, 19vw, 210px)" }}>
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "rgba(0,0,0,0.52)",
+                backdropFilter: "blur(14px)",
+                border: "1px solid rgba(255,255,255,0.13)",
+                boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+              }}
+              data-testid="card-celine-hero"
             >
-              <div className="relative w-full max-w-[380px] mx-auto">
-                {/* iPad portrait tablet frame */}
+              <img
+                src={celineBagImage}
+                alt="Céline Classic Box Bag"
+                className="w-full object-cover"
+                style={{ height: 160 }}
+              />
+              <div className="p-3 space-y-2">
+                <div className="space-y-0.5">
+                  <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">CÉLINE</div>
+                  <div className="text-white text-[11px] font-semibold leading-tight">Classic Box Bag</div>
+                  <div className="text-white font-bold text-base leading-tight">€2,650</div>
+                </div>
                 <div
-                  className="relative rounded-[44px] p-[16px]"
-                  style={{
-                    background: "#1c1c1e",
-                    boxShadow: "0 50px 120px rgba(0,0,0,0.65), 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.35)",
-                  }}
+                  className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.92)" }}
                 >
-                  {/* Front camera */}
-                  <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#2e2e2e]" />
-                  {/* Power button (right) */}
-                  <div className="absolute right-[-4px] top-[90px] w-[4px] h-10 rounded-r-full bg-[#2a2a2a]" />
-                  {/* Volume up (left) */}
-                  <div className="absolute left-[-4px] top-[70px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
-                  {/* Volume down (left) */}
-                  <div className="absolute left-[-4px] top-[106px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
-
-                  {/* Screen */}
-                  <div
-                    className="relative rounded-[30px] overflow-hidden bg-black"
-                    style={{ height: "62vh", maxHeight: 640 }}
-                  >
-                    {/* Audio toggle inside screen */}
-                    <button
-                      onClick={() => {
-                        const v = miroVideoRef.current;
-                        if (!v) return;
-                        const next = !miroMuted;
-                        v.muted = next;
-                        setMiroMuted(next);
-                      }}
-                      className="absolute top-3 left-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors backdrop-blur-sm"
-                      data-testid="button-miro-audio-toggle"
-                      title={miroMuted ? "Enable audio" : "Mute"}
-                    >
-                      {miroMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                    </button>
-
-                    <video
-                      ref={miroVideoRef}
-                      src="/miro-misljen-dress.mp4"
-                      autoPlay
-                      loop
-                      playsInline
-                      muted={miroMuted}
-                      className="w-full h-full object-cover"
-                      data-testid="video-miro-misljen"
-                      onLoadedMetadata={(e) => {
-                        const v = e.currentTarget;
-                        v.currentTime = 3;
-                        v.play().catch(() => {});
-                      }}
-                    />
-                    {/* Screen glare */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/4 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Floating product card */}
-                <div className="absolute bottom-8 right-4 z-30">
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <a
-                      href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block no-underline"
-                      style={{ width: "clamp(148px, 18vw, 196px)" }}
-                      data-testid="link-miro-product-card"
-                    >
-                      <div
-                        className="rounded-2xl overflow-hidden"
-                        style={{
-                          background: "rgba(0,0,0,0.52)",
-                          backdropFilter: "blur(14px)",
-                          border: "1px solid rgba(255,255,255,0.13)",
-                          boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
-                        }}
-                      >
-                        <div className="p-3 space-y-2.5">
-                          <div className="space-y-0.5">
-                            <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
-                            <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
-                            <div className="text-white font-bold text-base leading-tight">€1,129</div>
-                          </div>
-                          <div
-                            className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                            style={{ background: "rgba(255,255,255,0.92)" }}
-                          >
-                            BUY NOW
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </motion.div>
+                  BUY NOW
                 </div>
               </div>
-            </motion.div>
-
-          </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Scroll chevron */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.4, duration: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+          transition={{ delay: 1.2, duration: 1 }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10"
         >
           <ChevronDown className="w-8 h-8 text-white/50 animate-bounce" />
         </motion.div>
@@ -1769,6 +1682,180 @@ export default function Landing() {
 
         {/* Event Voucher Section */}
         <EventVoucherSection />
+
+        {/* Data Analytics feature — formerly hero */}
+        <div
+          className="overflow-hidden relative"
+          style={{
+            borderRadius: 50,
+            background: "#1a1a1a",
+            boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          <section className="relative min-h-screen overflow-hidden bg-[#1a1a1a]">
+            {/* Chrome blobs */}
+            {heroBlobs.map((blob, i) => (
+              <motion.div
+                key={i}
+                animate={{ x: blob.travelX, y: blob.travelY }}
+                transition={{ duration: blob.travelDuration, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
+                className="absolute pointer-events-none select-none"
+                style={{ top: blob.anchor.top, bottom: blob.anchor.bottom, left: blob.anchor.left, right: blob.anchor.right, zIndex: 0 }}
+              >
+                <motion.img
+                  src={chromeBlobIcon}
+                  alt=""
+                  aria-hidden="true"
+                  animate={{ rotate: [0, blob.dir * 360] }}
+                  transition={{ duration: blob.rotateDuration, repeat: Infinity, ease: "linear" }}
+                  style={{ width: blob.size, height: blob.size, opacity: 0.14, display: "block" }}
+                />
+              </motion.div>
+            ))}
+
+            {/* Two-column content */}
+            <div className="relative z-10 flex items-center min-h-screen px-6 pt-20 pb-12">
+              <div className="max-w-6xl mx-auto w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
+
+                {/* Left: Data Analytics text */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8 }}
+                  className="flex-1 text-center lg:text-left"
+                >
+                  <p className="text-[#6b8fd6] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
+                    Data &amp; Analytics
+                  </p>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    <TypewriterText />
+                  </h2>
+                  <p className="text-lg md:text-xl text-white/70 max-w-xl mb-10">
+                    The all-in-one platform for creators, brands, and publishers to monetize video content with AI-powered product detection and seamless affiliate tracking.
+                  </p>
+                  <motion.div
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                    className="inline-flex"
+                  >
+                    <Button
+                      onClick={scrollToSignup}
+                      size="lg"
+                      className="text-white font-semibold rounded-full border-0"
+                      style={{ paddingLeft: "30px", paddingRight: "30px", paddingTop: "15px", paddingBottom: "15px", background: "#1351aa47", backdropFilter: "blur(8px)" }}
+                      data-testid="button-analytics-cta"
+                    >
+                      Try Now
+                    </Button>
+                  </motion.div>
+                </motion.div>
+
+                {/* Right: Miro Misljen product video in tablet */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.9, delay: 0.2 }}
+                  className="flex-1 flex justify-center"
+                >
+                  <div className="relative w-full max-w-[380px] mx-auto">
+                    {/* iPad portrait tablet frame */}
+                    <div
+                      className="relative rounded-[44px] p-[16px]"
+                      style={{
+                        background: "#1c1c1e",
+                        boxShadow: "0 50px 120px rgba(0,0,0,0.65), 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.35)",
+                      }}
+                    >
+                      <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#2e2e2e]" />
+                      <div className="absolute right-[-4px] top-[90px] w-[4px] h-10 rounded-r-full bg-[#2a2a2a]" />
+                      <div className="absolute left-[-4px] top-[70px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
+                      <div className="absolute left-[-4px] top-[106px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
+                      <div
+                        className="relative rounded-[30px] overflow-hidden bg-black"
+                        style={{ height: "62vh", maxHeight: 640 }}
+                      >
+                        <button
+                          onClick={() => {
+                            const v = miroVideoRef.current;
+                            if (!v) return;
+                            const next = !miroMuted;
+                            v.muted = next;
+                            setMiroMuted(next);
+                          }}
+                          className="absolute top-3 left-3 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors backdrop-blur-sm"
+                          data-testid="button-miro-audio-toggle"
+                          title={miroMuted ? "Enable audio" : "Mute"}
+                        >
+                          {miroMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                        </button>
+                        <video
+                          ref={miroVideoRef}
+                          src="/miro-misljen-dress.mp4"
+                          autoPlay
+                          loop
+                          playsInline
+                          muted={miroMuted}
+                          className="w-full h-full object-cover"
+                          data-testid="video-miro-misljen"
+                          onLoadedMetadata={(e) => {
+                            const v = e.currentTarget;
+                            v.currentTime = 3;
+                            v.play().catch(() => {});
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/4 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                    </div>
+                    {/* Floating product card */}
+                    <div className="absolute bottom-8 right-4 z-30">
+                      <motion.div
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <a
+                          href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block no-underline"
+                          style={{ width: "clamp(148px, 18vw, 196px)" }}
+                          data-testid="link-miro-product-card"
+                        >
+                          <div
+                            className="rounded-2xl overflow-hidden"
+                            style={{
+                              background: "rgba(0,0,0,0.52)",
+                              backdropFilter: "blur(14px)",
+                              border: "1px solid rgba(255,255,255,0.13)",
+                              boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                            }}
+                          >
+                            <div className="p-3 space-y-2.5">
+                              <div className="space-y-0.5">
+                                <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
+                                <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
+                                <div className="text-white font-bold text-base leading-tight">€1,129</div>
+                              </div>
+                              <div
+                                className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                                style={{ background: "rgba(255,255,255,0.92)" }}
+                              >
+                                BUY NOW
+                              </div>
+                            </div>
+                          </div>
+                        </a>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+
+              </div>
+            </div>
+          </section>
+        </div>
 
       </div>
 
