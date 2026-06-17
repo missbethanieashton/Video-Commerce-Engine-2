@@ -1436,8 +1436,8 @@ export default function Landing() {
             backdropFilter: "blur(0px)",
           }}
         >
-          <img src={materializedLogo} alt="Materialized" style={{ height: 140, width: "auto", filter: "invert(1)" }} />
-          <div className="flex items-center gap-3">
+          <img src={materializedLogo} alt="Materialized" className="h-10 sm:h-16 w-auto" style={{ filter: "invert(1)" }} />
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login">
               <Button
                 variant="ghost"
@@ -1450,16 +1450,18 @@ export default function Landing() {
                 <RollingText>Sign In</RollingText>
               </Button>
             </Link>
-            <Button
-              onClick={scrollToSignup}
-              variant="ghost"
-              size="sm"
-              className="hidden sm:inline-flex group text-white font-semibold rounded-full text-sm overflow-hidden"
-              style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
-              data-testid="button-nav-get-started"
-            >
-              <RollingText>Get Started</RollingText>
-            </Button>
+            <div className="hidden sm:block">
+              <Button
+                onClick={scrollToSignup}
+                variant="ghost"
+                size="sm"
+                className="group text-white font-semibold rounded-full text-sm overflow-hidden"
+                style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
+                data-testid="button-nav-get-started"
+              >
+                <RollingText>Get Started</RollingText>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -1495,7 +1497,7 @@ export default function Landing() {
         </motion.div>
 
         {/* Celine bag floating product card */}
-        <div className="absolute bottom-16 right-6 z-30" style={{ width: "clamp(160px, 19vw, 210px)" }}>
+        <div className="absolute top-24 right-4 sm:top-auto sm:bottom-16 sm:right-6 z-30" style={{ width: "clamp(140px, 35vw, 210px)" }}>
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
