@@ -1368,6 +1368,26 @@ export default function Landing() {
   const [showDemo, setShowDemo] = useState(false);
   const [miroMuted, setMiroMuted] = useState(true);
   const miroVideoRef = useRef<HTMLVideoElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setHeaderScrolled(currentY > 20);
+      if (currentY < 10) {
+        setHeaderVisible(true);
+      } else if (currentY > lastScrollY.current + 4) {
+        setHeaderVisible(false);
+      } else if (currentY < lastScrollY.current - 4) {
+        setHeaderVisible(true);
+      }
+      lastScrollY.current = currentY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const v = miroVideoRef.current;
@@ -1412,7 +1432,16 @@ export default function Landing() {
         ))}
 
         {/* Nav bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 transition-transform duration-300 ease-in-out"
+          style={{
+            transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
+            background: headerScrolled
+              ? "linear-gradient(to bottom, rgba(10,10,10,0.88) 0%, rgba(10,10,10,0.72) 60%, rgba(10,10,10,0) 100%)"
+              : "linear-gradient(to bottom, rgba(10,10,10,0.70) 0%, rgba(10,10,10,0.40) 60%, rgba(10,10,10,0) 100%)",
+            backdropFilter: "blur(0px)",
+          }}
+        >
           <img src={materializedLogo} alt="Materialized" style={{ height: 140, width: "auto", filter: "invert(1)" }} />
           <div className="flex items-center gap-3">
             <Link href="/login">
