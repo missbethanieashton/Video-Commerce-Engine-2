@@ -801,7 +801,7 @@ function EventVoucherSection() {
   };
 
   return (
-    <section className="relative py-24 px-4 overflow-hidden">
+    <section id="have-we-met" className="relative py-24 px-4 overflow-hidden">
       {/* Chrome animated background */}
       <motion.div
         className="absolute inset-0"
@@ -1418,6 +1418,10 @@ export default function Landing() {
     document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const scrollToHaveWeMet = () => {
+    document.getElementById("have-we-met")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1a]">
       <section className="relative min-h-screen overflow-hidden">
@@ -1437,7 +1441,7 @@ export default function Landing() {
 
         {/* Nav bar */}
         <div
-          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 transition-transform duration-300 ease-in-out"
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center sm:justify-between px-4 sm:px-6 py-3 sm:py-4 transition-transform duration-300 ease-in-out"
           style={{
             transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
             background: headerScrolled
@@ -1446,8 +1450,8 @@ export default function Landing() {
             backdropFilter: "blur(0px)",
           }}
         >
-          <img src={materializedLogo} alt="Materialized" className="h-10 sm:h-16 w-auto" style={{ filter: "invert(1)" }} />
-          <div className="flex items-center gap-2 sm:gap-3">
+          <img src={materializedLogo} alt="Materialized" className="h-20 sm:h-32 w-auto" style={{ filter: "invert(1)" }} />
+          <div className="hidden sm:flex items-center gap-3">
             <Link href="/login">
               <Button
                 variant="ghost"
@@ -1460,18 +1464,16 @@ export default function Landing() {
                 <RollingText>Sign In</RollingText>
               </Button>
             </Link>
-            <div className="hidden sm:block">
-              <Button
-                onClick={scrollToSignup}
-                variant="ghost"
-                size="sm"
-                className="group text-white font-semibold rounded-full text-sm overflow-hidden"
-                style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
-                data-testid="button-nav-get-started"
-              >
-                <RollingText>Get Started</RollingText>
-              </Button>
-            </div>
+            <Button
+              onClick={scrollToSignup}
+              variant="ghost"
+              size="sm"
+              className="group text-white font-semibold rounded-full text-sm overflow-hidden"
+              style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
+              data-testid="button-nav-get-started"
+            >
+              <RollingText>Get Started</RollingText>
+            </Button>
           </div>
         </div>
 
@@ -1555,6 +1557,35 @@ export default function Landing() {
           <ChevronDown className="w-8 h-8 text-white/50 animate-bounce" />
         </motion.div>
       </section>
+
+      {/* Mobile-only submenu — below hero video */}
+      <div className="sm:hidden bg-[#202120] px-4 py-4 flex items-center justify-between gap-3">
+        <Link href="/login">
+          <button
+            className="flex items-center gap-1.5 text-white/70 text-sm font-medium"
+            data-testid="button-mobile-signin"
+          >
+            <CircleUserRound className="w-4 h-4" strokeWidth={1.5} />
+            Sign In
+          </button>
+        </Link>
+        <div className="w-px h-4 bg-white/20" />
+        <button
+          onClick={scrollToSignup}
+          className="text-white/70 text-sm font-medium"
+          data-testid="button-mobile-pricing"
+        >
+          Pricing
+        </button>
+        <div className="w-px h-4 bg-white/20" />
+        <button
+          onClick={scrollToHaveWeMet}
+          className="text-white/70 text-sm font-medium"
+          data-testid="button-mobile-cannes"
+        >
+          Cannes Lions
+        </button>
+      </div>
 
       {/* ── Section cards ── all float on #202120 background with 50px radius */}
       <div className="bg-[#202120] px-3 md:px-6 space-y-3 py-3">
