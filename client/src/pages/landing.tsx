@@ -1526,9 +1526,8 @@ export default function Landing() {
               data-testid="card-miro-black-dress-hero"
             >
               <div
-                className="rounded-3xl overflow-hidden flex flex-col justify-between"
+                className="rounded-3xl overflow-hidden"
                 style={{
-                  aspectRatio: "1 / 1",
                   background: "rgba(0,0,0,0.58)",
                   backdropFilter: "blur(14px)",
                   border: "1px solid rgba(255,255,255,0.13)",
@@ -1536,13 +1535,13 @@ export default function Landing() {
                   padding: "18px",
                 }}
               >
-                <div className="space-y-1">
+                <div className="space-y-1 mb-4">
                   <div className="text-white/45 text-[8px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
                   <div className="text-white text-sm font-semibold leading-tight">Little Black Dress</div>
                   <div className="text-white font-bold text-xl leading-tight">€790</div>
                 </div>
                 <div
-                  className="w-full text-center text-[9px] font-black tracking-widest text-[#1a1a1a] py-2.5 rounded-2xl mt-3"
+                  className="w-full text-center text-[9px] font-black tracking-widest text-[#1a1a1a] py-2.5 rounded-2xl"
                   style={{ background: "rgba(255,255,255,0.92)" }}
                 >
                   BUY NOW
