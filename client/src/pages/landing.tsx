@@ -322,9 +322,9 @@ function StatsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="md:text-xl text-white/80 max-w-2xl mx-auto text-[16px]"
+          className="md:text-xl text-white/80 max-w-2xl mx-auto text-[16px] not-italic"
         >
-          <em>Shoppable video technology</em> has existed for more than a decade. Materialized has built an affiliate eco-system that rewards reposts, where content provides multi-layered revenues and impact
+          <em className="italic">Shoppable video technology</em> has existed for more than a decade. Materialized has built an affiliate eco-system that rewards reposts, where content provides multi-layered revenues and impact
         </motion.p>
       </div>
 
