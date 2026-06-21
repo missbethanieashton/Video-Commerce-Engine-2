@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +65,6 @@ export function VideoProductCarousel({
   onProductClick,
 }: VideoProductCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const visibleProducts = products.filter(
     (p) => currentTime >= p.startTime && currentTime <= p.endTime
@@ -77,24 +76,16 @@ export function VideoProductCarousel({
     }
   }, [visibleProducts.length, activeIndex]);
 
-  const scrollToIndex = (index: number) => {
-    if (scrollRef.current) {
-      const child = scrollRef.current.children[index] as HTMLElement;
-      if (child) {
-        child.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-      }
-    }
+  const goToIndex = (index: number) => {
     setActiveIndex(index);
   };
 
   const handlePrev = () => {
-    const newIndex = activeIndex > 0 ? activeIndex - 1 : visibleProducts.length - 1;
-    scrollToIndex(newIndex);
+    goToIndex(activeIndex > 0 ? activeIndex - 1 : visibleProducts.length - 1);
   };
 
   const handleNext = () => {
-    const newIndex = activeIndex < visibleProducts.length - 1 ? activeIndex + 1 : 0;
-    scrollToIndex(newIndex);
+    goToIndex(activeIndex < visibleProducts.length - 1 ? activeIndex + 1 : 0);
   };
 
   const handleProductClick = (product: DetectedProduct) => {
@@ -183,25 +174,27 @@ export function VideoProductCarousel({
         )}
 
         <div
-          ref={scrollRef}
-          className="flex gap-3 overflow-hidden"
+          className="relative"
           style={{
-            flexDirection: isVertical ? "column" : "row",
-            maxWidth: isVertical ? "auto" : "min(400px, 80vw)",
-            maxHeight: isVertical ? "min(400px, 60vh)" : "auto",
+            width: isVertical ? "180px" : "min(400px, 80vw)",
+            minHeight: isVertical ? "min(400px, 60vh)" : "auto",
           }}
         >
           {visibleProducts.map((item, index) => (
             <Card
               key={item.id}
-              className="shrink-0 cursor-pointer transition-all"
+              className="cursor-pointer"
               style={{
                 borderRadius: `${config.cornerRadius}px`,
                 backdropFilter: "blur(8px)",
-                width: isVertical ? "180px" : "auto",
-                opacity: index === activeIndex ? 1 : 0.7,
-                transform: index === activeIndex ? "scale(1)" : "scale(0.95)",
+                width: "100%",
                 backgroundColor: `hsl(var(--card) / ${config.backgroundOpacity / 100})`,
+                position: index === 0 ? "relative" : "absolute",
+                top: index === 0 ? undefined : 0,
+                left: index === 0 ? undefined : 0,
+                opacity: index === activeIndex ? 1 : 0,
+                pointerEvents: index === activeIndex ? "auto" : "none",
+                transition: "opacity 0.25s ease-in-out",
               }}
               onClick={() => handleProductClick(item)}
               data-testid={`card-product-${item.productId}`}
@@ -298,7 +291,7 @@ export function VideoProductCarousel({
                   ? "bg-white w-2 h-2"
                   : "bg-white/50 w-1.5 h-1.5"
               }`}
-              onClick={() => scrollToIndex(index)}
+              onClick={() => goToIndex(index)}
               data-testid={`button-carousel-dot-${index}`}
             />
           ))}
