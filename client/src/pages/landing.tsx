@@ -472,16 +472,13 @@ function VideoOrientationSection() {
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-1 bg-white/30 rounded-full" />
                 </div>
               </div>
-              {/* Format label — blue container below device */}
-              <div
-                className="w-[220px] md:w-[260px] px-4 py-3 flex items-center justify-between rounded-b-2xl"
-                style={{ background: "rgba(19,81,170,0.22)", border: "1px solid rgba(19,81,170,0.35)", borderTop: "none" }}
-              >
+              {/* Format label */}
+              <div className="w-[220px] md:w-[260px] px-1 pt-3 flex items-center justify-between">
                 <div>
-                  <div className="text-white font-semibold text-sm">Vertical / Reels</div>
-                  <div className="text-white/60 text-xs">9:16 Format</div>
+                  <div className="text-white font-semibold text-sm">Vertical</div>
+                  <div className="text-white/60 text-xs">9:16</div>
                 </div>
-                <div className="text-[#6b9ef5] text-[10px] font-bold tracking-widest uppercase">Reels</div>
+                <div className="text-white/50 text-[10px] font-bold tracking-widest uppercase">REELS</div>
               </div>
             </div>
           </motion.div>
@@ -546,16 +543,13 @@ function VideoOrientationSection() {
                   </div>
                 </div>
               </div>
-              {/* Format label — blue container below device */}
-              <div
-                className="w-full px-5 py-3 flex items-center justify-between rounded-b-2xl"
-                style={{ background: "rgba(19,81,170,0.22)", border: "1px solid rgba(19,81,170,0.35)", borderTop: "none" }}
-              >
+              {/* Format label */}
+              <div className="w-full px-1 pt-3 flex items-center justify-between">
                 <div>
-                  <div className="text-white font-semibold text-sm">Horizontal / YouTube</div>
-                  <div className="text-white/60 text-xs">16:9 Format</div>
+                  <div className="text-white font-semibold text-sm">Horizontal</div>
+                  <div className="text-white/60 text-xs">16:9</div>
                 </div>
-                <div className="text-[#6b9ef5] text-[10px] font-bold tracking-widest uppercase">YouTube</div>
+                <div className="text-white/50 text-[10px] font-bold tracking-widest uppercase">YOUTUBE</div>
               </div>
             </div>
           </motion.div>
