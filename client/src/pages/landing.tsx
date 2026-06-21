@@ -87,9 +87,8 @@ function ContactForm() {
         <div className="grid grid-cols-2 gap-2">
           <FormField control={form.control} name="firstName" render={({ field }) => (
             <FormItem className="space-y-1">
-              <FormLabel className="text-white/60 text-xs">First Name *</FormLabel>
               <FormControl>
-                <input {...field} data-testid="input-contact-firstName" placeholder="Jane"
+                <input {...field} data-testid="input-contact-firstName" placeholder="First Name"
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors" />
               </FormControl>
               <FormMessage className="text-xs text-red-400" />
@@ -97,9 +96,8 @@ function ContactForm() {
           )} />
           <FormField control={form.control} name="surname" render={({ field }) => (
             <FormItem className="space-y-1">
-              <FormLabel className="text-white/60 text-xs">Surname *</FormLabel>
               <FormControl>
-                <input {...field} data-testid="input-contact-surname" placeholder="Smith"
+                <input {...field} data-testid="input-contact-surname" placeholder="Surname"
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors" />
               </FormControl>
               <FormMessage className="text-xs text-red-400" />
@@ -110,9 +108,8 @@ function ContactForm() {
         {/* Email */}
         <FormField control={form.control} name="email" render={({ field }) => (
           <FormItem className="space-y-1">
-            <FormLabel className="text-white/60 text-xs">Email *</FormLabel>
             <FormControl>
-              <input {...field} type="email" data-testid="input-contact-email" placeholder="you@example.com"
+              <input {...field} type="email" data-testid="input-contact-email" placeholder="Your Email"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors" />
             </FormControl>
             <FormMessage className="text-xs text-red-400" />
@@ -147,11 +144,10 @@ function ContactForm() {
         {/* IG handle */}
         <FormField control={form.control} name="igHandle" render={({ field }) => (
           <FormItem className="space-y-1">
-            <FormLabel className="text-white/60 text-xs">Instagram Handle *</FormLabel>
             <FormControl>
               <div className="flex items-center bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-[#1351aa] transition-colors">
                 <span className="px-3 text-white/30 text-sm select-none">@</span>
-                <input {...field} data-testid="input-contact-igHandle" placeholder="yourhandle"
+                <input {...field} data-testid="input-contact-igHandle" placeholder="Instagram Handle"
                   className="flex-1 bg-transparent py-2 pr-3 text-white text-sm placeholder:text-white/30 focus:outline-none"
                   onChange={e => field.onChange(e.target.value.replace(/^@/, ""))} />
               </div>
@@ -164,12 +160,12 @@ function ContactForm() {
         <FormField control={form.control} name="message" render={({ field }) => (
           <FormItem className="space-y-1">
             <div className="flex items-center justify-between">
-              <FormLabel className="text-white/60 text-xs">Message *</FormLabel>
+              <FormLabel className="sr-only">Message</FormLabel>
               <span className={`text-xs ${msg.length > 190 ? "text-amber-400" : "text-white/30"}`}>{msg.length}/200</span>
             </div>
             <FormControl>
               <textarea {...field} data-testid="textarea-contact-message" rows={3} maxLength={200}
-                placeholder="Tell us a bit about yourself and what you're looking for..."
+                placeholder="Message"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#1351aa] transition-colors resize-none" />
             </FormControl>
             <FormMessage className="text-xs text-red-400" />
