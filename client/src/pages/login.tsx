@@ -141,7 +141,7 @@ export default function Login() {
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Back to home
+            &lt; Back home
           </Link>
         </div>
       </div>
