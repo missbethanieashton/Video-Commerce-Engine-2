@@ -810,8 +810,8 @@ function EventVoucherSection() {
             Have we met?
           </h2>
           <p className="text-white/75 text-base leading-relaxed">
-            Get 14 days FREE usage — no credit card required.<br />
-            Upload your first video and test the results for yourself.
+            Get 30 days FREE as part of our Cannes Pilot Cohort.<br />
+            Invite up to 10 clients to sample & analyze the increase in sales conversions. No credit card required.
           </p>
         </div>
 
