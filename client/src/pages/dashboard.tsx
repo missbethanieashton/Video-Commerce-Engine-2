@@ -8,7 +8,6 @@ import { AffiliateCard } from "@/components/AffiliateCard";
 import { DashboardTabs } from "@/components/DashboardTabs";
 import { AffiliateTable } from "@/components/AffiliateTable";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { CreatorRewardNotification } from "@/components/EarningsNotification";
 import { Eye, DollarSign, Heart, MousePointer, Upload, Play, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

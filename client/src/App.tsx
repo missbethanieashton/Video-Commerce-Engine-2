@@ -261,14 +261,21 @@ function AppContent() {
           {getSidebar()}
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center justify-between gap-4 p-4 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
+          <header
+            className="flex items-center justify-between gap-4 px-4 py-3 sticky top-0 z-50"
+            style={{
+              background: "rgba(0,0,0,0.58)",
+              backdropFilter: "blur(14px)",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
             <div className="flex items-center gap-3">
-              <SidebarTrigger className="hidden md:flex" data-testid="button-sidebar-toggle" />
+              <SidebarTrigger className="hidden md:flex text-white/70 hover:text-white" data-testid="button-sidebar-toggle" />
               <img
                 src={materializedLogo}
                 alt="Materialized"
                 className="md:hidden"
-                style={{ height: 32, width: "auto" }}
+                style={{ height: 28, width: "auto", filter: "invert(1)" }}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -277,9 +284,15 @@ function AppContent() {
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1 h-8" data-testid="button-user-menu">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 h-8 text-white/80 hover:text-white rounded-full text-xs font-medium"
+                      style={{ border: "1px solid rgba(180,180,180,0.28)", background: "transparent" }}
+                      data-testid="button-user-menu"
+                    >
                       <User className="h-4 w-4" />
-                      <span className="hidden sm:inline text-xs max-w-24 truncate">{user.displayName}</span>
+                      <span className="hidden sm:inline max-w-24 truncate">{user.displayName}</span>
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>

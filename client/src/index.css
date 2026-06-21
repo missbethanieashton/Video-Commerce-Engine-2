@@ -117,42 +117,42 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-/* DARK MODE - Dark Charcoal (#43484D) background with white text and sage accent */
+/* DARK MODE - Landing page palette: #202120 background, #1351aa accent */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 210 7% 12%;
+  --background: 120 2% 13%;
   --foreground: 0 0% 96%;
-  --border: 210 5% 22%;
-  --card: 210 7% 15%;
+  --border: 0 0% 18%;
+  --card: 0 0% 10%;
   --card-foreground: 0 0% 96%;
-  --card-border: 210 5% 20%;
-  --sidebar: 210 7% 10%;
+  --card-border: 0 0% 16%;
+  --sidebar: 0 0% 7%;
   --sidebar-foreground: 0 0% 94%;
-  --sidebar-border: 210 5% 18%;
-  --sidebar-primary: 218 60% 47%;
+  --sidebar-border: 0 0% 14%;
+  --sidebar-primary: 218 60% 37%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 210 7% 18%;
+  --sidebar-accent: 0 0% 14%;
   --sidebar-accent-foreground: 0 0% 94%;
-  --sidebar-ring: 218 60% 47%;
-  --popover: 210 7% 14%;
+  --sidebar-ring: 218 60% 37%;
+  --popover: 0 0% 10%;
   --popover-foreground: 0 0% 96%;
-  --popover-border: 210 5% 24%;
-  --primary: 218 60% 47%;
+  --popover-border: 0 0% 20%;
+  --primary: 218 60% 37%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 210 7% 20%;
+  --secondary: 0 0% 16%;
   --secondary-foreground: 0 0% 94%;
-  --muted: 210 5% 20%;
-  --muted-foreground: 0 0% 65%;
-  --accent: 218 60% 47%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 218 60% 37%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 48%;
   --destructive-foreground: 0 0% 100%;
-  --input: 210 5% 28%;
-  --ring: 218 60% 47%;
+  --input: 0 0% 22%;
+  --ring: 218 60% 37%;
   --chart-1: 218 60% 47%;
   --chart-2: 218 60% 58%;
   --chart-3: 218 60% 37%;
