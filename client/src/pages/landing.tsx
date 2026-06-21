@@ -307,7 +307,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="relative px-4 bg-[#202120]" style={{ paddingTop: "100px", paddingBottom: "100px" }}>
+    <section className="relative px-4 bg-[#202120]" style={{ paddingTop: "100px", paddingBottom: "40px" }}>
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -328,19 +328,6 @@ function StatsSection() {
         </motion.p>
       </div>
 
-      {/* Star icon — straddles StatsSection + TestimonialCarousel */}
-      <motion.img
-        src={starIcon}
-        alt="Materialized star"
-        animate={{ y: [0, -22, 0] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute right-6 md:right-14 w-40 h-40 md:w-56 md:h-56 object-contain select-none pointer-events-none"
-        style={{
-          bottom: "-5rem",
-          zIndex: 20,
-          mixBlendMode: "screen",
-        }}
-      />
     </section>
   );
 }
@@ -356,7 +343,7 @@ function TestimonialCarousel() {
   }, []);
 
   return (
-    <section className="py-10 px-4 bg-[#202120]">
+    <section className="pt-4 pb-10 px-4 bg-[#202120]">
       <div className="max-w-4xl mx-auto">
         <div className="relative min-h-[160px]">
           <AnimatePresence mode="wait">
