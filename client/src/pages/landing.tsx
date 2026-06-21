@@ -1893,7 +1893,7 @@ export default function Landing() {
       <footer className="py-12 px-4 bg-[#202120] border-t border-white/10" style={{ borderTopLeftRadius: 50, borderTopRightRadius: 50, marginTop: -15, position: "relative", zIndex: 10 }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <img src={materializedLogo} alt="Materialized" className="h-[640px] mx-auto w-auto" style={{ filter: "invert(1)" }} />
+            <img src={materializedLogo} alt="Materialized" className="h-40 mx-auto w-auto" style={{ filter: "invert(1)" }} />
           </div>
 
           <div className="max-w-md mx-auto mb-8 space-y-1">
