@@ -1512,8 +1512,8 @@ export default function Landing() {
           </motion.div>
         </motion.div>
 
-        {/* Miro Misljen Little Black Dress floating product card */}
-        <div className="absolute top-24 right-4 sm:top-auto sm:bottom-16 sm:right-6 z-30" style={{ width: "clamp(280px, 60vw, 420px)" }}>
+        {/* Miro Misljen Little Black Dress floating product card — square */}
+        <div className="absolute top-24 right-4 sm:top-auto sm:bottom-16 sm:right-6 z-30" style={{ width: "clamp(160px, 26vw, 260px)" }}>
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1526,26 +1526,26 @@ export default function Landing() {
               data-testid="card-miro-black-dress-hero"
             >
               <div
-                className="rounded-2xl overflow-hidden"
+                className="rounded-3xl overflow-hidden flex flex-col justify-between"
                 style={{
-                  background: "rgba(0,0,0,0.52)",
+                  aspectRatio: "1 / 1",
+                  background: "rgba(0,0,0,0.58)",
                   backdropFilter: "blur(14px)",
                   border: "1px solid rgba(255,255,255,0.13)",
                   boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                  padding: "18px",
                 }}
               >
-                <div className="p-3 space-y-2">
-                  <div className="space-y-0.5">
-                    <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
-                    <div className="text-white text-[11px] font-semibold leading-tight">Little Black Dress</div>
-                    <div className="text-white font-bold text-base leading-tight">€790</div>
-                  </div>
-                  <div
-                    className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                    style={{ background: "rgba(255,255,255,0.92)" }}
-                  >
-                    BUY NOW
-                  </div>
+                <div className="space-y-1">
+                  <div className="text-white/45 text-[8px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
+                  <div className="text-white text-sm font-semibold leading-tight">Little Black Dress</div>
+                  <div className="text-white font-bold text-xl leading-tight">€790</div>
+                </div>
+                <div
+                  className="w-full text-center text-[9px] font-black tracking-widest text-[#1a1a1a] py-2.5 rounded-2xl mt-3"
+                  style={{ background: "rgba(255,255,255,0.92)" }}
+                >
+                  BUY NOW
                 </div>
               </div>
             </a>
