@@ -1620,7 +1620,7 @@ export default function Landing() {
               "documentaries",
               "music videos",
               "beauty tutorials",
-              "panels and stage performances",
+              "panels & concerts",
               "theatre productions",
               "advertorials",
               "fashion runways",
