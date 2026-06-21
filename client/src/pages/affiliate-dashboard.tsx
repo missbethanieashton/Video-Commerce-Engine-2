@@ -4,14 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/StatCard";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  Video, 
-  MousePointer, 
+import {
+  DollarSign,
+  TrendingUp,
+  Video,
+  MousePointer,
   ShoppingBag,
   Eye,
-  ArrowRight
+  ArrowRight,
+  Gift,
+  Globe,
+  Zap,
+  CreditCard,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
@@ -76,13 +80,14 @@ export default function AffiliateDashboard() {
     <div className="space-y-6 pb-24 md:pb-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-welcome">
-          Welcome back, {currentUser?.displayName || "Affiliate"}
+          Welcome back, {currentUser?.displayName || "Publisher"}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Manage your video campaigns and track your earnings
+          Curate shoppable content, grow your audience, and earn affiliate commissions
         </p>
       </div>
 
+      {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Earnings"
@@ -111,6 +116,56 @@ export default function AffiliateDashboard() {
         />
       </div>
 
+      {/* Get Discovered banner */}
+      <Card className="bg-gradient-to-r from-primary/10 to-chart-2/10 border-0">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="h-14 w-14 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <Globe className="h-7 w-7 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg">Get Discovered</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Upload your video to the Global Video Library to get reposted, and check in with your affiliate publishers to see how they're performing. Increase your presence, get noticed globally, and earn more from a broader consumer audience.
+              </p>
+            </div>
+            <Link href="/affiliate/library">
+              <Button size="sm" className="rounded-full gap-2 shrink-0" data-testid="button-explore-library">
+                <ShoppingBag className="h-4 w-4" />
+                Explore Library
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Connect with Creators / Brands */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Connect with Creators & Brands</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <div className="h-11 w-11 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+              <Gift className="h-5 w-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Enable shoppable content — earn a €49 credit</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Refer your PR contact at a creator or brand to unlock the shoppable feature in video uploads for their products. When they subscribe to a paid plan, you receive a <strong>€49 credit</strong> towards listing a video in the Global Library. Without a credit, the listing fee is €49 per video.
+              </p>
+            </div>
+            <Link href="/affiliate/wishlist">
+              <Button variant="outline" size="sm" className="rounded-full shrink-0 gap-2" data-testid="button-view-wishlist">
+                <Eye className="h-3.5 w-3.5" />
+                Creator Wishlist
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Campaigns + Available Videos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4">
@@ -220,12 +275,13 @@ export default function AffiliateDashboard() {
         </Card>
       </div>
 
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Link href="/affiliate/library">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2" data-testid="action-browse-videos">
                 <ShoppingBag className="h-5 w-5" />
@@ -235,12 +291,18 @@ export default function AffiliateDashboard() {
             <Link href="/affiliate/campaigns">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2" data-testid="action-manage-campaigns">
                 <Video className="h-5 w-5" />
-                <span>Manage Campaigns</span>
+                <span>Campaigns</span>
+              </Button>
+            </Link>
+            <Link href="/affiliate/settings/subscription">
+              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2" data-testid="action-subscription">
+                <Zap className="h-5 w-5" />
+                <span>Subscription</span>
               </Button>
             </Link>
             <Link href="/affiliate/settings">
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2" data-testid="action-payout-settings">
-                <DollarSign className="h-5 w-5" />
+                <CreditCard className="h-5 w-5" />
                 <span>Payout Settings</span>
               </Button>
             </Link>

@@ -33,6 +33,7 @@ import BrandLibrary from "@/pages/brand-library";
 import PlaylistsPage from "@/pages/playlists";
 import AffiliateCampaigns from "@/pages/affiliate-campaigns";
 import AffiliateSettings from "@/pages/affiliate-settings";
+import PublisherSettingsSubscription from "@/pages/publisher-settings-subscription";
 import UserSettings from "@/pages/user-settings";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import Affiliates from "@/pages/affiliates";
@@ -119,6 +120,7 @@ function AffiliateRouter() {
       <Route path="/affiliate/library" component={AffiliateLibrary} />
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
+      <Route path="/affiliate/settings/subscription" component={PublisherSettingsSubscription} />
       <Route path="/affiliate/settings" component={UserSettings} />
       <Route path="/affiliate/playlists" component={PlaylistsPage} />
       <Route path="/affiliate/wishlist" component={WishlistPage} />

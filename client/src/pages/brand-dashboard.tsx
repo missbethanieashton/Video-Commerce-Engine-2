@@ -581,7 +581,7 @@ export default function BrandDashboard() {
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No creators connected yet</p>
-                <p className="text-sm">Send invitations to start building your creator network</p>
+                <p className="text-sm">Connect your PR contact at a creator to enable the shoppable feature in their video uploads for your products</p>
               </div>
             </CardContent>
           </Card>
