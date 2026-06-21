@@ -204,7 +204,7 @@ export default function Register() {
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-            &lt; Back home
+            &lt; Back
           </Link>
         </div>
       </div>
