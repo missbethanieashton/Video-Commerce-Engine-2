@@ -1559,32 +1559,47 @@ export default function Landing() {
       </section>
 
       {/* Mobile-only submenu — below hero video */}
-      <div className="sm:hidden bg-[#202120] px-4 py-4 flex items-center justify-between gap-3">
+      <div className="sm:hidden bg-[#202120] px-4 py-3 flex items-center justify-between gap-2">
+        {[
+          { label: "Pricing", onClick: scrollToSignup, testId: "button-mobile-pricing", icon: null },
+          { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes", icon: null },
+        ].map((item, i) => (
+          <button
+            key={item.label}
+            onClick={item.onClick}
+            data-testid={item.testId}
+            className="relative flex-1 py-2 px-3 rounded-xl text-white/65 text-sm font-medium overflow-hidden transition-colors duration-200 hover:text-white group"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            {/* Shine sweep on hover */}
+            <span
+              className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background: "linear-gradient(105deg, transparent 30%, rgba(200,210,220,0.18) 50%, rgba(255,255,255,0.28) 55%, rgba(200,210,220,0.18) 60%, transparent 75%)",
+                boxShadow: "inset 0 0 12px rgba(180,195,215,0.12)",
+              }}
+            />
+            {item.label}
+          </button>
+        ))}
+        <div className="w-px h-5 bg-white/15 flex-shrink-0" />
         <Link href="/login">
           <button
-            className="flex items-center gap-1.5 text-white/70 text-sm font-medium"
+            className="relative flex items-center gap-1.5 py-2 px-3 rounded-xl text-white/65 text-sm font-medium overflow-hidden transition-colors duration-200 hover:text-white group flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
             data-testid="button-mobile-signin"
           >
-            <CircleUserRound className="w-4 h-4" strokeWidth={1.5} />
+            <span
+              className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background: "linear-gradient(105deg, transparent 30%, rgba(200,210,220,0.18) 50%, rgba(255,255,255,0.28) 55%, rgba(200,210,220,0.18) 60%, transparent 75%)",
+                boxShadow: "inset 0 0 12px rgba(180,195,215,0.12)",
+              }}
+            />
+            <CircleUserRound className="w-4 h-4 shrink-0" strokeWidth={1.5} />
             Sign In
           </button>
         </Link>
-        <div className="w-px h-4 bg-white/20" />
-        <button
-          onClick={scrollToSignup}
-          className="text-white/70 text-sm font-medium"
-          data-testid="button-mobile-pricing"
-        >
-          Pricing
-        </button>
-        <div className="w-px h-4 bg-white/20" />
-        <button
-          onClick={scrollToHaveWeMet}
-          className="text-white/70 text-sm font-medium"
-          data-testid="button-mobile-cannes"
-        >
-          Cannes Lions
-        </button>
       </div>
 
       {/* ── Section cards ── all float on #202120 background with 50px radius */}
