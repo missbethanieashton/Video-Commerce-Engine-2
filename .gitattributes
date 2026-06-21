@@ -2,3 +2,4 @@ attached_assets/MiroMisljen_Layered_Dress_1774352109729.MOV filter=lfs diff=lfs 
 client/public/miro-misljen-dress.mov filter=lfs diff=lfs merge=lfs -text
 attached_assets/Croissant_Pilot_Intro2_1775147862373.MOV filter=lfs diff=lfs merge=lfs -text
 attached_assets/Croissant_Pilot_Intro_1775147036295.MOV filter=lfs diff=lfs merge=lfs -text
+attached_assets/Miro_Misljen_Horizontal_Black_dress_1782040882166.mov filter=lfs diff=lfs merge=lfs -text

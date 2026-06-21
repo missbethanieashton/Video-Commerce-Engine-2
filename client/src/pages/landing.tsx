@@ -1427,16 +1427,16 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1a]">
       <section className="relative min-h-screen overflow-hidden">
-        {/* Full-screen street-style video background */}
+        {/* Full-screen hero video background */}
         <video
           autoPlay
           loop
           muted
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
-          aria-label="Street style fashion video"
+          aria-label="Miro Misljen black dress fashion video"
         >
-          <source src={streetStyleVideo} type="video/mp4" />
+          <source src="/miro-misljen-black-dress.mp4" type="video/mp4" />
         </video>
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/25 to-black/70" />
@@ -1512,42 +1512,43 @@ export default function Landing() {
           </motion.div>
         </motion.div>
 
-        {/* Celine bag floating product card */}
+        {/* Miro Misljen Little Black Dress floating product card */}
         <div className="absolute top-24 right-4 sm:top-auto sm:bottom-16 sm:right-6 z-30" style={{ width: "clamp(140px, 35vw, 210px)" }}>
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div
-              className="rounded-2xl overflow-hidden"
-              style={{
-                background: "rgba(0,0,0,0.52)",
-                backdropFilter: "blur(14px)",
-                border: "1px solid rgba(255,255,255,0.13)",
-                boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
-              }}
-              data-testid="card-celine-hero"
+            <a
+              href="https://www.etsy.com/listing/4454443883/one-shoulder-black-dress-one-size-34-to?ref=shop_home_active_14&frs=1&logging_key=b2c6b649fb5b9c4ad8cea5cc9f68f260b736d7a4%3A4454443883"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block no-underline"
+              data-testid="card-miro-black-dress-hero"
             >
-              <img
-                src={celineBagImage}
-                alt="Céline Classic Box Bag"
-                className="w-full object-cover"
-                style={{ height: 160 }}
-              />
-              <div className="p-3 space-y-2">
-                <div className="space-y-0.5">
-                  <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">CÉLINE</div>
-                  <div className="text-white text-[11px] font-semibold leading-tight">Classic Box Bag</div>
-                  <div className="text-white font-bold text-base leading-tight">€2,650</div>
-                </div>
-                <div
-                  className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                  style={{ background: "rgba(255,255,255,0.92)" }}
-                >
-                  BUY NOW
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{
+                  background: "rgba(0,0,0,0.52)",
+                  backdropFilter: "blur(14px)",
+                  border: "1px solid rgba(255,255,255,0.13)",
+                  boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                }}
+              >
+                <div className="p-3 space-y-2">
+                  <div className="space-y-0.5">
+                    <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
+                    <div className="text-white text-[11px] font-semibold leading-tight">Little Black Dress</div>
+                    <div className="text-white font-bold text-base leading-tight">€790</div>
+                  </div>
+                  <div
+                    className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                    style={{ background: "rgba(255,255,255,0.92)" }}
+                  >
+                    BUY NOW
+                  </div>
                 </div>
               </div>
-            </div>
+            </a>
           </motion.div>
         </div>
 
