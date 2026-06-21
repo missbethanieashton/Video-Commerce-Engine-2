@@ -1039,7 +1039,7 @@ function SignupSection() {
             Join the Revolution
           </h2>
           <p className="text-center text-white/70 mb-12 text-lg">
-            Subscribe and experience just how AI is transforming entertainment
+            Choose your subscription & increase your sales performance 
           </p>
 
           {!selectedRole ? (
