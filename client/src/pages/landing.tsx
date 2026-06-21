@@ -1513,7 +1513,7 @@ export default function Landing() {
         </motion.div>
 
         {/* Miro Misljen Little Black Dress floating product card */}
-        <div className="absolute top-24 right-4 sm:top-auto sm:bottom-16 sm:right-6 z-30" style={{ width: "clamp(140px, 35vw, 210px)" }}>
+        <div className="absolute top-24 right-4 sm:top-auto sm:bottom-16 sm:right-6 z-30" style={{ width: "clamp(280px, 60vw, 420px)" }}>
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
