@@ -809,9 +809,8 @@ function EventVoucherSection() {
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-5" style={{ fontFamily: "'Aileron', sans-serif" }}>
             Have we met?
           </h2>
-          <p className="text-white/75 text-base leading-relaxed">
-            Get 30 days FREE as part of our Cannes Pilot Cohort.<br />
-            Invite up to 10 clients to sample & analyze the increase in sales conversions. No credit card required.
+          <p className="text-white/75 text-base leading-relaxed text-center">
+            Get 30 days FREE as part of our Cannes Pilot Cohort. Invite up to 10 clients to sample & analyze the increase in sales conversions. No credit card required.
           </p>
         </div>
 
