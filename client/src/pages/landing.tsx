@@ -788,7 +788,7 @@ function EventVoucherSection() {
   };
 
   return (
-    <section id="have-we-met" className="relative py-24 px-4 overflow-hidden">
+    <section id="have-we-met" className="relative py-24 overflow-hidden">
       {/* Chrome animated background */}
       <motion.div
         className="absolute inset-0"
@@ -802,7 +802,7 @@ function EventVoucherSection() {
       {/* Overlay for legibility */}
       <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.55)" }} />
 
-      <div className="relative z-10 max-w-xl mx-auto">
+      <div className="relative z-10 w-full">
         {/* Header */}
         <div className="text-center mb-10">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/50 mb-3">Exclusive Offer</p>
