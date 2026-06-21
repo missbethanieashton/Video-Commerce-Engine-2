@@ -1676,8 +1676,7 @@ export default function Landing() {
                 ) : (
                   <span key={`${prefix}-${i}`} className="flex items-center shrink-0">
                     <span
-                      className="whitespace-nowrap text-white font-normal px-4"
-                      style={{ fontSize: 28 }}
+                      className="whitespace-nowrap text-white px-4 text-[18px] font-bold"
                     >
                       {item}
                     </span>
