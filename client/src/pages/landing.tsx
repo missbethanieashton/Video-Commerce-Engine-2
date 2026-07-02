@@ -339,7 +339,7 @@ function TestimonialCarousel() {
   }, []);
 
   return (
-    <section className="pt-4 pb-10 px-4 bg-[#202120]">
+    <section className="pt-4 pb-10 px-4 bg-[#33415c]">
       <div className="max-w-4xl mx-auto">
         <div className="relative min-h-[160px]">
           <AnimatePresence mode="wait">
