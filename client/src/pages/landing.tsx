@@ -1599,7 +1599,7 @@ export default function Landing() {
           style={{
             borderRadius: 50,
             boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
-            background: "rgba(19, 81, 170, 0.9)",
+            background: "#001233",
             marginTop: -48,
             zIndex: 10,
           }}
