@@ -1023,7 +1023,7 @@ function SignupSection() {
   };
 
   return (
-    <section id="signup" className="py-20 px-4 bg-[#202120]">
+    <section id="signup" className="py-20 px-4 bg-[#33415c]">
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
