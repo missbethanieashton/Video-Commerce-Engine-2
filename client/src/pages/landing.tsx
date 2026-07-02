@@ -303,7 +303,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 function StatsSection() {
   return (
-    <section className="relative px-4 bg-[#202120]" style={{ paddingTop: "100px", paddingBottom: "40px" }}>
+    <section className="relative px-4 bg-[#33415c]" style={{ paddingTop: "100px", paddingBottom: "40px" }}>
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
