@@ -421,7 +421,7 @@ function VideoOrientationSection() {
                 {/* Screen area — inset to match the frame's cutout, clipped edge-to-edge */}
                 <div
                   className="absolute overflow-hidden z-0"
-                  style={{ top: "2.6%", bottom: "3.3%", left: "21.5%", right: "16.6%" }}
+                  style={{ top: "2.6%", bottom: "3.3%", left: "21.5%", right: "16.6%", borderRadius: "30px" }}
                 >
                   <video
                     autoPlay
@@ -483,7 +483,7 @@ function VideoOrientationSection() {
                 {/* Screen area — inset to match the frame's cutout, clipped edge-to-edge */}
                 <div
                   className="absolute overflow-hidden z-0"
-                  style={{ top: "6.0%", bottom: "5.4%", left: "5.3%", right: "4.2%" }}
+                  style={{ top: "6.0%", bottom: "5.4%", left: "5.3%", right: "4.2%", borderRadius: "30px" }}
                 >
                   <video
                     autoPlay
