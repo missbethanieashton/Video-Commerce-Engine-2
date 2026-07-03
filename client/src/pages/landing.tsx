@@ -1529,7 +1529,7 @@ export default function Landing() {
                 item === "creator content" ? (
                   <span key={`${prefix}-${i}`} className="flex items-center shrink-0 px-3">
                     <span
-                      className="inline-flex items-center overflow-hidden shrink-0 bg-[#174292]"
+                      className="inline-flex items-center overflow-hidden shrink-0 bg-[#6b8fd6]"
                       style={{
                         borderRadius: 50,
                         height: 44,
