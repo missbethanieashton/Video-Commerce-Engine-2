@@ -1539,22 +1539,20 @@ export default function Landing() {
                     >
                       <span className="pill-marquee-track">
                         <span
-                          className="whitespace-nowrap px-4 font-accent"
+                          className="whitespace-nowrap px-4 font-accent text-[#ffffff]"
                           style={{
                             fontStyle: "italic",
                             fontSize: 18,
-                            color: "#1a1a1a",
                             letterSpacing: "0.01em",
                           }}
                         >
                           {pillText}
                         </span>
                         <span
-                          className="whitespace-nowrap px-4 font-accent"
+                          className="whitespace-nowrap px-4 font-accent text-[#ffffff]"
                           style={{
                             fontStyle: "italic",
                             fontSize: 18,
-                            color: "#1a1a1a",
                             letterSpacing: "0.01em",
                           }}
                         >
