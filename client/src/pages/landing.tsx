@@ -955,7 +955,7 @@ function SignupSection() {
                   accentColor: "#6dbf7e",
                   hoverBg: "rgba(49,77,59,0.28)",
                   hoverBorder: "rgba(109,191,126,0.7)",
-                  glowColor: "rgba(109,191,126,0.3)",
+                  glowColor: "rgba(0,18,51,0.3)",
                   icon: "🛍️",
                 },
                 {
@@ -996,9 +996,9 @@ function SignupSection() {
                   </div>
                   <div
                     className="mt-auto text-sm font-semibold flex items-center gap-1.5 transition-colors"
-                    style={{ color: item.accentColor }}
+                    style={{ color: "#ffffff" }}
                   >
-                    Get started <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+                    Get started
                   </div>
                 </motion.button>
               ))}
