@@ -1442,7 +1442,7 @@ export default function Landing() {
       <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-between gap-2">
         {[
           { label: "Pricing", onClick: scrollToSignup, testId: "button-mobile-pricing" },
-          { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" },
+          // { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" }, // hidden with "Have we met?" section, re-enable together
         ].map((item) => (
           <button
             key={item.label}
@@ -1604,8 +1604,8 @@ export default function Landing() {
           <SignupSection />
         </div>
 
-        {/* Event Voucher Section */}
-        <EventVoucherSection />
+        {/* Event Voucher Section — "Have we met?" — temporarily hidden, re-enable at a later date */}
+        {/* <EventVoucherSection /> */}
 
         {/* Data Analytics feature — formerly hero */}
         <div
