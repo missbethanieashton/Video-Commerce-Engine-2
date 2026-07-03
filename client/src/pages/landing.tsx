@@ -965,7 +965,7 @@ function SignupSection() {
                   accentColor: "#c8a54a",
                   hoverBg: "rgba(200,165,74,0.2)",
                   hoverBorder: "rgba(200,165,74,0.65)",
-                  glowColor: "rgba(200,165,74,0.35)",
+                  glowColor: "rgba(2,4,16,0.35)",
                   icon: "📡",
                 },
               ].map((item) => (
