@@ -599,8 +599,8 @@ function ParallaxImageSection() {
             style={{ borderRadius: 50, height: 44, width: 230, verticalAlign: "middle", position: "relative", top: -2 }}
           >
             <span
-              className="pill-marquee-track font-accent"
-              style={{ fontStyle: "italic", fontSize: 18, whiteSpace: "nowrap", color: "#1a1a1a", paddingLeft: 16 }}
+              className="pill-marquee-track font-accent text-[#ffffff]"
+              style={{ fontStyle: "italic", fontSize: 18, whiteSpace: "nowrap", paddingLeft: 16 }}
             >
               creator content &nbsp;&nbsp;&nbsp;&nbsp; creator content &nbsp;&nbsp;&nbsp;&nbsp;
             </span>
