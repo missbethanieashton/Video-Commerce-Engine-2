@@ -14,7 +14,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import starIcon from "@assets/Materialized_Star_icon_1773416195409.png";
-import meleMarieBagImage from "@assets/Screenshot_2026-06-16_at_6.25.26_PM_1781627140311.png";
 import chromeBlobIcon from "@assets/2Iconography_Icons_1773417096477.png";
 import bagCartImage from "@assets/bag_cart_1773417992382.png";
 import celineBagImage from "@assets/celine_bag_1773420370038.png";
@@ -25,8 +24,7 @@ import { SiInstagram, SiLinkedin } from "react-icons/si";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
-
-const streetStyleVideo = "/street-style-ss26.mp4";
+const mtrlzdVideoBanner = "/mtrlzd-video-banner.mp4";
 
 const formSchema = z.object({
   role: z.enum(["creator", "brand", "publisher"]),
@@ -543,7 +541,6 @@ function VideoOrientationSection() {
 }
 
 function ParallaxImageSection() {
-  const [descOpen, setDescOpen] = useState(false);
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -552,7 +549,7 @@ function ParallaxImageSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
 
   return (
-    <section ref={ref} className="relative h-[160vh] overflow-hidden">
+    <section ref={ref} className="relative h-[64vh] overflow-hidden">
       {/* Parallax video layer */}
       <motion.div
         style={{ y }}
@@ -563,10 +560,11 @@ function ParallaxImageSection() {
           loop
           muted
           playsInline
+          preload="auto"
           className="w-full h-full object-cover"
-          aria-label="Street style fashion video"
+          aria-label="Materialized video banner"
         >
-          <source src={streetStyleVideo} type="video/mp4" />
+          <source src={mtrlzdVideoBanner} type="video/mp4" />
         </video>
       </motion.div>
 
@@ -608,109 +606,6 @@ function ParallaxImageSection() {
         </motion.p>
       </div>
 
-      {/* Floating product card */}
-      <div className="absolute right-6 z-30" style={{ bottom: "calc(3rem + 20px)", width: "clamp(160px, 19vw, 210px)" }}>
-        <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          style={{ position: "relative" }}
-        >
-          {/* Main card */}
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: "rgba(0,0,0,0.52)",
-              backdropFilter: "blur(14px)",
-              border: "1px solid rgba(255,255,255,0.13)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
-            }}
-            data-testid="card-mele-marie"
-          >
-            <img
-              src={meleMarieBagImage}
-              alt="Hannah & Hazel bag by Mele + Marie"
-              className="w-full object-cover"
-              style={{ height: 160 }}
-            />
-            <div className="p-3 space-y-2">
-              <div className="space-y-0.5">
-                <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MELE + MARIE</div>
-                <div className="text-white text-[11px] font-semibold leading-tight">Hannah &amp; Hazel</div>
-                <div className="text-white font-bold text-base leading-tight">$1,500</div>
-              </div>
-              {/* BUY NOW */}
-              <a
-                href="https://www.meleandmarie.com/collections/hannah-air-collection/products/hannah-air-hazael"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block no-underline"
-                data-testid="link-mele-marie-buy"
-              >
-                <div
-                  className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                  style={{ background: "rgba(255,255,255,0.92)" }}
-                >
-                  BUY NOW
-                </div>
-              </a>
-              {/* LEARN MORE */}
-              <button
-                onClick={() => setDescOpen(true)}
-                className="w-full text-center text-[8.5px] font-black tracking-widest text-white/70 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.10)" }}
-                data-testid="button-mele-marie-learn-more"
-              >
-                LEARN MORE
-              </button>
-            </div>
-          </div>
-
-          {/* Description slide-out panel */}
-          <AnimatePresence>
-            {descOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.22, ease: "easeInOut" }}
-                className="absolute inset-0 rounded-2xl flex flex-col"
-                style={{
-                  background: "rgba(10,10,10,0.88)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,0.13)",
-                  overflowY: "auto",
-                }}
-              >
-                {/* Close */}
-                <button
-                  onClick={() => setDescOpen(false)}
-                  className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-10"
-                  data-testid="button-mele-marie-close-desc"
-                  aria-label="Close description"
-                >
-                  <X size={14} />
-                </button>
-
-                <div className="p-4 pt-8 flex flex-col gap-3 h-full">
-                  {/* Description */}
-                  <p className="text-white/80 text-[10px] leading-relaxed">
-                    Made with Silver abalone shell, this medium-sized minaudière captures attention with its gentle shimmer and polished finish that feels effortless to hold. This luxury minaudiere is a timeless piece, with its classy finished look and one-of-a-kind design.
-                  </p>
-
-                  {/* Divider */}
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }} />
-
-                  {/* Dimensions */}
-                  <div>
-                    <div className="text-white/40 text-[7.5px] uppercase tracking-widest font-medium mb-1">Dimensions (L × H × W)</div>
-                    <div className="text-white/80 text-[10px]">25.4cm × 23.5 × 8.9cm</div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
     </section>
   );
 }
