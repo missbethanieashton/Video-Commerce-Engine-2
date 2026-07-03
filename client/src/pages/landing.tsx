@@ -365,7 +365,7 @@ function TestimonialCarousel() {
               <p className="text-lg md:text-xl text-white/90 mb-3 italic leading-relaxed">
                 {TESTIMONIALS[activeIndex].quote}
               </p>
-              <div className="text-[#1351aa] font-semibold text-sm mt-2 font-accent">
+              <div className="font-semibold text-sm mt-2 font-accent text-[#001233]">
                 <span className="text-white/30 mr-2">|</span>{TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
