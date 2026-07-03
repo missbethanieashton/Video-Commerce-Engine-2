@@ -24,6 +24,8 @@ import { SiInstagram, SiLinkedin } from "react-icons/si";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
+import iphoneFrameTransparent from "@assets/iphone_frame_transparent.png";
+import tabletFrameTransparent from "@assets/tablet_frame_transparent.png";
 const mtrlzdVideoBanner = "/mtrlzd-video-banner.mp4";
 
 const formSchema = z.object({
@@ -412,46 +414,52 @@ function VideoOrientationSection() {
             viewport={{ once: true }}
           >
             <div className="flex flex-col items-center gap-0">
-              <div className="relative w-[220px] md:w-[260px]">
+              <div
+                className="relative w-[220px] md:w-[260px]"
+                style={{ aspectRatio: "1024 / 1536" }}
+              >
+                {/* Screen area — inset to match the frame's cutout, clipped edge-to-edge */}
                 <div
-                  className="relative bg-[#1a1a1a] rounded-[3rem] p-3"
-                  style={{
-                    boxShadow: "0 25px 60px rgba(0,0,0,0.4), 0 10px 20px rgba(0,0,0,0.3), 0 0 40px rgba(103,122,103,0.15)",
-                  }}
+                  className="absolute overflow-hidden z-0"
+                  style={{ top: "2.6%", bottom: "3.3%", left: "21.5%", right: "16.6%" }}
                 >
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-6 bg-[#1a1a1a] rounded-b-2xl z-20" />
-                  <div className="relative rounded-[2.25rem] overflow-hidden bg-black">
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full aspect-[9/16] object-cover"
-                      aria-label="Vertical video demo"
-                    >
-                      <source src={verticalDemoVideo} type="video/mp4" />
-                    </video>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    {/* Bag product carousel — bottom of screen */}
-                    <div className="absolute left-2 right-2 z-10" style={{ bottom: 5 }}>
-                      <div className="bg-black/40 backdrop-blur-md rounded-lg px-2 py-1.5 border border-white/10">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-7 h-7 rounded-md bg-white/10 flex-shrink-0 overflow-hidden">
-                            <img src={bagCartImage} alt="Metallic Chain Handbag" className="w-full h-full object-contain" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white/70 text-[7px] leading-tight truncate">Metallic Chain Bag</div>
-                            <div className="text-white font-bold text-[10px] leading-tight">€720</div>
-                          </div>
-                          <button className="bg-white/90 text-[#43484D] text-[6.5px] font-black tracking-wide px-1.5 py-1 rounded flex-shrink-0">
-                            BUY NOW
-                          </button>
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    aria-label="Vertical video demo"
+                  >
+                    <source src={verticalDemoVideo} type="video/mp4" />
+                  </video>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  {/* Bag product carousel — bottom of screen */}
+                  <div className="absolute left-2 right-2 z-10" style={{ bottom: 5 }}>
+                    <div className="bg-black/40 backdrop-blur-md rounded-lg px-2 py-1.5 border border-white/10">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-7 h-7 rounded-md bg-white/10 flex-shrink-0 overflow-hidden">
+                          <img src={bagCartImage} alt="Metallic Chain Handbag" className="w-full h-full object-contain" />
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white/70 text-[7px] leading-tight truncate">Metallic Chain Bag</div>
+                          <div className="text-white font-bold text-[10px] leading-tight">€720</div>
+                        </div>
+                        <button className="bg-white/90 text-[#43484D] text-[6.5px] font-black tracking-wide px-1.5 py-1 rounded flex-shrink-0">
+                          BUY NOW
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-1 bg-white/30 rounded-full" />
                 </div>
+                {/* Transparent iPhone frame overlay */}
+                <img
+                  src={iphoneFrameTransparent}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 w-full h-full z-10 pointer-events-none select-none"
+                  style={{ filter: "drop-shadow(0 25px 60px rgba(0,0,0,0.4)) drop-shadow(0 10px 20px rgba(0,0,0,0.3))" }}
+                />
               </div>
               {/* Format label */}
               <div className="w-[220px] md:w-[260px] px-1 pt-3 flex items-center justify-between">
@@ -471,58 +479,53 @@ function VideoOrientationSection() {
           >
             {/* iPad landscape frame */}
             <div className="flex flex-col items-center gap-0 w-full max-w-[560px]">
-              <div className="w-full">
+              <div className="relative w-full" style={{ aspectRatio: "1536 / 1024" }}>
+                {/* Screen area — inset to match the frame's cutout, clipped edge-to-edge */}
                 <div
-                  className="relative rounded-[28px] p-[14px]"
-                  style={{
-                    background: "#1a1a1a",
-                    boxShadow: "0 30px 70px rgba(0,0,0,0.45), 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.3)",
-                  }}
+                  className="absolute overflow-hidden z-0"
+                  style={{ top: "6.0%", bottom: "5.4%", left: "5.3%", right: "4.2%" }}
                 >
-                  {/* Front camera dot */}
-                  <div className="absolute top-[7px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#333] shadow-inner" />
-                  {/* Side button (right) */}
-                  <div className="absolute right-[-3px] top-[60px] w-[3px] h-8 rounded-r-full bg-[#2a2a2a]" />
-                  {/* Volume buttons (left) */}
-                  <div className="absolute left-[-3px] top-[50px] w-[3px] h-5 rounded-l-full bg-[#2a2a2a]" />
-                  <div className="absolute left-[-3px] top-[78px] w-[3px] h-5 rounded-l-full bg-[#2a2a2a]" />
-
-                  {/* Screen */}
-                  <div className="relative rounded-[16px] overflow-hidden bg-black" style={{ aspectRatio: "16/10" }}>
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                      style={{ objectPosition: "center 60%" }}
-                      aria-label="Jetski vessels video"
-                    >
-                      <source src="/vessels-jetski.mp4" type="video/mp4" />
-                    </video>
-                    {/* Subtle screen glare */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-                    {/* Seasonal Leasing carousel card — bottom of screen */}
-                    <div className="absolute left-3 right-3 z-10" style={{ bottom: 5 }}>
-                      <div className="rounded-xl px-3 py-2 border border-white/15" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)" }}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="text-white/50 text-[8px] uppercase tracking-widest leading-tight">Lund Group</div>
-                            <div className="text-white text-[11px] font-semibold leading-tight mt-0.5">Luxury Yacht Charters</div>
-                          </div>
-                          <a
-                            href="https://www.lund-group.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-white/10 hover:bg-white/20 text-white text-[8px] font-black tracking-wider px-3 py-1.5 rounded-lg flex-shrink-0 border border-white/20 transition-colors whitespace-nowrap"
-                          >
-                            SEASONAL LEASING
-                          </a>
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: "center 60%" }}
+                    aria-label="Jetski vessels video"
+                  >
+                    <source src="/vessels-jetski.mp4" type="video/mp4" />
+                  </video>
+                  {/* Subtle screen glare */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                  {/* Seasonal Leasing carousel card — bottom of screen */}
+                  <div className="absolute left-3 right-3 z-10" style={{ bottom: 5 }}>
+                    <div className="rounded-xl px-3 py-2 border border-white/15" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)" }}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-white/50 text-[8px] uppercase tracking-widest leading-tight">Lund Group</div>
+                          <div className="text-white text-[11px] font-semibold leading-tight mt-0.5">Luxury Yacht Charters</div>
                         </div>
+                        <a
+                          href="https://www.lund-group.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white/10 hover:bg-white/20 text-white text-[8px] font-black tracking-wider px-3 py-1.5 rounded-lg flex-shrink-0 border border-white/20 transition-colors whitespace-nowrap"
+                        >
+                          SEASONAL LEASING
+                        </a>
                       </div>
                     </div>
                   </div>
                 </div>
+                {/* Transparent tablet frame overlay */}
+                <img
+                  src={tabletFrameTransparent}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 w-full h-full z-10 pointer-events-none select-none"
+                  style={{ filter: "drop-shadow(0 30px 70px rgba(0,0,0,0.45)) drop-shadow(0 10px 25px rgba(0,0,0,0.3))" }}
+                />
               </div>
               {/* Format label */}
               <div className="w-full px-1 pt-3 flex items-center justify-between">
