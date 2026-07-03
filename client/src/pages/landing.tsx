@@ -365,7 +365,7 @@ function TestimonialCarousel() {
               <p className="text-lg md:text-xl text-white/90 mb-3 italic leading-relaxed">
                 {TESTIMONIALS[activeIndex].quote}
               </p>
-              <div className="text-[#1351aa] font-semibold text-sm mt-2">
+              <div className="text-[#1351aa] font-semibold text-sm mt-2 font-accent">
                 <span className="text-white/30 mr-2">|</span>{TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
@@ -599,8 +599,8 @@ function ParallaxImageSection() {
             style={{ background: "#AAED3C", borderRadius: 50, height: 44, width: 230, verticalAlign: "middle", position: "relative", top: -2 }}
           >
             <span
-              className="pill-marquee-track"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 18, whiteSpace: "nowrap", color: "#1a1a1a", paddingLeft: 16 }}
+              className="pill-marquee-track font-accent"
+              style={{ fontStyle: "italic", fontSize: 18, whiteSpace: "nowrap", color: "#1a1a1a", paddingLeft: 16 }}
             >
               creator content &nbsp;&nbsp;&nbsp;&nbsp; creator content &nbsp;&nbsp;&nbsp;&nbsp;
             </span>
@@ -1540,9 +1540,8 @@ export default function Landing() {
                     >
                       <span className="pill-marquee-track">
                         <span
-                          className="whitespace-nowrap px-4"
+                          className="whitespace-nowrap px-4 font-accent"
                           style={{
-                            fontFamily: "Georgia, 'Times New Roman', serif",
                             fontStyle: "italic",
                             fontSize: 18,
                             color: "#1a1a1a",
@@ -1552,9 +1551,8 @@ export default function Landing() {
                           {pillText}
                         </span>
                         <span
-                          className="whitespace-nowrap px-4"
+                          className="whitespace-nowrap px-4 font-accent"
                           style={{
-                            fontFamily: "Georgia, 'Times New Roman', serif",
                             fontStyle: "italic",
                             fontSize: 18,
                             color: "#1a1a1a",

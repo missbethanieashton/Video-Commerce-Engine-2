@@ -2,6 +2,14 @@
 @import url('https://fonts.cdnfonts.com/css/neue-haas-grotesk-display');
 @import url('https://fonts.cdnfonts.com/css/aileron');
 
+@font-face {
+  font-family: 'Lekton';
+  src: url('/fonts/Lekton-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -73,6 +81,7 @@
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --font-heading: 'Aileron', sans-serif;
+  --font-accent: 'Lekton', monospace;
   --color-cta: #314d3b;
   --color-cta-hover: #24372b;
   --color-accent: #1351aa;

@@ -25,7 +25,7 @@ export function AnnouncementBanner() {
         {repeatedAnnouncements.map((text, index) => (
           <span 
             key={index} 
-            className="mx-8 py-[10px] text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-2"
+            className="mx-8 py-[10px] text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-2 font-accent"
           >
             <span className="text-[hsl(34,67%,70%)]">/</span>
             <span className="text-[hsl(34,67%,70%)]">/</span>
