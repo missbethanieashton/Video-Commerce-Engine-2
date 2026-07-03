@@ -595,8 +595,8 @@ function ParallaxImageSection() {
         >
           Buy directly from{" "}
           <span
-            className="inline-flex items-center overflow-hidden align-middle"
-            style={{ background: "#AAED3C", borderRadius: 50, height: 44, width: 230, verticalAlign: "middle", position: "relative", top: -2 }}
+            className="inline-flex items-center overflow-hidden align-middle bg-[#174292]"
+            style={{ borderRadius: 50, height: 44, width: 230, verticalAlign: "middle", position: "relative", top: -2 }}
           >
             <span
               className="pill-marquee-track font-accent"
