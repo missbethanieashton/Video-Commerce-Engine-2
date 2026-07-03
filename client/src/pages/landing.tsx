@@ -955,7 +955,7 @@ function SignupSection() {
                   accentColor: "#6dbf7e",
                   hoverBg: "rgba(49,77,59,0.28)",
                   hoverBorder: "rgba(109,191,126,0.7)",
-                  glowColor: "rgba(0,18,51,0.3)",
+                  glowColor: "rgba(107,143,214,0.3)",
                   icon: "🛍️",
                 },
                 {
