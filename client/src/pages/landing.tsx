@@ -366,7 +366,7 @@ function TestimonialCarousel() {
                 {TESTIMONIALS[activeIndex].quote}
               </p>
               <div className="font-semibold text-sm mt-2 font-accent text-[#001233]">
-                <span className="text-white/30 mr-2">|</span>{TESTIMONIALS[activeIndex].company}
+                <span className="mr-2 text-[#001233]">|</span>{TESTIMONIALS[activeIndex].company}
               </div>
             </motion.div>
           </AnimatePresence>
