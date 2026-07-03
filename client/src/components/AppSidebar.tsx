@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import materializedLogo from "@assets/MATERIALIZED_full_logo_1773352270197.png";
+import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
 import {
   LayoutDashboard,
   Video,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
+import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -147,7 +147,7 @@ export default function BrandSettingsSubscription() {
     <div className="space-y-6 max-w-2xl pb-12">
       {/* Logo banner */}
       <div className="flex items-center justify-center rounded-2xl py-8" style={{ background: "rgba(0,0,0,0.58)", border: "1px solid rgba(255,255,255,0.08)" }}>
-        <img src={materializedLogo} alt="Materialized" className="h-32 w-auto" style={{ filter: "invert(1)" }} />
+        <img src={materializedLogo} alt="Materialized" className="h-32 w-auto" />
       </div>
 
       {/* Back header */}

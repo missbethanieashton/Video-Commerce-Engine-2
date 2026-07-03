@@ -24,7 +24,7 @@ import { DemoPopup } from "@/components/DemoPopup";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
-import materializedLogo from "@assets/MATERIALIZED_full_logo_1773324040022.png";
+import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
 
 const streetStyleVideo = "/street-style-ss26.mp4";
 
@@ -1432,7 +1432,7 @@ export default function Landing() {
             backdropFilter: "blur(0px)",
           }}
         >
-          <img src={materializedLogo} alt="Materialized" className="h-20 sm:h-32 w-auto" style={{ filter: "invert(1)" }} />
+          <img src={materializedLogo} alt="Materialized" className="h-20 sm:h-32 w-auto" />
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/login">
               <Button
@@ -1541,7 +1541,7 @@ export default function Landing() {
       </section>
 
       {/* Mobile-only submenu — below hero video */}
-      <div className="sm:hidden bg-[#202120] px-4 py-3 flex items-center justify-between gap-2">
+      <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-between gap-2">
         {[
           { label: "Pricing", onClick: scrollToSignup, testId: "button-mobile-pricing" },
           { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" },
@@ -1573,8 +1573,8 @@ export default function Landing() {
         </Link>
       </div>
 
-      {/* ── Section cards ── all float on #202120 background with 50px radius */}
-      <div className="bg-[#202120] px-3 md:px-6 space-y-3 py-3">
+      {/* ── Section cards ── all float on #020410 background with 50px radius */}
+      <div className="bg-[#020410] px-3 md:px-6 space-y-3 py-3">
 
         {/* Stats + Testimonials — dark card */}
         <div
@@ -1687,7 +1687,7 @@ export default function Landing() {
               );
 
             return (
-              <div className="w-full overflow-hidden bg-[#202120] py-4">
+              <div className="w-full overflow-hidden bg-[#020410] py-4">
                 <div className="marquee-track">
                   {renderTrack("a")}
                   {renderTrack("b")}
@@ -1890,10 +1890,10 @@ export default function Landing() {
 
       <DemoPopup open={showDemo} onClose={() => setShowDemo(false)} />
 
-      <footer className="py-12 px-4 border-t border-white/10 bg-[#001233]" style={{ borderTopLeftRadius: 50, borderTopRightRadius: 50, marginTop: -15, position: "relative", zIndex: 10 }}>
+      <footer className="py-12 px-4 border-t border-white/10 bg-[#020410]" style={{ borderTopLeftRadius: 50, borderTopRightRadius: 50, marginTop: -15, position: "relative", zIndex: 10 }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <img src={materializedLogo} alt="Materialized" className="h-40 mx-auto w-auto" style={{ filter: "invert(1)" }} />
+            <img src={materializedLogo} alt="Materialized" className="h-40 mx-auto w-auto" />
           </div>
 
           <div className="max-w-md mx-auto mb-8 space-y-1">
