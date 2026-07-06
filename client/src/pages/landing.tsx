@@ -1708,7 +1708,7 @@ export default function Landing() {
                       {/* Video with product carousel fitted into the frame's screen area */}
                       <div
                         className="absolute overflow-hidden bg-black"
-                        style={{ left: "8%", top: "9%", width: "84%", height: "82%", borderRadius: 30 }}
+                        style={{ left: "8.98%", top: "6.51%", width: "81.64%", height: "86.13%", borderRadius: 30 }}
                       >
                         <button
                           onClick={() => {
