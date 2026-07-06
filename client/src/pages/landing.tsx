@@ -26,6 +26,7 @@ import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_17678733583
 import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
 import iphoneFrameTransparent from "@assets/iphone_frame_transparent.png";
 import tabletFrameTransparent from "@assets/tablet_frame_transparent.png";
+import chromeTabletFrame from "@assets/WhatsApp_Image_2026-07-03_at_16.13.03_1783374186838.jpeg";
 const mtrlzdVideoBanner = "/mtrlzd-video-banner.mp4";
 
 const formSchema = z.object({
@@ -1682,21 +1683,32 @@ export default function Landing() {
                   className="flex-1 flex justify-center"
                 >
                   <div className="relative w-full max-w-[380px] mx-auto">
-                    {/* iPad portrait tablet frame */}
-                    <div
-                      className="relative rounded-[44px] p-[16px]"
-                      style={{
-                        background: "#1c1c1e",
-                        boxShadow: "0 50px 120px rgba(0,0,0,0.65), 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.35)",
-                      }}
-                    >
-                      <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#2e2e2e]" />
-                      <div className="absolute right-[-4px] top-[90px] w-[4px] h-10 rounded-r-full bg-[#2a2a2a]" />
-                      <div className="absolute left-[-4px] top-[70px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
-                      <div className="absolute left-[-4px] top-[106px] w-[4px] h-7 rounded-l-full bg-[#2a2a2a]" />
+                    {/* Chrome tablet frame, rotated to vertical/portrait orientation */}
+                    <div className="relative mx-auto" style={{ width: 300, height: 442 }}>
+                      {/* Frame graphic (landscape source image, rotated to appear portrait) */}
                       <div
-                        className="relative rounded-[30px] overflow-hidden bg-black"
-                        style={{ height: "62vh", maxHeight: 640 }}
+                        className="absolute top-1/2 left-1/2 pointer-events-none select-none"
+                        style={{
+                          width: 442,
+                          height: 300,
+                          transform: "translate(-50%, -50%) rotate(-90deg)",
+                        }}
+                      >
+                        <img
+                          src={chromeTabletFrame}
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 w-full h-full"
+                          style={{
+                            objectFit: "fill",
+                            filter: "drop-shadow(0 50px 120px rgba(0,0,0,0.45)) drop-shadow(0 15px 40px rgba(0,0,0,0.3))",
+                          }}
+                        />
+                      </div>
+                      {/* Video fitted into the frame's screen area */}
+                      <div
+                        className="absolute overflow-hidden rounded-[6px] bg-black"
+                        style={{ left: "8%", top: "9%", width: "84%", height: "82%" }}
                       >
                         <button
                           onClick={() => {
