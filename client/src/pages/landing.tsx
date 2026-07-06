@@ -26,7 +26,7 @@ import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_17678733583
 import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
 import iphoneFrameTransparent from "@assets/iphone_frame_transparent.png";
 import tabletFrameTransparent from "@assets/tablet_frame_transparent.png";
-import chromeTabletFrame from "@assets/WhatsApp_Image_2026-07-03_at_16.13.03_1783374186838.jpeg";
+import chromeTabletFrame from "@/assets/chrome_tablet_frame_no_bg.png";
 const mtrlzdVideoBanner = "/mtrlzd-video-banner.mp4";
 
 const formSchema = z.object({
@@ -1682,15 +1682,15 @@ export default function Landing() {
                   transition={{ duration: 0.9, delay: 0.2 }}
                   className="flex-1 flex justify-center"
                 >
-                  <div className="relative w-full max-w-[380px] mx-auto">
-                    {/* Chrome tablet frame, rotated to vertical/portrait orientation */}
-                    <div className="relative mx-auto" style={{ width: 300, height: 442 }}>
+                  <div className="relative w-full max-w-[520px] mx-auto">
+                    {/* Chrome tablet frame, rotated to vertical/portrait orientation, enlarged 1.5x */}
+                    <div className="relative mx-auto" style={{ width: 450, height: 663 }}>
                       {/* Frame graphic (landscape source image, rotated to appear portrait) */}
                       <div
                         className="absolute top-1/2 left-1/2 pointer-events-none select-none"
                         style={{
-                          width: 442,
-                          height: 300,
+                          width: 663,
+                          height: 450,
                           transform: "translate(-50%, -50%) rotate(-90deg)",
                         }}
                       >
@@ -1705,10 +1705,10 @@ export default function Landing() {
                           }}
                         />
                       </div>
-                      {/* Video fitted into the frame's screen area */}
+                      {/* Video with product carousel fitted into the frame's screen area */}
                       <div
-                        className="absolute overflow-hidden rounded-[6px] bg-black"
-                        style={{ left: "8%", top: "9%", width: "84%", height: "82%" }}
+                        className="absolute overflow-hidden bg-black"
+                        style={{ left: "8%", top: "9%", width: "84%", height: "82%", borderRadius: 30 }}
                       >
                         <button
                           onClick={() => {
@@ -1740,47 +1740,47 @@ export default function Landing() {
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-br from-white/4 via-transparent to-transparent pointer-events-none" />
-                      </div>
-                    </div>
-                    {/* Floating product card */}
-                    <div className="absolute bottom-8 right-4 z-30">
-                      <motion.div
-                        animate={{ y: [0, -10, 0] }}
-                        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        <a
-                          href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block no-underline"
-                          style={{ width: "clamp(148px, 18vw, 196px)" }}
-                          data-testid="link-miro-product-card"
-                        >
-                          <div
-                            className="rounded-2xl overflow-hidden"
-                            style={{
-                              background: "rgba(0,0,0,0.52)",
-                              backdropFilter: "blur(14px)",
-                              border: "1px solid rgba(255,255,255,0.13)",
-                              boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
-                            }}
+                        {/* Product carousel card, fitted inside the video/frame */}
+                        <div className="absolute bottom-3 right-3 z-30">
+                          <motion.div
+                            animate={{ y: [0, -10, 0] }}
+                            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
                           >
-                            <div className="p-3 space-y-2.5">
-                              <div className="space-y-0.5">
-                                <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
-                                <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
-                                <div className="text-white font-bold text-base leading-tight">€1,129</div>
-                              </div>
+                            <a
+                              href="https://www.etsy.com/listing/4438945876/mixed-media-deconstructed-patchwork?ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=miro+misljen&ref=sr_gallery-1-7"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block no-underline"
+                              style={{ width: "clamp(148px, 18vw, 196px)" }}
+                              data-testid="link-miro-product-card"
+                            >
                               <div
-                                className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
-                                style={{ background: "rgba(255,255,255,0.92)" }}
+                                className="rounded-2xl overflow-hidden"
+                                style={{
+                                  background: "rgba(0,0,0,0.52)",
+                                  backdropFilter: "blur(14px)",
+                                  border: "1px solid rgba(255,255,255,0.13)",
+                                  boxShadow: "0 24px 60px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                                }}
                               >
-                                BUY NOW
+                                <div className="p-3 space-y-2.5">
+                                  <div className="space-y-0.5">
+                                    <div className="text-white/45 text-[7.5px] uppercase tracking-widest font-medium">MIRO MISLJEN</div>
+                                    <div className="text-white text-[11px] font-semibold leading-tight">Deconstructed Patchwork Dress</div>
+                                    <div className="text-white font-bold text-base leading-tight">€1,129</div>
+                                  </div>
+                                  <div
+                                    className="w-full text-center text-[8.5px] font-black tracking-widest text-[#1a1a1a] py-2 rounded-xl"
+                                    style={{ background: "rgba(255,255,255,0.92)" }}
+                                  >
+                                    BUY NOW
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        </a>
-                      </motion.div>
+                            </a>
+                          </motion.div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
