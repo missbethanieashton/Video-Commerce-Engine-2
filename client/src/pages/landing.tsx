@@ -1523,7 +1523,7 @@ export default function Landing() {
       </section>
 
       {/* Mobile-only submenu — below hero video */}
-      <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-between gap-2">
+      <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-center gap-2">
         {[
           { label: "Pricing", onClick: () => openPricing(), testId: "button-mobile-pricing" },
           // { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" }, // hidden with "Have we met?" section, re-enable together
@@ -1768,11 +1768,15 @@ export default function Landing() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.9, delay: 0.2 }}
-                  className="flex-1 flex justify-center"
+                  className="flex-1 flex justify-center overflow-hidden px-4 sm:px-0"
                 >
-                  <div className="relative w-full max-w-[520px] mx-auto">
+                  <div className="relative w-full max-w-[520px] mx-auto overflow-hidden">
                     {/* Chrome tablet frame, rotated to vertical/portrait orientation, enlarged 1.5x */}
-                    <div className="relative mx-auto" style={{ width: 450, height: 663 }}>
+                    {/* Scale down on mobile so frame fits within the card with padding */}
+                    <div
+                      className="relative mx-auto origin-top scale-[0.58] sm:scale-[0.78] lg:scale-100 -mb-[278px] sm:-mb-[146px] lg:mb-0"
+                      style={{ width: 450, height: 663 }}
+                    >
                       {/* Frame graphic (landscape source image, rotated to appear portrait) */}
                       <div
                         className="absolute top-1/2 left-1/2 pointer-events-none select-none"
