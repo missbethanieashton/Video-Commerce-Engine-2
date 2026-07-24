@@ -1036,7 +1036,7 @@ function SignupSection({ initialRole = null, voucher = "", planSelected = false 
                     whileHover={{ scale: 1.08 }}
                     transition={{ type: "spring", stiffness: 380, damping: 20 }}
                   >
-                    Get started
+                    View benefits
                   </motion.div>
                 </motion.button>
               ))}
