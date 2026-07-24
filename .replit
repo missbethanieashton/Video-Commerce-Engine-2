@@ -54,3 +54,6 @@ ACCESS_CODE = "exclusiveaccess1233*"
 [userenv.development]
 TEST_ADMIN_EMAIL = "missbethanieashton@gmail.com"
 TEST_ADMIN_PASSWORD = "test1233*"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-96117ee1-c747-4ebf-908c-11a95848899e"
