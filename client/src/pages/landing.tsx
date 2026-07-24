@@ -1337,19 +1337,19 @@ export default function Landing() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="group text-white/80 hover:text-white rounded-full text-sm overflow-hidden flex items-center gap-1.5"
+                className="text-white/80 hover:text-white hover:scale-105 active:scale-95 transition-transform duration-150 rounded-full text-sm flex items-center gap-1.5"
                 style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
                 data-testid="button-nav-signin"
               >
                 <CircleUserRound className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-                <RollingText>Sign In</RollingText>
+                Sign In
               </Button>
             </Link>
             <Button
               onClick={scrollToSignup}
               variant="ghost"
               size="sm"
-              className="text-white font-semibold rounded-full text-sm"
+              className="text-white font-semibold rounded-full text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
               style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
               data-testid="button-nav-get-started"
             >
