@@ -45,6 +45,7 @@ import type Stripe from "stripe";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { dispatchStripeEvent } from "./webhookHandlers";
+import { hashPassword, verifyPassword } from "./auth";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -78,19 +79,40 @@ export async function registerRoutes(
     }
   });
 
-  // Update current user display name
+  // Update current user (displayName, username, email)
   app.patch("/api/users/me", async (req, res) => {
     try {
       const sessionUserId = (req.session as any)?.userId;
       if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
-      const { displayName } = req.body;
-      if (!displayName || typeof displayName !== "string" || !displayName.trim()) {
-        return res.status(400).json({ error: "displayName is required" });
-      }
-      const updated = await storage.updateUser(sessionUserId, { displayName: displayName.trim() } as any);
+      const data: Record<string, string> = {};
+      if (req.body.displayName && typeof req.body.displayName === "string") data.displayName = req.body.displayName.trim();
+      if (req.body.username && typeof req.body.username === "string") data.username = req.body.username.trim();
+      if (req.body.email && typeof req.body.email === "string") data.email = req.body.email.trim().toLowerCase();
+      if (Object.keys(data).length === 0) return res.status(400).json({ error: "No valid fields to update" });
+      const updated = await storage.updateUser(sessionUserId, data as any);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  // Change password
+  app.post("/api/auth/change-password", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) return res.status(400).json({ error: "currentPassword and newPassword are required" });
+      if (newPassword.length < 8) return res.status(400).json({ error: "New password must be at least 8 characters" });
+      const user = await storage.getUser(sessionUserId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      const valid = await verifyPassword(currentPassword, user.password);
+      if (!valid) return res.status(400).json({ error: "Current password is incorrect" });
+      const hashed = await hashPassword(newPassword);
+      await storage.updateUser(sessionUserId, { password: hashed } as any);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to change password" });
     }
   });
 
@@ -155,24 +177,68 @@ export async function registerRoutes(
     }
   });
 
-  // Get wallet balance (token balance for current user)
+  // Generic Stripe billing portal (role-agnostic)
+  app.post("/api/stripe/portal", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const user = await storage.getUser(sessionUserId);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No billing account on file. Please subscribe first." });
+      }
+      const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+      const returnPath = user.role === "brand" ? "/brand/settings" : user.role === "affiliate" ? "/affiliate/settings" : "/creator/settings";
+      const portal = await stripeService.createBillingPortal(user.stripeCustomerId, `${origin}${returnPath}`);
+      res.json({ url: portal.url });
+    } catch (e: any) {
+      console.error("Generic portal error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to open billing portal" });
+    }
+  });
+
+  // Payment history — past Stripe charges for the current user
+  app.get("/api/payments/history", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const user = await storage.getUser(sessionUserId);
+      if (!user?.stripeCustomerId) return res.json([]);
+      const stripe = await getUncachableStripeClient();
+      const charges = await stripe.charges.list({ customer: user.stripeCustomerId, limit: 20 });
+      const history = charges.data.map(c => ({
+        description: c.description || "Payment",
+        date: new Date(c.created * 1000).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+        amount: (c.amount / 100).toFixed(2),
+        currency: (c.currency ?? "eur").toUpperCase(),
+        status: c.status === "succeeded" ? "Paid" : c.status === "pending" ? "Processing" : "Failed",
+      }));
+      res.json(history);
+    } catch (e: any) {
+      console.error("Payments history error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to fetch payment history" });
+    }
+  });
+
+  // Get wallet balance (token balance for current user — requires auth)
   app.get("/api/users/me/wallet", async (req, res) => {
     try {
       const sessionUserId = (req.session as any)?.userId;
-      const user = sessionUserId ? await storage.getUser(sessionUserId) : await storage.getUserByUsername("demo_creator");
-      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const user = await storage.getUser(sessionUserId);
+      if (!user) return res.status(404).json({ error: "User not found" });
       res.json({ tokens: user.walletTokens ?? 0, tokenValueEur: 49 });
     } catch (error) {
       res.status(500).json({ error: "Failed to get wallet" });
     }
   });
 
-  // Earnings summary — last 6 months aggregated
+  // Earnings summary — last 6 months aggregated (requires auth)
   app.get("/api/users/me/earnings", async (req, res) => {
     try {
       const sessionUserId = (req.session as any)?.userId;
-      const user = sessionUserId ? await storage.getUser(sessionUserId) : await storage.getUserByUsername("demo_creator");
-      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const user = await storage.getUser(sessionUserId);
+      if (!user) return res.status(404).json({ error: "User not found" });
 
       const months: { label: string; earned: number; paid: number; upcoming: number }[] = [];
       const now = new Date();

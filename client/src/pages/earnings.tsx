@@ -153,8 +153,10 @@ export default function EarningsPage() {
                       </div>
                     </div>
                     <div className="mt-2.5">
-                      {m.paid > 0 ? (
+                      {m.paid > 0 && m.upcoming === 0 ? (
                         <Badge className="text-[10px] bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">Paid</Badge>
+                      ) : m.upcoming > 0 && m.paid > 0 ? (
+                        <Badge className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">Processing</Badge>
                       ) : m.upcoming > 0 ? (
                         <Badge className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">Upcoming</Badge>
                       ) : (

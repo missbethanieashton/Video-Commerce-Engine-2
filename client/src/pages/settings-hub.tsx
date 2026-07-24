@@ -21,10 +21,10 @@ import {
   User, Lock, Shield, Bell, CreditCard, Wallet, Receipt, Building2,
   BarChart3, HelpCircle, UserPlus, LogOut, KeyRound,
   MessageCircle, ChevronRight, CheckCircle2, AlertCircle, ExternalLink,
-  Save, Eye, EyeOff, Copy, Plus, Trash2,
+  Save, Eye, EyeOff, Copy, Plus, Trash2, Clock,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiRequest as fetchApi } from "@/lib/queryClient";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import type { BrandApiKey } from "@shared/schema";
 
 type Section =
@@ -60,7 +60,7 @@ const personalInfoSchema = z.object({
   legalName: z.string().optional(),
   preferredFirstName: z.string().optional(),
   phoneNumber: z.string().optional(),
-  email: z.string().email("Valid email required").optional(),
+  email: z.string().email("Valid email required"),
   mailingAddress: z.string().optional(),
   countryOrigin: z.string().optional(),
 });
@@ -233,17 +233,22 @@ function PersonalInfoSection() {
     },
   });
 
-  const mutation = useMutation({
+  const profileMutation = useMutation({
     mutationFn: async (data: z.infer<typeof personalInfoSchema>) => {
-      const res = await apiRequest("PATCH", "/api/users/me/profile", data);
-      return res.json();
+      const { email, ...profileFields } = data;
+      await apiRequest("PATCH", "/api/users/me/profile", profileFields);
+      if (email && email !== user?.email) {
+        await apiRequest("PATCH", "/api/users/me", { email });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/me/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
       toast({ title: "Saved", description: "Personal information updated." });
     },
     onError: () => toast({ title: "Error", description: "Could not save.", variant: "destructive" }),
   });
+  const mutation = profileMutation;
 
   if (isLoading) return <Skeleton className="h-64 w-full rounded-xl" />;
 
@@ -276,11 +281,13 @@ function PersonalInfoSection() {
                 <FormMessage />
               </FormItem>
             )} />
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <Input value={user?.email ?? ""} disabled className="bg-muted" data-testid="input-email-readonly" />
-              <p className="text-xs text-muted-foreground mt-1">Contact support to change your email.</p>
-            </FormItem>
+            <FormField control={form.control} name="email" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl><Input {...field} type="email" placeholder="you@example.com" data-testid="input-email" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
           <FormField control={form.control} name="mailingAddress" render={({ field }) => (
             <FormItem>
@@ -604,18 +611,25 @@ function YourPaymentsSection() {
           ) : empty ? (
             <p className="text-center text-muted-foreground py-12 text-sm">No payments yet</p>
           ) : (
-            payments!.map((p: any, i: number) => (
-              <div key={i} className={cn("flex items-center justify-between px-4 py-3.5", i !== payments!.length - 1 && "border-b border-border")}>
-                <div>
-                  <p className="text-sm font-medium">{p.description || "Payment"}</p>
-                  <p className="text-xs text-muted-foreground">{p.date || ""}</p>
+            payments!.map((p: any, i: number) => {
+              const statusColor =
+                p.status === "Paid" ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20" :
+                p.status === "Processing" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" :
+                p.status === "Failed" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                "";
+              return (
+                <div key={i} className={cn("flex items-center justify-between px-4 py-3.5", i !== payments!.length - 1 && "border-b border-border")}>
+                  <div>
+                    <p className="text-sm font-medium">{p.description || "Payment"}</p>
+                    <p className="text-xs text-muted-foreground">{p.date || ""}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold">{p.currency === "USD" ? "$" : "€"}{p.amount || "0.00"}</p>
+                    <Badge className={cn("text-[10px]", statusColor)} variant="outline">{p.status || "Paid"}</Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">€{p.amount || "0.00"}</p>
-                  <Badge variant="secondary" className="text-[10px]">{p.status || "Completed"}</Badge>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </CardContent>
       </Card>
@@ -746,6 +760,7 @@ function TransactionHistorySection() {
     <div>
       <SectionHeader title="Transaction History" description="Monthly performance overview. Upcoming payouts typically arrive 3–7 business days after processing." />
       <div className="space-y-4">
+        {/* Summary stat cards */}
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: "Total Earned", value: earnings?.totalEarned ?? 0, color: "text-foreground" },
@@ -754,41 +769,79 @@ function TransactionHistorySection() {
           ].map(({ label, value, color }) => (
             <Card key={label}>
               <CardContent className="p-3 text-center">
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className={cn("text-lg font-bold mt-0.5", color)}>${value.toFixed(2)}</p>
+                {isLoading ? <Skeleton className="h-10 w-full" /> : (
+                  <>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className={cn("text-lg font-bold mt-0.5", color)}>${value.toFixed(2)}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="space-y-2">
-          {isLoading ? (
-            [1,2,3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)
-          ) : months.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm">No transaction data yet</p>
-          ) : (
-            months.map((m, i) => (
-              <Card key={i}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{m.label}</p>
-                    <p className="text-xs text-muted-foreground">Earned: ${m.earned.toFixed(2)}</p>
-                  </div>
-                  <div className="flex gap-3 text-right">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Paid</p>
-                      <p className="text-sm font-semibold text-green-600">${m.paid.toFixed(2)}</p>
+        {/* Monthly bar chart */}
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Monthly Performance</CardTitle></CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-40 w-full" />
+            ) : months.length === 0 ? (
+              <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">No earnings data yet</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={months} barGap={4} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+                  <Tooltip formatter={(v: number, name: string) => [`$${v.toFixed(2)}`, name]} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                  <Bar dataKey="paid" name="Paid" fill="hsl(142 72% 50%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="upcoming" name="Upcoming" fill="hsl(38 92% 60%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Swipeable month cards */}
+        {!isLoading && months.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Monthly Breakdown</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+              {months.slice().reverse().map((m, i) => (
+                <Card key={i} className="min-w-[180px] snap-start shrink-0">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-semibold mb-2">{m.label}</p>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Earned</span>
+                        <span className="font-medium">${m.earned.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Paid</span>
+                        <span className="font-medium text-green-600">${m.paid.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Upcoming</span>
+                        <span className="font-medium text-amber-600">${m.upcoming.toFixed(2)}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Upcoming</p>
-                      <p className="text-sm font-semibold text-amber-600">${m.upcoming.toFixed(2)}</p>
+                    <div className="mt-2">
+                      {m.paid > 0 ? (
+                        <Badge className="text-[10px] bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">Paid</Badge>
+                      ) : m.upcoming > 0 ? (
+                        <Badge className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">Upcoming</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-[10px]">No earnings</Badge>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 text-center">Swipe to see previous months</p>
+          </div>
+        )}
       </div>
     </div>
   );
