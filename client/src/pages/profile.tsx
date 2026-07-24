@@ -8,128 +8,133 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserCircle, MapPin, Upload, Save, X, Loader2, Image as ImageIcon, Video } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Camera, MapPin, Upload, Save, X, Loader2, Image as ImageIcon,
+  Video, Check, Pencil,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { COUNTRIES } from "@shared/schema";
 import type { UserProfile, User } from "@shared/schema";
 
-const profileFormSchema = z.object({
+const identitySchema = z.object({
+  displayName: z.string().min(1, "Display name is required"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+});
+
+const locationSchema = z.object({
   bio: z.string().max(100, "Bio must be 100 characters or less").optional(),
-  profileMediaUrl: z.string().url().optional().or(z.literal("")),
-  profileMediaType: z.enum(["image", "video"]).optional(),
   locationCity: z.string().optional(),
   locationCountry: z.string().optional(),
 });
 
-type ProfileFormData = z.infer<typeof profileFormSchema>;
+type IdentityForm = z.infer<typeof identitySchema>;
+type LocationForm = z.infer<typeof locationSchema>;
+
+const ROLE_LABELS: Record<string, string> = {
+  creator: "Creator",
+  brand: "Brand",
+  affiliate: "Publisher",
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  creator: "bg-primary/10 text-primary border-primary/20",
+  brand: "bg-chart-2/10 text-chart-2 border-chart-2/20",
+  affiliate: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+};
 
 export default function ProfilePage() {
   const { toast } = useToast();
-  const [bioLength, setBioLength]       = useState(0);
-  const [isDragging, setIsDragging]     = useState(false);
+  const [bioLength, setBioLength] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [mediaType, setMediaType]       = useState<"image" | "video" | null>(null);
-  const [isUploading, setIsUploading]   = useState(false);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [savedIdentity, setSavedIdentity] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: user } = useQuery<User>({
+  const { data: user, isLoading: userLoading } = useQuery<User>({
     queryKey: ["/api/users/me"],
   });
 
-  const { data: profile } = useQuery<UserProfile>({
-    queryKey: ["/api/profile"],
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
+    queryKey: ["/api/users/me/profile"],
   });
 
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      bio: "",
-      profileMediaUrl: "",
-      profileMediaType: "image",
-      locationCity: "",
-      locationCountry: "",
+  const identityForm = useForm<IdentityForm>({
+    resolver: zodResolver(identitySchema),
+    values: {
+      displayName: user?.displayName ?? "",
+      username: user?.username ?? "",
     },
   });
 
-  const { reset } = form;
-
-  useState(() => {
-    if (profile) {
-      reset({
-        bio: profile.bio || "",
-        profileMediaUrl: profile.profileMediaUrl || "",
-        profileMediaType: (profile.profileMediaType as "image" | "video") || "image",
-        locationCity: profile.locationCity || "",
-        locationCountry: profile.locationCountry || "",
-      });
-      setBioLength(profile.bio?.length || 0);
-      if (profile.profileMediaUrl) {
-        setMediaPreview(profile.profileMediaUrl);
-        setMediaType((profile.profileMediaType as "image" | "video") || "image");
-      }
-    }
+  const locationForm = useForm<LocationForm>({
+    resolver: zodResolver(locationSchema),
+    values: {
+      bio: profile?.bio ?? "",
+      locationCity: profile?.locationCity ?? "",
+      locationCountry: profile?.locationCountry ?? "",
+    },
   });
 
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: ProfileFormData) => {
-      const response = await apiRequest("PUT", "/api/profile", data);
-      return response.json();
+  const identityMutation = useMutation({
+    mutationFn: async (data: IdentityForm) => {
+      const res = await apiRequest("PATCH", "/api/users/me", data);
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-      toast({
-        title: "Profile updated",
-        description: "Your personal details have been saved successfully.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+      setSavedIdentity(true);
+      setTimeout(() => setSavedIdentity(false), 2500);
+      toast({ title: "Profile saved", description: "Your name and username have been updated." });
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    },
+    onError: () => toast({ title: "Error", description: "Could not update profile.", variant: "destructive" }),
   });
 
-  const onSubmit = (data: ProfileFormData) => {
-    updateProfileMutation.mutate(data);
-  };
+  const locationMutation = useMutation({
+    mutationFn: async (data: LocationForm) => {
+      const profilePayload: Record<string, any> = { ...data };
+      if (mediaPreview) {
+        profilePayload.profileMediaUrl = mediaPreview;
+        profilePayload.profileMediaType = mediaType ?? "image";
+      }
+      const res = await apiRequest("PATCH", "/api/users/me/profile", profilePayload);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me/profile"] });
+      toast({ title: "Profile saved", description: "Your bio and location have been updated." });
+    },
+    onError: () => toast({ title: "Error", description: "Could not save profile details.", variant: "destructive" }),
+  });
 
-  // ── File upload helpers ────────────────────────────────────────────────────
-
+  // Avatar / media upload
   const uploadFile = async (file: File) => {
     const isImage = file.type.startsWith("image/");
     const isVideo = file.type.startsWith("video/");
     if (!isImage && !isVideo) {
-      toast({ title: "Unsupported file", description: "Please drop an image or video file.", variant: "destructive" });
+      toast({ title: "Unsupported file", description: "Please use an image or video file.", variant: "destructive" });
       return;
     }
-
     const localPreview = URL.createObjectURL(file);
     setMediaPreview(localPreview);
     setMediaType(isVideo ? "video" : "image");
     setIsUploading(true);
-
     try {
       const urlRes = await apiRequest("POST", "/api/uploads/request-url", {
-        name: file.name,
-        size: file.size,
-        contentType: file.type,
+        name: file.name, size: file.size, contentType: file.type,
       });
       const { uploadURL, objectPath } = await urlRes.json();
-      await fetch(uploadURL, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
+      await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
       const publicUrl = `/objects/${objectPath.replace(/^\//, "")}`;
-      form.setValue("profileMediaUrl", publicUrl);
-      form.setValue("profileMediaType", isVideo ? "video" : "image");
+      setMediaPreview(publicUrl);
     } catch {
-      toast({ title: "Upload failed", description: "Could not upload the file. Please try again.", variant: "destructive" });
+      toast({ title: "Upload failed", description: "Could not upload the file.", variant: "destructive" });
       setMediaPreview(null);
       setMediaType(null);
     } finally {
@@ -152,233 +157,228 @@ export default function ProfilePage() {
   const clearMedia = () => {
     setMediaPreview(null);
     setMediaType(null);
-    form.setValue("profileMediaUrl", "");
-    form.setValue("profileMediaType", "image");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-  const currentPreview = mediaPreview || form.watch("profileMediaUrl") || user?.avatarUrl || "";
+  const currentPreview = mediaPreview || profile?.profileMediaUrl || user?.avatarUrl || "";
+  const role = user?.role ?? "creator";
+  const isLoading = userLoading || profileLoading;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <UserCircle className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold text-[#43484D] dark:text-white">Personal Details</h1>
-          <p className="text-muted-foreground">Manage your profile information</p>
-        </div>
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Profile</h1>
+        <p className="text-sm text-muted-foreground mt-1">Your public-facing identity on MTRLZD</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* ── Profile Media card ─────────────────────────────────────────── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Media</CardTitle>
-            <CardDescription>
-              Upload a profile photo or video from your computer
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-
-            {/* Current preview avatar */}
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 shrink-0">
+      {/* Avatar + role card */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-5">
+            {/* Avatar with change button */}
+            <div className="relative shrink-0">
+              <Avatar className="h-20 w-20 border-2 border-border">
                 {mediaType === "video" ? (
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    <Video className="h-6 w-6" />
-                  </AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary"><Video className="h-8 w-8" /></AvatarFallback>
                 ) : (
                   <>
                     <AvatarImage src={currentPreview} />
-                    <AvatarFallback className="bg-primary/20 text-primary text-2xl">
-                      {user?.displayName?.charAt(0) || "U"}
+                    <AvatarFallback className="bg-primary/20 text-primary text-2xl font-semibold">
+                      {user?.displayName?.charAt(0)?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </>
                 )}
               </Avatar>
-              <div className="text-sm text-muted-foreground leading-snug">
-                {isUploading
-                  ? "Uploading…"
-                  : mediaPreview
-                  ? mediaType === "video" ? "Video ready — save to apply." : "Image ready — save to apply."
-                  : "No media uploaded yet."}
-              </div>
-            </div>
-
-            {/* Drag-and-drop zone */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/mp4,video/mov,video/webm"
-              className="hidden"
-              onChange={onFileChange}
-              data-testid="input-media-file"
-            />
-
-            {!mediaPreview ? (
-              <div
-                data-testid="dropzone-profile-media"
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={onDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all select-none ${
-                  isDragging
-                    ? "border-primary bg-primary/5 scale-[1.01]"
-                    : "border-border hover:border-primary/50 hover:bg-muted/30"
-                }`}
-              >
-                {isUploading ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                    <p className="text-sm font-medium">Uploading…</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                      <Upload className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {isDragging ? "Drop to upload" : "Drag & drop your photo or video"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        JPG, PNG, WEBP or MP4 · max 50 MB
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full mt-1"
-                      data-testid="button-browse-media"
-                      onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                    >
-                      Browse files
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="relative rounded-xl overflow-hidden border border-border">
-                {mediaType === "video" ? (
-                  <video
-                    src={mediaPreview}
-                    controls
-                    className="w-full max-h-52 object-cover"
-                    data-testid="preview-profile-video"
-                  />
-                ) : (
-                  <img
-                    src={mediaPreview}
-                    alt="Profile preview"
-                    className="w-full max-h-52 object-cover"
-                    data-testid="preview-profile-image"
-                  />
-                )}
+              {isUploading ? (
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={clearMedia}
-                  data-testid="button-remove-media"
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  data-testid="button-change-avatar"
+                  className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm hover:bg-primary/90 transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <Camera className="h-3.5 w-3.5" />
                 </button>
-                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-full">
-                  {mediaType === "video"
-                    ? <Video className="h-3 w-3 text-white" />
-                    : <ImageIcon className="h-3 w-3 text-white" />}
-                  <span className="text-[11px] text-white font-medium capitalize">{mediaType}</span>
-                </div>
-              </div>
-            )}
-
-          </CardContent>
-        </Card>
-
-        {/* ── Bio card ───────────────────────────────────────────────────── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Bio</CardTitle>
-            <CardDescription>
-              Write a short bio about yourself (max 100 characters)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Textarea
-                placeholder="Tell us about yourself..."
-                className="resize-none"
-                maxLength={100}
-                {...form.register("bio", {
-                  onChange: (e) => setBioLength(e.target.value.length),
-                })}
-                data-testid="input-bio"
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/mp4,video/mov,video/webm"
+                className="hidden"
+                onChange={onFileChange}
+                data-testid="input-avatar-file"
               />
-              <div className="text-xs text-muted-foreground text-right mt-1">
-                {bioLength}/100 characters
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* ── Location card ─────────────────────────────────────────────────── */}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-lg truncate">{user?.displayName || "Your Name"}</p>
+              <p className="text-sm text-muted-foreground truncate">@{user?.username || "username"}</p>
+              <div className="mt-2">
+                <Badge
+                  className={`text-xs font-semibold border ${ROLE_COLORS[role] || ROLE_COLORS.creator}`}
+                  variant="outline"
+                  data-testid="badge-role"
+                >
+                  {ROLE_LABELS[role] || "Creator"}
+                </Badge>
+              </div>
+              {mediaPreview && mediaPreview !== profile?.profileMediaUrl && (
+                <div className="mt-2 flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">New photo ready</p>
+                  <button type="button" onClick={clearMedia} className="text-xs text-destructive hover:underline">Remove</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upload drop zone (shown only when no preview) */}
+          {!mediaPreview && (
+            <div
+              data-testid="dropzone-profile-media"
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={onDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`mt-4 border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
+                isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/30"
+              }`}
+            >
+              <Upload className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground" />
+              <p className="text-sm font-medium">{isDragging ? "Drop to upload" : "Upload profile photo"}</p>
+              <p className="text-xs text-muted-foreground">JPG, PNG, or MP4 · max 50 MB</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Display name + username — inline save */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Location
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Pencil className="h-4 w-4" /> Name & Username
           </CardTitle>
-          <CardDescription>
-            Share your location to help brands and affiliates find you
-          </CardDescription>
+          <CardDescription>How you appear to others on the platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="locationCity">City</Label>
-                <Input
-                  id="locationCity"
-                  placeholder="e.g., London"
-                  {...form.register("locationCity")}
-                  data-testid="input-location-city"
-                />
+          <Form {...identityForm}>
+            <form onSubmit={identityForm.handleSubmit(d => identityMutation.mutate(d))} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField control={identityForm.control} name="displayName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Your name" data-testid="input-display-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={identityForm.control} name="username" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="@username" data-testid="input-username" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </div>
-
-              <div>
-                <Label htmlFor="locationCountry">Country</Label>
-                <Select
-                  value={form.watch("locationCountry") || ""}
-                  onValueChange={(value) => form.setValue("locationCountry", value)}
-                >
-                  <SelectTrigger data-testid="select-location-country">
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={updateProfileMutation.isPending || isUploading}
-                data-testid="button-save-profile"
+                disabled={identityMutation.isPending}
+                data-testid="button-save-identity"
+                className="gap-2"
               >
-                <Save className="h-4 w-4 mr-2" />
-                {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                {savedIdentity ? (
+                  <><Check className="h-4 w-4" /> Saved</>
+                ) : identityMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+                ) : (
+                  <><Save className="h-4 w-4" /> Save</>
+                )}
               </Button>
-            </div>
-          </form>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Bio + location */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4" /> Bio & Location
+          </CardTitle>
+          <CardDescription>Help brands and collaborators discover you</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...locationForm}>
+            <form onSubmit={locationForm.handleSubmit(d => locationMutation.mutate(d))} className="space-y-4">
+              <FormField control={locationForm.control} name="bio" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bio <span className="text-muted-foreground font-normal">(max 100 chars)</span></FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Tell us about yourself…"
+                      className="resize-none"
+                      maxLength={100}
+                      onChange={e => { field.onChange(e); setBioLength(e.target.value.length); }}
+                      data-testid="input-bio"
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground text-right">{bioLength}/100</p>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField control={locationForm.control} name="locationCity" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g. London" data-testid="input-location-city" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <Select
+                    value={locationForm.watch("locationCountry") || ""}
+                    onValueChange={v => locationForm.setValue("locationCountry", v)}
+                  >
+                    <SelectTrigger data-testid="select-location-country">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={locationMutation.isPending || isUploading}
+                  data-testid="button-save-profile"
+                  className="gap-2"
+                >
+                  {locationMutation.isPending ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+                  ) : (
+                    <><Save className="h-4 w-4" /> Save Changes</>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

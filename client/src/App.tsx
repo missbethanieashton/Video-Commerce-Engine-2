@@ -47,11 +47,6 @@ import AdminPipeline from "@/pages/admin-pipeline";
 import AdminDashboard from "@/pages/admin-dashboard";
 import BrandSettingsSubscription from "@/pages/brand-settings-subscription";
 import CreatorSettingsSubscription from "@/pages/creator-settings-subscription";
-import BrandSettingsBillingHistory from "@/pages/brand-settings-billing-history";
-import BrandSettingsTransactions from "@/pages/brand-settings-transactions";
-import BrandSettingsPayout from "@/pages/brand-settings-payout";
-import BrandSettingsBillingAddress from "@/pages/brand-settings-billing-address";
-import BrandSettingsApiKey from "@/pages/brand-settings-api-key";
 import Mailbox from "@/pages/mailbox";
 import WishlistPage from "@/pages/wishlist";
 import EditingSuite from "@/pages/editing-suite";
@@ -104,11 +99,11 @@ function BrandRouter() {
       <Route path="/brand/earnings" component={EarningsPage} />
       <Route path="/brand/settings" component={SettingsHub} />
       <Route path="/brand/settings/subscription" component={BrandSettingsSubscription} />
-      <Route path="/brand/settings/billing-history" component={BrandSettingsBillingHistory} />
-      <Route path="/brand/settings/transactions" component={BrandSettingsTransactions} />
-      <Route path="/brand/settings/payout" component={BrandSettingsPayout} />
-      <Route path="/brand/settings/billing-address" component={BrandSettingsBillingAddress} />
-      <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
+      <Route path="/brand/settings/billing-history" component={SettingsHub} />
+      <Route path="/brand/settings/transactions" component={SettingsHub} />
+      <Route path="/brand/settings/payout" component={SettingsHub} />
+      <Route path="/brand/settings/billing-address" component={SettingsHub} />
+      <Route path="/brand/settings/api-key" component={SettingsHub} />
       <Route path="/brand/editing-suite/:videoId" component={EditingSuite} />
       <Route path="/brand/editing-suite" component={EditingSuite} />
       <Route path="/brand/library" component={BrandLibrary} />
