@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,6 +177,7 @@ function ImportToLibraryModal({ video, open, onClose }: ImportToLibraryModalProp
 }
 
 export default function MyVideos() {
+  const [, setLocation] = useLocation();
   const [uploadModalOpen, setUploadModalOpen]     = useState(false);
   const [embedModalOpen, setEmbedModalOpen]       = useState(false);
   const [selectedVideo, setSelectedVideo]         = useState<VideoType | null>(null);
@@ -270,6 +272,7 @@ export default function MyVideos() {
   const handleDelete    = async (video: VideoType) => deleteMutation.mutateAsync(video.id);
   const handleOpenDetail = (video: VideoType) => { setDetailSheetVideo(video); setDetailSheetOpen(true); };
   const handleImport    = (video: VideoType) => { setImportVideo(video); setImportModalOpen(true); };
+  const handleEditingSuite = (video: VideoType) => setLocation(`/creator/editing-suite/${video.id}`);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -419,6 +422,7 @@ export default function MyVideos() {
               onViewEmbed={handleViewEmbed}
               onDelete={handleDelete}
               onImport={handleImport}
+              onEditingSuite={handleEditingSuite}
             />
           ))}
         </div>

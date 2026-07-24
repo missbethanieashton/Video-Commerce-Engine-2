@@ -52,6 +52,7 @@ import BrandSettingsBillingAddress from "@/pages/brand-settings-billing-address"
 import BrandSettingsApiKey from "@/pages/brand-settings-api-key";
 import Mailbox from "@/pages/mailbox";
 import WishlistPage from "@/pages/wishlist";
+import EditingSuite from "@/pages/editing-suite";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import { useCurrentUser, useLogout } from "@/hooks/useCurrentUser";
@@ -66,6 +67,8 @@ function CreatorRouter() {
       <Route path="/creator" component={Dashboard} />
       <Route path="/creator/my-videos" component={MyVideos} />
       <Route path="/creator/library" component={Library} />
+      <Route path="/creator/editing-suite/:videoId" component={EditingSuite} />
+      <Route path="/creator/editing-suite" component={EditingSuite} />
       <Route path="/creator/playlists" component={PlaylistsPage} />
       <Route path="/creator/wishlist" component={WishlistPage} />
       <Route path="/creator/analytics" component={Analytics} />
@@ -102,6 +105,8 @@ function BrandRouter() {
       <Route path="/brand/settings/payout" component={BrandSettingsPayout} />
       <Route path="/brand/settings/billing-address" component={BrandSettingsBillingAddress} />
       <Route path="/brand/settings/api-key" component={BrandSettingsApiKey} />
+      <Route path="/brand/editing-suite/:videoId" component={EditingSuite} />
+      <Route path="/brand/editing-suite" component={EditingSuite} />
       <Route path="/brand/library" component={BrandLibrary} />
       <Route path="/brand/playlists" component={PlaylistsPage} />
       <Route path="/brand/wishlist" component={WishlistPage} />
@@ -117,6 +122,8 @@ function AffiliateRouter() {
   return (
     <Switch>
       <Route path="/affiliate" component={AffiliateDashboard} />
+      <Route path="/affiliate/editing-suite/:videoId" component={EditingSuite} />
+      <Route path="/affiliate/editing-suite" component={EditingSuite} />
       <Route path="/affiliate/library" component={AffiliateLibrary} />
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />

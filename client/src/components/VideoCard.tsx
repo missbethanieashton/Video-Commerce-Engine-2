@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Play, Eye, MousePointer, DollarSign, MoreVertical, Code, Library } from "lucide-react";
+import { Play, Eye, MousePointer, DollarSign, MoreVertical, Code, Library, Wand2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,9 +49,10 @@ interface VideoCardProps {
   onViewEmbed?: (video: Video) => void;
   onDelete?: (video: Video) => void;
   onImport?: (video: Video) => void;
+  onEditingSuite?: (video: Video) => void;
 }
 
-export function VideoCard({ video, onOpen, onEdit, onViewEmbed, onDelete, onImport }: VideoCardProps) {
+export function VideoCard({ video, onOpen, onEdit, onViewEmbed, onDelete, onImport, onEditingSuite }: VideoCardProps) {
   const categories = parseCategories(video.categories);
 
   return (
@@ -97,6 +98,10 @@ export function VideoCard({ video, onOpen, onEdit, onViewEmbed, onDelete, onImpo
           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenuItem onClick={() => onEdit?.(video)}>
               Edit Video
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditingSuite?.(video)}>
+              <Wand2 className="h-4 w-4 mr-2" />
+              Open in Editing Suite
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onViewEmbed?.(video)}>
               <Code className="h-4 w-4 mr-2" />

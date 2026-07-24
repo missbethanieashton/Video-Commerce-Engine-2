@@ -15,6 +15,7 @@ import {
   ListVideo,
   Heart,
   LogOut,
+  Wand2,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useCurrentUser";
 import {
@@ -44,6 +45,7 @@ const inventoryItems = [
 const creatorsItems = [
   { path: "/brand/creators", label: "Connect Your Creators", icon: Users },
   { path: "/brand/campaigns", label: "Campaigns", icon: Target },
+  { path: "/brand/editing-suite", label: "Editing Suite", icon: Wand2 },
   { path: "/brand/library", label: "Video Library", icon: Library },
   { path: "/brand/playlists", label: "My Playlists", icon: ListVideo },
 ];

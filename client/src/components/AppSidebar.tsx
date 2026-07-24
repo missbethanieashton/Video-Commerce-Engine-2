@@ -18,6 +18,7 @@ import {
   Heart,
   LogOut,
   Settings,
+  Wand2,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useCurrentUser";
 import {
@@ -42,6 +43,7 @@ const overviewItems = [
 
 const contentItems = [
   { path: "/creator/my-videos", label: "My Campaigns", icon: Video },
+  { path: "/creator/editing-suite", label: "Editing Suite", icon: Wand2 },
   { path: "/creator/library", label: "Global Video Library", icon: Library },
   { path: "/creator/playlists", label: "My Playlists", icon: ListVideo },
 ];

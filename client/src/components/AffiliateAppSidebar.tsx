@@ -24,6 +24,7 @@ import {
   Palette,
   ListVideo,
   Heart,
+  Wand2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,11 @@ const affiliateMenuItems = [
     title: "Video Library",
     url: "/affiliate/library",
     icon: ShoppingBag,
+  },
+  {
+    title: "Editing Suite",
+    url: "/affiliate/editing-suite",
+    icon: Wand2,
   },
   {
     title: "My Playlists",
