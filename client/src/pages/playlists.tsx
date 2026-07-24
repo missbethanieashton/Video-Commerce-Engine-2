@@ -177,9 +177,6 @@ export default function PlaylistsPage() {
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">My Playlists</h1>
-        <p className="text-muted-foreground mt-1">
-          Video collections from the Global Library — pay the licensing fee to publish and get your embed code.
-        </p>
       </div>
 
       {isLoading ? (
