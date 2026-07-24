@@ -1349,11 +1349,11 @@ export default function Landing() {
               onClick={scrollToSignup}
               variant="ghost"
               size="sm"
-              className="group text-white font-semibold rounded-full text-sm overflow-hidden"
+              className="text-white font-semibold rounded-full text-sm"
               style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
               data-testid="button-nav-get-started"
             >
-              <RollingText>Get Started</RollingText>
+              Get Started
             </Button>
           </div>
         </div>
