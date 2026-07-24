@@ -16,7 +16,6 @@ const TIERS = [
   {
     id: "creator" as PricingTier,
     title: "Creator",
-    icon: "🎬",
     price: 149,
     accentColor: "#1351aa",
     bgActive: "rgba(19,81,170,0.22)",
@@ -35,7 +34,6 @@ const TIERS = [
   {
     id: "brand" as PricingTier,
     title: "Brand",
-    icon: "🛍️",
     price: 249,
     accentColor: "#6dbf7e",
     bgActive: "rgba(49,77,59,0.28)",
@@ -57,7 +55,6 @@ const TIERS = [
   {
     id: "publisher" as PricingTier,
     title: "Publisher",
-    icon: "📡",
     price: 499,
     accentColor: "#c8a54a",
     bgActive: "rgba(60,45,10,0.28)",
@@ -168,7 +165,6 @@ export function PricingModal({ open, initialTier, onClose, onSubscribe, onVouche
                       >
                         {/* Icon + Title */}
                         <div className="mb-5">
-                          <span className="text-2xl mb-2 block">{tier.icon}</span>
                           <div
                             className="text-xl font-bold text-white mb-3"
                             style={{ fontFamily: "'Aileron', sans-serif" }}
@@ -211,7 +207,7 @@ export function PricingModal({ open, initialTier, onClose, onSubscribe, onVouche
                           transition={{ duration: 0.15 }}
                           onClick={() => onSubscribe(tier.id)}
                           className="w-full py-3.5 rounded-2xl font-semibold text-white text-sm mb-3 transition-all"
-                          style={{ background: tier.accentColor, border: "none" }}
+                          style={{ background: "#1351aa47", border: "none" }}
                           data-testid={`button-subscribe-${tier.id}`}
                         >
                           Subscribe — €{tier.price}/mo
@@ -245,7 +241,7 @@ export function PricingModal({ open, initialTier, onClose, onSubscribe, onVouche
                                 <button
                                   onClick={() => handleApplyVoucher(tier.id)}
                                   className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-80"
-                                  style={{ background: tier.accentColor, flexShrink: 0 }}
+                                  style={{ background: "#1351aa47", flexShrink: 0 }}
                                   data-testid={`button-apply-voucher-${tier.id}`}
                                 >
                                   Apply

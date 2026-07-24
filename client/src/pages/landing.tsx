@@ -1248,8 +1248,8 @@ function SignupSection({ initialRole = null, voucher = "", planSelected = false 
                       whileHover={{ scale: 1.03, boxShadow: "0 0 32px rgba(103,122,103,0.7), 0 8px 24px rgba(0,0,0,0.3)" }}
                       whileTap={{ scale: 0.97 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      className="w-full bg-[#314d3b] text-white font-semibold rounded-full mt-4 disabled:opacity-60"
-                      style={{ fontSize: 18, padding: "16px 30px" }}
+                      className="w-full text-white font-semibold rounded-full mt-4 disabled:opacity-60"
+                      style={{ background: "#1351aa47", fontSize: 18, padding: "16px 30px" }}
                       data-testid="button-submit-signup"
                     >
                       {mutation.isPending ? "Creating Account..." : planSelected ? "Create Account & Subscribe" : "Create Account"}
