@@ -46,7 +46,6 @@ const creatorsItems = [
   { path: "/brand/campaigns", label: "Campaigns", icon: Target },
   { path: "/brand/library", label: "Video Library", icon: Library },
   { path: "/brand/playlists", label: "My Playlists", icon: ListVideo },
-  { path: "/brand/wishlist", label: "Wishlist", icon: Heart },
 ];
 
 const analyticsItems = [

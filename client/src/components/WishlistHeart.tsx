@@ -53,9 +53,10 @@ export function WishlistHeart({ listingId, wishlisted }: WishlistHeartProps) {
         alt="wishlist"
         className="w-full h-full object-contain transition-all duration-300"
         style={{
+          opacity: wishlisted ? 1 : 0.35,
           filter: wishlisted
-            ? "drop-shadow(0 0 10px rgba(220,220,220,0.85)) brightness(1.15)"
-            : "brightness(0.18) saturate(0)",
+            ? "drop-shadow(0 0 8px rgba(255,255,255,0.7)) brightness(1.1)"
+            : "none",
           transform: isPending ? "scale(0.85)" : "scale(1)",
         }}
       />

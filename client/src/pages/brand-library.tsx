@@ -4,6 +4,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingBag, Play, Search, CheckSquare, Square, ListVideo, X } from "lucide-react";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
 import { WishlistHeart } from "@/components/WishlistHeart";
@@ -44,6 +45,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function BrandLibrary() {
   const [searchQuery, setSearchQuery]             = useState("");
   const [categoryFilter, setCategoryFilter]       = useState("all");
+  const [sortMode, setSortMode]                   = useState("newest");
   const [selectedIds, setSelectedIds]             = useState<Set<string>>(new Set());
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
@@ -57,15 +59,20 @@ export default function BrandLibrary() {
 
   const wishlistedIds = new Set(wishlistItems.map((w) => w.globalListingId));
 
-  const filtered = listings.filter((l) => {
-    const q = searchQuery.toLowerCase();
-    const title = (l.listingTitle || l.video?.title || "").toLowerCase();
-    const creator = (l.creator?.displayName || "").toLowerCase();
-    const handle = (l.creator?.username || "").toLowerCase();
-    const matchSearch = !searchQuery || title.includes(q) || creator.includes(q) || handle.includes(q);
-    const matchCat = categoryFilter === "all" || (l.category ?? "").toLowerCase() === categoryFilter;
-    return matchSearch && matchCat;
-  });
+  const filtered = listings
+    .filter((l) => {
+      const q = searchQuery.toLowerCase();
+      const title = (l.listingTitle || l.video?.title || "").toLowerCase();
+      const creator = (l.creator?.displayName || "").toLowerCase();
+      const handle = (l.creator?.username || "").toLowerCase();
+      const matchSearch = !searchQuery || title.includes(q) || creator.includes(q) || handle.includes(q);
+      const matchCat = categoryFilter === "all" || (l.category ?? "").toLowerCase() === categoryFilter;
+      const matchWishlisted = sortMode !== "wishlisted" || wishlistedIds.has(l.id);
+      return matchSearch && matchCat && matchWishlisted;
+    })
+    .sort((a, b) =>
+      sortMode === "most_licensed" ? (b.totalLicenses ?? 0) - (a.totalLicenses ?? 0) : 0,
+    );
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -86,16 +93,28 @@ export default function BrandLibrary() {
         </p>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by title, creator or brand…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-          data-testid="input-search-library"
-        />
+      {/* Search + sort */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by title, creator or brand…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+            data-testid="input-search-library"
+          />
+        </div>
+        <Select value={sortMode} onValueChange={setSortMode}>
+          <SelectTrigger className="w-48 h-10 text-sm" data-testid="select-sort-library">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="most_licensed">Most licensed</SelectItem>
+            <SelectItem value="wishlisted">Wishlisted</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Category pills */}

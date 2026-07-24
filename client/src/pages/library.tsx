@@ -69,7 +69,8 @@ export default function Library() {
       const handle = (l.creator?.username || "").toLowerCase();
       const matchSearch = !searchQuery || title.includes(q) || creator.includes(q) || handle.includes(q);
       const matchCat = categoryFilter === "all" || (l.category ?? "").toLowerCase() === categoryFilter;
-      return matchSearch && matchCat;
+      const matchWishlisted = sortMode !== "wishlisted" || wishlistedIds.has(l.id);
+      return matchSearch && matchCat && matchWishlisted;
     })
     .sort((a, b) =>
       sortMode === "most_licensed" ? (b.totalLicenses ?? 0) - (a.totalLicenses ?? 0) : 0,
@@ -112,6 +113,7 @@ export default function Library() {
           <SelectContent>
             <SelectItem value="newest">Newest first</SelectItem>
             <SelectItem value="most_licensed">Most licensed</SelectItem>
+            <SelectItem value="wishlisted">Wishlisted</SelectItem>
           </SelectContent>
         </Select>
       </div>

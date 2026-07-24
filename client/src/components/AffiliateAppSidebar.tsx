@@ -54,11 +54,6 @@ const affiliateMenuItems = [
     icon: ListVideo,
   },
   {
-    title: "Wishlist",
-    url: "/affiliate/wishlist",
-    icon: Heart,
-  },
-  {
     title: "My Campaigns",
     url: "/affiliate/campaigns",
     icon: Video,

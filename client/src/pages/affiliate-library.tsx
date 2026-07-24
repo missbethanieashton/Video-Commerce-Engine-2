@@ -4,6 +4,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingBag, Play, Search, CheckSquare, Square, ListVideo, X, DollarSign, Users } from "lucide-react";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
 import { WishlistHeart } from "@/components/WishlistHeart";
@@ -48,6 +49,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function AffiliateLibrary() {
   const [searchQuery, setSearchQuery]             = useState("");
   const [categoryFilter, setCategoryFilter]       = useState("all");
+  const [sortMode, setSortMode]                   = useState("newest");
   const [selectedIds, setSelectedIds]             = useState<Set<string>>(new Set());
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
@@ -61,19 +63,24 @@ export default function AffiliateLibrary() {
 
   const wishlistedIds = new Set(wishlistItems.map((w) => w.globalListingId));
 
-  const filteredListings = listings.filter((listing) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      searchQuery === "" ||
-      listing.listingTitle?.toLowerCase().includes(q) ||
-      listing.video?.title.toLowerCase().includes(q) ||
-      (listing.creator?.displayName ?? "").toLowerCase().includes(q) ||
-      (listing.creator?.username ?? "").toLowerCase().includes(q);
-    const matchesCategory =
-      categoryFilter === "all" ||
-      (listing.category ?? "").toLowerCase() === categoryFilter.toLowerCase();
-    return matchesSearch && matchesCategory;
-  });
+  const filteredListings = listings
+    .filter((listing) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" ||
+        listing.listingTitle?.toLowerCase().includes(q) ||
+        listing.video?.title.toLowerCase().includes(q) ||
+        (listing.creator?.displayName ?? "").toLowerCase().includes(q) ||
+        (listing.creator?.username ?? "").toLowerCase().includes(q);
+      const matchesCategory =
+        categoryFilter === "all" ||
+        (listing.category ?? "").toLowerCase() === categoryFilter.toLowerCase();
+      const matchesWishlisted = sortMode !== "wishlisted" || wishlistedIds.has(listing.id);
+      return matchesSearch && matchesCategory && matchesWishlisted;
+    })
+    .sort((a, b) =>
+      sortMode === "most_licensed" ? (b.totalLicenses ?? 0) - (a.totalLicenses ?? 0) : 0,
+    );
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -96,16 +103,28 @@ export default function AffiliateLibrary() {
         </p>
       </div>
 
-      {/* Search bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by title, creator or brand…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-          data-testid="input-search-library"
-        />
+      {/* Search bar + sort */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by title, creator or brand…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+            data-testid="input-search-library"
+          />
+        </div>
+        <Select value={sortMode} onValueChange={setSortMode}>
+          <SelectTrigger className="w-48 h-10 text-sm" data-testid="select-sort-library">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="most_licensed">Most licensed</SelectItem>
+            <SelectItem value="wishlisted">Wishlisted</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Category pills */}
