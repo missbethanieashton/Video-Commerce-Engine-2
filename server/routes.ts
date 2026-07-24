@@ -2086,7 +2086,7 @@ Identify which products from the catalog are most likely to appear or be feature
           return {
             ...listing,
             video,
-            creator: creator ? { displayName: creator.displayName, avatarUrl: creator.avatarUrl } : null,
+            creator: creator ? { displayName: creator.displayName, avatarUrl: creator.avatarUrl, username: creator.username } : null,
           };
         })
       );
@@ -2167,6 +2167,112 @@ Identify which products from the catalog are most likely to appear or be feature
       res.json({ success: true, listing: await storage.getGlobalVideoListing(listing.id) });
     } catch (error) {
       res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // Import a creator's video into the Global Library using a token or payment
+  app.post("/api/videos/:id/import-to-library", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const video = await storage.getVideo(req.params.id);
+      if (!video || video.creatorId !== user.id) {
+        return res.status(404).json({ error: "Video not found or not owned by you" });
+      }
+
+      // Check if already listed
+      const existing = await storage.getGlobalVideoListingByVideo(req.params.id);
+      if (existing) {
+        return res.status(400).json({ error: "Video is already in the Global Library" });
+      }
+
+      const { method, category, listingTitle } = req.body;
+
+      if (method === "token") {
+        // Find an available (credited, not redeemed) reward
+        const rewards = await storage.getCreatorRewards(user.id);
+        const available = rewards.find((r) => r.status === "credited");
+        if (!available) {
+          return res.status(400).json({ error: "No wallet tokens available. Refer a brand to earn one." });
+        }
+
+        // Create the listing as published
+        const listing = await storage.createGlobalVideoListing({
+          videoId: req.params.id,
+          creatorId: user.id,
+          licenseFee: "45.00",
+          listingTitle: listingTitle || video.title,
+          category: category || null,
+          publishStatus: "published",
+        } as any);
+
+        // Redeem the reward, linking to this listing
+        await storage.redeemCreatorReward(available.id, listing.id);
+
+        return res.status(201).json({ success: true, listing, method: "token" });
+      }
+
+      if (method === "payment") {
+        // Create the listing in pending_payment state first
+        const listing = await storage.createGlobalVideoListing({
+          videoId: req.params.id,
+          creatorId: user.id,
+          licenseFee: "45.00",
+          listingTitle: listingTitle || video.title,
+          category: category || null,
+          publishStatus: "pending_payment",
+        } as any);
+
+        // Get or create Stripe customer
+        let customerId = user.stripeCustomerId;
+        if (!customerId) {
+          const customer = await stripeService.createCustomer(user.email ?? "", user.id, user.name ?? undefined);
+          customerId = customer.id;
+          await storage.updateUser(user.id, { stripeCustomerId: customerId });
+        }
+
+        const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+        const session = await stripeService.createSubscriptionCheckout(
+          customerId,
+          "starter" as any,
+          `${origin}/creator/my-videos?import=success`,
+          `${origin}/creator/my-videos?import=cancelled`,
+          { listingId: listing.id, type: "library_import" },
+        );
+
+        // Fallback: payment intent if checkout fails to create URL
+        return res.status(201).json({ success: true, listing, method: "payment", checkoutUrl: session.url });
+      }
+
+      return res.status(400).json({ error: "method must be 'token' or 'payment'" });
+    } catch (error) {
+      console.error("Failed to import video to library:", error);
+      res.status(500).json({ error: "Failed to import video to library" });
+    }
+  });
+
+  // Creator global reach analytics — library reposts summary
+  app.get("/api/analytics/global-reach", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId
+        ? await storage.getUser(sessionUserId)
+        : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const listings = await storage.getGlobalVideoListings(undefined);
+      const myListings = listings.filter((l) => l.creatorId === user.id);
+      const totalListings = myListings.length;
+      const totalReposts = myListings.reduce((sum, l) => sum + (l.totalLicenses ?? 0), 0);
+      const totalRepostRevenue = totalReposts * 45;
+
+      res.json({ totalListings, totalReposts, totalRepostRevenue });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get global reach stats" });
     }
   });
 

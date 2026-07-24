@@ -9,10 +9,18 @@ import { VideoCard } from "@/components/VideoCard";
 import { VideoDetailSheet } from "@/components/VideoDetailSheet";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
 import { EmbedCodeModal } from "@/components/EmbedCodeModal";
-import { Upload, Search, Grid, List, Video } from "lucide-react";
+import { Upload, Search, Grid, List, Video, Coins, CreditCard, Library, X, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Video as VideoType, Brand } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const CATEGORY_FILTERS = [
   { value: "all",         label: "All" },
@@ -30,12 +38,151 @@ function parseCategories(raw: string | null | undefined): string[] {
   try { return JSON.parse(raw); } catch { return []; }
 }
 
+interface WalletSummary {
+  totalCredits: number;
+  availableCredits: number;
+  redeemedCredits: number;
+  euroValue: number;
+}
+
+interface ImportToLibraryModalProps {
+  video: VideoType | null;
+  open: boolean;
+  onClose: () => void;
+}
+
+function ImportToLibraryModal({ video, open, onClose }: ImportToLibraryModalProps) {
+  const { toast } = useToast();
+
+  const { data: wallet } = useQuery<WalletSummary>({
+    queryKey: ["/api/rewards/summary"],
+    enabled: open,
+  });
+
+  const tokenMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/videos/${video!.id}/import-to-library`, { method: "token" });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rewards/summary"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/library"] });
+      toast({ title: "Imported!", description: "Your campaign is now live in the Global Video Library." });
+      onClose();
+    },
+    onError: (err: any) => {
+      toast({ title: "Import Failed", description: err?.message || "Could not import video.", variant: "destructive" });
+    },
+  });
+
+  const paymentMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/videos/${video!.id}/import-to-library`, { method: "payment" });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast({ title: "Payment initiated", description: "Redirecting to payment..." });
+        onClose();
+      }
+    },
+    onError: (err: any) => {
+      toast({ title: "Payment Failed", description: err?.message || "Could not start payment.", variant: "destructive" });
+    },
+  });
+
+  const availableTokens = wallet?.availableCredits ?? 0;
+  const hasToken = availableTokens > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Library className="h-5 w-5 text-primary" />
+            Import to Global Video Library
+          </DialogTitle>
+          <DialogDescription>
+            List <span className="font-medium text-foreground">"{video?.title}"</span> in the Global Library so affiliates can discover and license it.
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Wallet status */}
+        <div className="rounded-xl border bg-muted/30 p-4 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <Coins className="h-4 w-4" /> Your Wallet
+            </span>
+            <Badge variant={hasToken ? "default" : "secondary"} className="text-xs">
+              {availableTokens} token{availableTokens !== 1 ? "s" : ""} available
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Earn 1 token each time you tag a brand whose paid subscription is active. 1 token = €49.
+          </p>
+        </div>
+
+        <div className="space-y-3 pt-1">
+          {/* Option A: Use token */}
+          <button
+            disabled={!hasToken || tokenMutation.isPending || paymentMutation.isPending}
+            onClick={() => tokenMutation.mutate()}
+            className={`w-full flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
+              hasToken
+                ? "hover:border-primary hover:bg-primary/5 cursor-pointer"
+                : "opacity-40 cursor-not-allowed"
+            }`}
+            data-testid="button-import-use-token"
+          >
+            <Coins className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">
+                Use 1 Wallet Token
+                {hasToken && <CheckCircle2 className="inline h-4 w-4 ml-1.5 text-green-500" />}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {hasToken
+                  ? `You have ${availableTokens} token${availableTokens !== 1 ? "s" : ""}. No payment needed.`
+                  : "You don't have any tokens yet. Refer a brand to earn one."}
+              </p>
+            </div>
+          </button>
+
+          {/* Option B: Pay */}
+          <button
+            disabled={paymentMutation.isPending || tokenMutation.isPending}
+            onClick={() => paymentMutation.mutate()}
+            className="w-full flex items-start gap-3 rounded-xl border p-4 text-left hover:border-primary hover:bg-primary/5 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            data-testid="button-import-pay"
+          >
+            <CreditCard className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">Pay €49 via Saved Card</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Charged to your stored payment method. No card details needed.
+              </p>
+            </div>
+          </button>
+        </div>
+
+        {(tokenMutation.isPending || paymentMutation.isPending) && (
+          <p className="text-sm text-center text-muted-foreground animate-pulse">Processing…</p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function MyVideos() {
   const [uploadModalOpen, setUploadModalOpen]     = useState(false);
   const [embedModalOpen, setEmbedModalOpen]       = useState(false);
   const [selectedVideo, setSelectedVideo]         = useState<VideoType | null>(null);
   const [detailSheetVideo, setDetailSheetVideo]   = useState<VideoType | null>(null);
   const [detailSheetOpen, setDetailSheetOpen]     = useState(false);
+  const [importVideo, setImportVideo]             = useState<VideoType | null>(null);
+  const [importModalOpen, setImportModalOpen]     = useState(false);
   const [searchQuery, setSearchQuery]             = useState("");
   const [viewMode, setViewMode]                   = useState<"grid" | "list">("grid");
   const [statusFilter, setStatusFilter]           = useState("all");
@@ -63,7 +210,6 @@ export default function MyVideos() {
     .sort((a, b) => {
       if (sortMode === "most_viewed")       return (b.totalViews ?? 0) - (a.totalViews ?? 0);
       if (sortMode === "highest_grossing")  return Number(b.totalRevenue ?? 0) - Number(a.totalRevenue ?? 0);
-      // newest
       const da = new Date(a.createdAt ?? 0).getTime();
       const db = new Date(b.createdAt ?? 0).getTime();
       return db - da;
@@ -123,6 +269,7 @@ export default function MyVideos() {
   const handleViewEmbed = (video: VideoType) => { setSelectedVideo(video); setEmbedModalOpen(true); };
   const handleDelete    = async (video: VideoType) => deleteMutation.mutateAsync(video.id);
   const handleOpenDetail = (video: VideoType) => { setDetailSheetVideo(video); setDetailSheetOpen(true); };
+  const handleImport    = (video: VideoType) => { setImportVideo(video); setImportModalOpen(true); };
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -137,6 +284,7 @@ export default function MyVideos() {
         <Button
           onClick={() => setUploadModalOpen(true)}
           className="rounded-full gap-2 w-full sm:w-auto"
+          style={{ background: "#1351aa47", border: "1px solid rgba(255,255,255,0.2)" }}
           data-testid="button-upload-video-page"
         >
           <Upload className="h-4 w-4" />
@@ -270,6 +418,7 @@ export default function MyVideos() {
               onOpen={handleOpenDetail}
               onViewEmbed={handleViewEmbed}
               onDelete={handleDelete}
+              onImport={handleImport}
             />
           ))}
         </div>
@@ -294,6 +443,12 @@ export default function MyVideos() {
         video={detailSheetVideo}
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
+      />
+
+      <ImportToLibraryModal
+        video={importVideo}
+        open={importModalOpen}
+        onClose={() => { setImportModalOpen(false); setImportVideo(null); }}
       />
     </div>
   );

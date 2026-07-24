@@ -30,6 +30,8 @@ import {
   Clock,
   ExternalLink,
   Link2,
+  Library,
+  Repeat2,
 } from "lucide-react";
 import type { Video } from "@shared/schema";
 
@@ -164,6 +166,12 @@ export default function Analytics() {
   }, [currentStats.viewsByDay, timeRange]);
 
   const showAffiliateTable = dashboardContext === "creator";
+  const isCreator = dashboardContext === "creator";
+
+  const { data: globalReach } = useQuery<{ totalListings: number; totalReposts: number; totalRepostRevenue: number }>({
+    queryKey: ["/api/analytics/global-reach"],
+    enabled: isCreator,
+  });
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
@@ -272,6 +280,10 @@ export default function Analytics() {
             <>
               <TabsTrigger value="videos" data-testid="tab-videos">By Video</TabsTrigger>
               <TabsTrigger value="affiliates" data-testid="tab-affiliates">Affiliates</TabsTrigger>
+              <TabsTrigger value="global-reach" data-testid="tab-global-reach">
+                <Library className="h-3.5 w-3.5 mr-1.5" />
+                Global Reach
+              </TabsTrigger>
             </>
           )}
           <TabsTrigger value="geography" data-testid="tab-geography">Geography</TabsTrigger>
@@ -567,6 +579,74 @@ export default function Analytics() {
         {showAffiliateTable && (
           <TabsContent value="affiliates">
             <AffiliatePublishersTable formatMoney={fmtCurrency} />
+          </TabsContent>
+        )}
+
+        {showAffiliateTable && (
+          <TabsContent value="global-reach" className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold" data-testid="text-global-reach-title">Affiliate Reposts</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Performance of your videos licensed by affiliates through the Global Video Library.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card data-testid="card-total-listings">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Library className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground font-medium">Listed Videos</span>
+                  </div>
+                  <p className="text-3xl font-bold" data-testid="text-total-listings">
+                    {globalReach?.totalListings ?? 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Videos in Global Library</p>
+                </CardContent>
+              </Card>
+
+              <Card data-testid="card-total-reposts">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <Repeat2 className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <span className="text-sm text-muted-foreground font-medium">Total Reposts</span>
+                  </div>
+                  <p className="text-3xl font-bold" data-testid="text-total-reposts">
+                    {globalReach?.totalReposts ?? 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Affiliate licenses purchased</p>
+                </CardContent>
+              </Card>
+
+              <Card data-testid="card-repost-revenue">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-green-500" />
+                    </div>
+                    <span className="text-sm text-muted-foreground font-medium">Repost Revenue</span>
+                  </div>
+                  <p className="text-3xl font-bold" data-testid="text-repost-revenue">
+                    {fmtCurrency(globalReach?.totalRepostRevenue ?? 0)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">From affiliate licensing fees</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {(globalReach?.totalListings ?? 0) === 0 && (
+              <Card className="p-12 text-center">
+                <Library className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="font-semibold mb-1">No videos in the Global Library yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Import a video from My Campaigns to list it in the Global Library and let affiliates license it.
+                </p>
+              </Card>
+            )}
           </TabsContent>
         )}
 

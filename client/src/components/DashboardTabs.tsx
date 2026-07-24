@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Link2, Heart, PlayCircle, Zap, TrendingUp } from "lucide-react";
+import { BarChart3, Link2, PlayCircle, Zap, TrendingUp } from "lucide-react";
 
 interface DashboardTabsProps {
   activeTab: string;
@@ -9,7 +9,6 @@ interface DashboardTabsProps {
 const tabs = [
   { id: "stats", label: "Stats Overview", icon: BarChart3 },
   { id: "affiliate", label: "Affiliate Links", icon: Link2 },
-  { id: "charity", label: "Charity Support", icon: Heart },
   { id: "demo", label: "Video Demo", icon: PlayCircle },
   { id: "actions", label: "Quick Actions", icon: Zap },
   { id: "performance", label: "Performance", icon: TrendingUp },

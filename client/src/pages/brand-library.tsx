@@ -15,7 +15,7 @@ type GlobalListing = {
   category: string | null;
   totalLicenses: number;
   video: { id: string; title: string; thumbnailUrl: string | null } | null;
-  creator: { displayName: string; avatarUrl: string | null } | null;
+  creator: { displayName: string; avatarUrl: string | null; username: string | null } | null;
 };
 
 type WishlistEntry = { globalListingId: string };
@@ -58,8 +58,11 @@ export default function BrandLibrary() {
   const wishlistedIds = new Set(wishlistItems.map((w) => w.globalListingId));
 
   const filtered = listings.filter((l) => {
+    const q = searchQuery.toLowerCase();
     const title = (l.listingTitle || l.video?.title || "").toLowerCase();
-    const matchSearch = !searchQuery || title.includes(searchQuery.toLowerCase());
+    const creator = (l.creator?.displayName || "").toLowerCase();
+    const handle = (l.creator?.username || "").toLowerCase();
+    const matchSearch = !searchQuery || title.includes(q) || creator.includes(q) || handle.includes(q);
     const matchCat = categoryFilter === "all" || (l.category ?? "").toLowerCase() === categoryFilter;
     return matchSearch && matchCat;
   });
@@ -87,7 +90,7 @@ export default function BrandLibrary() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search videos..."
+          placeholder="Search by title, creator or brand…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Play, Eye, MousePointer, DollarSign, MoreVertical, Code } from "lucide-react";
+import { Play, Eye, MousePointer, DollarSign, MoreVertical, Code, Library } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,9 +48,10 @@ interface VideoCardProps {
   onEdit?: (video: Video) => void;
   onViewEmbed?: (video: Video) => void;
   onDelete?: (video: Video) => void;
+  onImport?: (video: Video) => void;
 }
 
-export function VideoCard({ video, onOpen, onEdit, onViewEmbed, onDelete }: VideoCardProps) {
+export function VideoCard({ video, onOpen, onEdit, onViewEmbed, onDelete, onImport }: VideoCardProps) {
   const categories = parseCategories(video.categories);
 
   return (
@@ -100,6 +101,10 @@ export function VideoCard({ video, onOpen, onEdit, onViewEmbed, onDelete }: Vide
             <DropdownMenuItem onClick={() => onViewEmbed?.(video)}>
               <Code className="h-4 w-4 mr-2" />
               Get Embed Code
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onImport?.(video)}>
+              <Library className="h-4 w-4 mr-2" />
+              Import to Global Library
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete?.(video)}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,7 @@ import { AffiliateCard } from "@/components/AffiliateCard";
 import { DashboardTabs } from "@/components/DashboardTabs";
 import { AffiliateTable } from "@/components/AffiliateTable";
 import { VideoUploadModal } from "@/components/VideoUploadModal";
-import { CreatorRewardNotification } from "@/components/EarningsNotification";
-import { Eye, DollarSign, Heart, MousePointer, Upload, Play, TrendingUp } from "lucide-react";
+import { Eye, DollarSign, MousePointer, Upload, Play, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Video, Brand, User } from "@shared/schema";
@@ -17,15 +16,7 @@ import type { Video, Brand, User } from "@shared/schema";
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("stats");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [demoEarnings, setDemoEarnings] = useState(0);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDemoEarnings(1500);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/users/me"],
@@ -126,8 +117,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-6">
-      <CreatorRewardNotification />
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -135,9 +124,10 @@ export default function Dashboard() {
             Manage your video commerce platform
           </p>
         </div>
-        <Button 
-          onClick={() => setUploadModalOpen(true)} 
+        <Button
+          onClick={() => setUploadModalOpen(true)}
           className="rounded-full gap-2 w-full sm:w-auto"
+          style={{ background: "#1351aa47", border: "1px solid rgba(255,255,255,0.2)" }}
           data-testid="button-upload-video"
         >
           <Upload className="h-4 w-4" />
@@ -156,7 +146,7 @@ export default function Dashboard() {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {stats ? (
                 <>
                   <StatCard
@@ -172,12 +162,6 @@ export default function Dashboard() {
                     icon={DollarSign}
                   />
                   <StatCard
-                    title="Charity Contributions"
-                    value={`$${stats.charityContribution.toFixed(2)}`}
-                    subtitle="Total donated"
-                    icon={Heart}
-                  />
-                  <StatCard
                     title="Average CTR"
                     value={`${stats.averageCTR.toFixed(2)}%`}
                     subtitle="Click-through rate"
@@ -188,7 +172,6 @@ export default function Dashboard() {
                 <>
                   <StatCard title="Total Views" value={0} subtitle="Video engagement" icon={Eye} />
                   <StatCard title="Total Revenue" value="$0" subtitle="Sales generated" icon={DollarSign} />
-                  <StatCard title="Charity Contributions" value="$0.00" subtitle="Total donated" icon={Heart} />
                   <StatCard title="Average CTR" value="0.00%" subtitle="Click-through rate" icon={MousePointer} />
                 </>
               )}
@@ -203,33 +186,6 @@ export default function Dashboard() {
           referralCode={currentUser?.referralCode || "REF_E6601237"}
           commissionRate={Number(currentUser?.commissionRate) || 15}
         />
-      )}
-
-      {activeTab === "charity" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-500" />
-              Charity Support
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <div className="h-20 w-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-                <Heart className="h-10 w-10 text-red-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">
-                ${Number(currentUser?.charityContribution || 0).toFixed(2)} Contributed
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                A portion of your earnings goes to charitable causes. Adjust your contribution rate in settings.
-              </p>
-              <Button variant="outline" className="mt-4 rounded-full">
-                Manage Contributions
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {activeTab === "demo" && (
