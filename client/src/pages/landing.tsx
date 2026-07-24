@@ -1236,7 +1236,7 @@ function SignupSection({ initialRole = null, voucher = "", planSelected = false 
                               {...field}
                               className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                               style={{ borderRadius: 30 }}
-                              placeholder="Access code (optional — enter for free access)"
+                              placeholder="Voucher Code"
                               data-testid="input-access-code"
                             />
                           </FormControl>
@@ -1251,10 +1251,10 @@ function SignupSection({ initialRole = null, voucher = "", planSelected = false 
                       whileTap={{ scale: 0.97 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       className="w-full text-white font-semibold rounded-full mt-4 disabled:opacity-60"
-                      style={{ background: "#1351aa47", fontSize: 18, padding: "16px 30px" }}
+                      style={{ background: "#1351aa47", fontSize: 18, padding: "16px 30px", border: "1px solid rgba(255,255,255,0.25)" }}
                       data-testid="button-submit-signup"
                     >
-                      {mutation.isPending ? "Creating Account..." : planSelected ? "Create Account & Subscribe" : "Create Account"}
+                      {mutation.isPending ? "Creating Account..." : "Create Account"}
                     </motion.button>
                   </form>
                 </Form>
