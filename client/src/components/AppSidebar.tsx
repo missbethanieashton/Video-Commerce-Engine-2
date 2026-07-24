@@ -15,10 +15,10 @@ import {
   Gift,
   UserCircle,
   Bell,
-  Heart,
   LogOut,
   Settings,
   Wand2,
+  DollarSign,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useCurrentUser";
 import {
@@ -67,7 +67,8 @@ const rewardsItems = [
 ];
 
 const accountItems = [
-  { path: "/creator/profile", label: "Personal Details", icon: UserCircle },
+  { path: "/creator/profile", label: "Profile", icon: UserCircle },
+  { path: "/creator/earnings", label: "Earnings", icon: DollarSign },
   { path: "/creator/settings", label: "Settings", icon: Settings },
 ];
 

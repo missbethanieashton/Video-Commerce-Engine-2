@@ -13,9 +13,10 @@ import {
   Palette,
   Library,
   ListVideo,
-  Heart,
   LogOut,
   Wand2,
+  UserCircle,
+  DollarSign,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useCurrentUser";
 import {
@@ -62,8 +63,13 @@ const communicationItems = [
   { path: "/brand/mailbox", label: "Mailbox", icon: Bell },
 ];
 
-const otherItems = [
+const accountItems = [
+  { path: "/brand/profile", label: "Profile", icon: UserCircle },
+  { path: "/brand/earnings", label: "Earnings", icon: DollarSign },
   { path: "/brand/settings", label: "Settings", icon: Settings },
+];
+
+const otherItems = [
   { path: "/brand/help", label: "Help Center", icon: HelpCircle },
 ];
 
@@ -201,7 +207,16 @@ export function BrandAppSidebar({ user }: BrandAppSidebarProps) {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Settings
+            Account
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            {renderItems(accountItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Support
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {renderItems(otherItems)}

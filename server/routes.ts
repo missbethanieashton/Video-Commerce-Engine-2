@@ -106,13 +106,16 @@ export async function registerRoutes(
     }
   });
 
-  // Update current user profile (location, billing address)
+  // Update current user profile (location, billing address, personal info)
   app.patch("/api/users/me/profile", async (req, res) => {
     try {
       const sessionUserId = (req.session as any)?.userId;
       if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
-      const allowed = ["locationCity", "locationCountry", "billingAddress", "bio", "instagramHandle"];
-      const data: Record<string, string> = {};
+      const allowed = [
+        "locationCity", "locationCountry", "billingAddress", "bio", "instagramHandle",
+        "legalName", "preferredFirstName", "phoneNumber", "mailingAddress", "countryOrigin",
+      ];
+      const data: Record<string, any> = {};
       for (const key of allowed) {
         if (req.body[key] !== undefined) data[key] = req.body[key];
       }
@@ -120,6 +123,89 @@ export async function registerRoutes(
       res.json(profile);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Get user preferences (notifications + privacy)
+  app.get("/api/users/me/preferences", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const profile = await storage.getUserProfile(sessionUserId);
+      res.json(profile?.preferences || {
+        notifications: { insightsTips: true, referralSuccess: true, rewardUpdates: true, recognitionsAchievements: true, accountReminders: true },
+        privacy: { messagingEnabled: true, profileDiscovery: true },
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get preferences" });
+    }
+  });
+
+  // Update user preferences
+  app.patch("/api/users/me/preferences", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) return res.status(401).json({ error: "Not authenticated" });
+      const existing = await storage.getUserProfile(sessionUserId);
+      const merged = { ...(existing?.preferences || {}), ...req.body };
+      const profile = await storage.updateUserProfile(sessionUserId, { preferences: merged } as any);
+      res.json(profile?.preferences || merged);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update preferences" });
+    }
+  });
+
+  // Get wallet balance (token balance for current user)
+  app.get("/api/users/me/wallet", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId ? await storage.getUser(sessionUserId) : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+      res.json({ tokens: user.walletTokens ?? 0, tokenValueEur: 49 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get wallet" });
+    }
+  });
+
+  // Earnings summary — last 6 months aggregated
+  app.get("/api/users/me/earnings", async (req, res) => {
+    try {
+      const sessionUserId = (req.session as any)?.userId;
+      const user = sessionUserId ? await storage.getUser(sessionUserId) : await storage.getUserByUsername("demo_creator");
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
+
+      const months: { label: string; earned: number; paid: number; upcoming: number }[] = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          label: d.toLocaleString("default", { month: "short", year: "numeric" }),
+          earned: 0,
+          paid: 0,
+          upcoming: 0,
+        });
+      }
+
+      const payouts = await storage.getAffiliatePayouts(user.id).catch(() => []);
+      for (const p of payouts) {
+        const d = new Date(p.createdAt!);
+        const label = d.toLocaleString("default", { month: "short", year: "numeric" });
+        const m = months.find(m => m.label === label);
+        if (m) {
+          const amt = parseFloat(p.amount as any) || 0;
+          m.earned += amt;
+          if (p.status === "paid") m.paid += amt;
+          else m.upcoming += amt;
+        }
+      }
+
+      const totalEarned = months.reduce((s, m) => s + m.earned, 0);
+      const totalPaid = months.reduce((s, m) => s + m.paid, 0);
+      const totalUpcoming = months.reduce((s, m) => s + m.upcoming, 0);
+
+      res.json({ months, totalEarned, totalPaid, totalUpcoming, walletTokens: user.walletTokens ?? 0 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get earnings" });
     }
   });
 

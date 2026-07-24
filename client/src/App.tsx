@@ -22,6 +22,8 @@ import CRMAnalytics from "@/pages/crm";
 import Referrals from "@/pages/referrals";
 import Help from "@/pages/help";
 import More from "@/pages/more";
+import SettingsHub from "@/pages/settings-hub";
+import EarningsPage from "@/pages/earnings";
 import BrandDashboard from "@/pages/brand-dashboard";
 import BrandInventory from "@/pages/brand-inventory";
 import BrandCreators from "@/pages/brand-creators";
@@ -81,7 +83,8 @@ function CreatorRouter() {
       <Route path="/creator/help" component={Help} />
       <Route path="/creator/mailbox" component={Mailbox} />
       <Route path="/creator/more" component={More} />
-      <Route path="/creator/settings" component={UserSettings} />
+      <Route path="/creator/earnings" component={EarningsPage} />
+      <Route path="/creator/settings" component={SettingsHub} />
       <Route path="/creator/settings/subscription" component={CreatorSettingsSubscription} />
       <Route component={NotFound} />
     </Switch>
@@ -98,7 +101,8 @@ function BrandRouter() {
       <Route path="/brand/campaigns/:id" component={BrandCampaignDetail} />
       <Route path="/brand/campaigns" component={BrandCampaigns} />
       <Route path="/brand/profile" component={Profile} />
-      <Route path="/brand/settings" component={More} />
+      <Route path="/brand/earnings" component={EarningsPage} />
+      <Route path="/brand/settings" component={SettingsHub} />
       <Route path="/brand/settings/subscription" component={BrandSettingsSubscription} />
       <Route path="/brand/settings/billing-history" component={BrandSettingsBillingHistory} />
       <Route path="/brand/settings/transactions" component={BrandSettingsTransactions} />
@@ -127,8 +131,10 @@ function AffiliateRouter() {
       <Route path="/affiliate/library" component={AffiliateLibrary} />
       <Route path="/affiliate/campaigns" component={AffiliateCampaigns} />
       <Route path="/affiliate/analytics" component={Analytics} />
+      <Route path="/affiliate/profile" component={Profile} />
+      <Route path="/affiliate/earnings" component={EarningsPage} />
       <Route path="/affiliate/settings/subscription" component={PublisherSettingsSubscription} />
-      <Route path="/affiliate/settings" component={UserSettings} />
+      <Route path="/affiliate/settings" component={SettingsHub} />
       <Route path="/affiliate/playlists" component={PlaylistsPage} />
       <Route path="/affiliate/wishlist" component={WishlistPage} />
       <Route path="/affiliate/brand-kit" component={BrandKit} />

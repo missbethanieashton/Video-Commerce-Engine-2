@@ -1,12 +1,12 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Video, Library, Bell, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, Video, Library, Bell, Settings } from "lucide-react";
 
 const navItems = [
   { path: "/creator", label: "Dashboard", icon: LayoutDashboard },
   { path: "/creator/my-videos", label: "Campaigns", icon: Video },
   { path: "/creator/library", label: "Library", icon: Library },
   { path: "/creator/mailbox", label: "Mailbox", icon: Bell },
-  { path: "/creator/more", label: "More", icon: MoreHorizontal },
+  { path: "/creator/settings", label: "Settings", icon: Settings },
 ];
 
 export function MobileNav() {

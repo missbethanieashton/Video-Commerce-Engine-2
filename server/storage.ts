@@ -432,6 +432,9 @@ export class MemStorage implements IStorage {
       stripeCustomerId: null,
       stripeConnectAccountId: null,
       stripeConnectOnboarded: false,
+      isAdmin: false,
+      freeAccess: false,
+      walletTokens: 0,
     };
     this.users.set(id, newUser);
     return newUser;

@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, numeric, serial, timestamp, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, numeric, serial, timestamp, boolean, pgEnum, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -66,6 +66,7 @@ export const users = pgTable("users", {
   stripeConnectOnboarded: boolean("stripe_connect_onboarded").default(false),
   isAdmin: boolean("is_admin").default(false),
   freeAccess: boolean("free_access").default(false),
+  walletTokens: integer("wallet_tokens").default(0),
 });
 
 // Brands table
@@ -398,6 +399,24 @@ export const userProfiles = pgTable("user_profiles", {
   locationCountry: text("location_country"),
   billingAddress: text("billing_address"),
   instagramHandle: text("instagram_handle"),
+  legalName: text("legal_name"),
+  preferredFirstName: text("preferred_first_name"),
+  phoneNumber: text("phone_number"),
+  mailingAddress: text("mailing_address"),
+  countryOrigin: text("country_origin"),
+  preferences: jsonb("preferences").$type<{
+    notifications?: {
+      insightsTips?: boolean;
+      referralSuccess?: boolean;
+      rewardUpdates?: boolean;
+      recognitionsAchievements?: boolean;
+      accountReminders?: boolean;
+    };
+    privacy?: {
+      messagingEnabled?: boolean;
+      profileDiscovery?: boolean;
+    };
+  }>(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });

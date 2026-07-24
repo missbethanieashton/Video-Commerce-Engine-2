@@ -23,8 +23,9 @@ import {
   Bell,
   Palette,
   ListVideo,
-  Heart,
   Wand2,
+  UserCircle,
+  DollarSign,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -81,17 +82,14 @@ const affiliateMenuItems = [
   },
 ];
 
+const accountMenuItems = [
+  { title: "Profile", url: "/affiliate/profile", icon: UserCircle },
+  { title: "Earnings", url: "/affiliate/earnings", icon: DollarSign },
+  { title: "Settings", url: "/affiliate/settings", icon: Settings },
+];
+
 const bottomMenuItems = [
-  {
-    title: "Settings",
-    url: "/affiliate/settings",
-    icon: Settings,
-  },
-  {
-    title: "Help",
-    url: "/affiliate/help",
-    icon: HelpCircle,
-  },
+  { title: "Help", url: "/affiliate/help", icon: HelpCircle },
 ];
 
 interface AffiliateAppSidebarProps {
@@ -132,6 +130,33 @@ export function AffiliateAppSidebar({ user }: AffiliateAppSidebarProps) {
                       className={isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}
                     >
                       <Link href={item.url} data-testid={`nav-${item.title.toLowerCase().replace(/\s/g, '-')}`}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs text-muted-foreground px-2 mb-2">
+            Account
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {accountMenuItems.map((item) => {
+                const isActive = location === item.url ||
+                  (item.url !== "/affiliate" && location.startsWith(item.url));
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      className={isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}
+                    >
+                      <Link href={item.url} data-testid={`nav-affiliate-${item.title.toLowerCase()}`}>
                         <item.icon className="w-4 h-4" />
                         <span>{item.title}</span>
                       </Link>
