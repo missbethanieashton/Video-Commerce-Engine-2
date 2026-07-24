@@ -767,8 +767,8 @@ export default function EditingSuite() {
           <SettingsPanel settings={settings} onChange={setSettings} />
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-[#0a0a0a] p-6 flex flex-col gap-5">
-          <div className="flex items-center justify-between">
+        <div className="flex-1 overflow-y-auto bg-[#0a0a0a] px-4 py-6 flex flex-col gap-5">
+          <div className="flex items-center justify-between w-full">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Live Preview Workspace</p>
             <div className="flex items-center gap-2">
               {!settings.commerceEnabled && (
@@ -782,7 +782,8 @@ export default function EditingSuite() {
             </div>
           </div>
 
-          <div className="w-full max-w-3xl mx-auto">
+          <div className="w-full flex justify-center">
+            <div className="w-full max-w-[320px]">
             <div
               className="relative w-full rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10"
               style={{ paddingBottom: aspectPadding, height: 0 }}
@@ -834,9 +835,10 @@ export default function EditingSuite() {
                 </button>
               </div>
             </div>
+            </div>
           </div>
 
-          <div className="w-full max-w-3xl mx-auto bg-white/5 rounded-xl p-4 border border-white/10">
+          <div className="w-full max-w-[320px] mx-auto bg-white/5 rounded-xl p-4 border border-white/10">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Code className="h-4 w-4 text-white/50" />
