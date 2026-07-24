@@ -1,12 +1,15 @@
 import { getUncachableStripeClient } from './stripeClient';
 
 const PLAN_CONFIG = {
-  starter: { name: 'Materialized Starter Plan', amount: 24900 },
-  pro:     { name: 'Materialized Pro Plan',     amount: 49900 },
+  creator:   { name: 'MTRLZD Creator Plan',   amount: 14900 },
+  brand:     { name: 'MTRLZD Brand Plan',      amount: 24900 },
+  publisher: { name: 'MTRLZD Publisher Plan',  amount: 49900 },
+  starter:   { name: 'Materialized Starter Plan', amount: 24900 },
+  pro:       { name: 'Materialized Pro Plan',     amount: 49900 },
 } as const;
 
 export class StripeService {
-  async findOrCreateSubscriptionPrice(plan: 'starter' | 'pro'): Promise<string> {
+  async findOrCreateSubscriptionPrice(plan: 'creator' | 'brand' | 'publisher' | 'starter' | 'pro'): Promise<string> {
     const stripe = await getUncachableStripeClient();
     const config = PLAN_CONFIG[plan];
 
@@ -37,7 +40,7 @@ export class StripeService {
 
   async createSubscriptionCheckout(
     customerId: string,
-    plan: 'starter' | 'pro',
+    plan: 'creator' | 'brand' | 'publisher' | 'starter' | 'pro',
     successUrl: string,
     cancelUrl: string,
     metadata?: Record<string, string>,

@@ -2955,6 +2955,38 @@ Identify which products from the catalog are most likely to appear or be feature
     }
   });
 
+  // Publisher (affiliate) subscription checkout
+  app.post("/api/publisher/subscription/checkout", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user.email ?? "", userId, user.name ?? undefined);
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      const origin = req.headers.origin ?? `${req.protocol}://${req.headers.host}`;
+      const session = await stripeService.createSubscriptionCheckout(
+        customerId,
+        'publisher',
+        `${origin}/affiliate?checkout=success`,
+        `${origin}/affiliate?checkout=cancelled`,
+        { userId, plan: 'publisher' },
+      );
+
+      res.json({ url: session.url, sessionId: session.id });
+    } catch (e: any) {
+      console.error("Publisher checkout error:", e);
+      res.status(500).json({ error: e?.message ?? "Failed to create checkout session" });
+    }
+  });
+
   // Subscription → Stripe Customer Portal (manage / cancel)
   app.post("/api/brand/subscription/portal", async (req, res) => {
     try {

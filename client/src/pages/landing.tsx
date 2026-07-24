@@ -20,6 +20,7 @@ import celineBagImage from "@assets/celine_bag_1773420370038.png";
 import { COUNTRIES } from "@shared/schema";
 import { Play, ChevronDown, Users, DollarSign, TrendingUp, ShoppingBag, ArrowRight, Star, Smartphone, Monitor, Video, Volume2, VolumeX, CircleUserRound, X } from "lucide-react";
 import { DemoPopup } from "@/components/DemoPopup";
+import { PricingModal, type PricingTier } from "@/components/PricingModal";
 import { SiInstagram, SiLinkedin } from "react-icons/si";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
@@ -857,15 +858,21 @@ function EventVoucherSection() {
 
 // ─── Signup Section ──────────────────────────────────────────────────────────
 
-function SignupSection() {
+interface SignupSectionProps {
+  initialRole?: PricingTier | null;
+  voucher?: string;
+  planSelected?: boolean;
+}
+
+function SignupSection({ initialRole = null, voucher = "", planSelected = false }: SignupSectionProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [selectedRole, setSelectedRole] = useState<"creator" | "brand" | "publisher" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"creator" | "brand" | "publisher" | null>(initialRole);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      role: "creator",
+      role: initialRole ?? "creator",
       firstName: "",
       surname: "",
       email: "",
@@ -874,9 +881,23 @@ function SignupSection() {
       tiktokHandle: "",
       country: "",
       city: "",
-      accessCode: "",
+      accessCode: voucher,
     },
   });
+
+  const CHECKOUT_ENDPOINTS: Record<string, string> = {
+    creator: "/api/creator/subscription/checkout",
+    brand: "/api/brand/subscription/checkout",
+    publisher: "/api/publisher/subscription/checkout",
+    affiliate: "/api/publisher/subscription/checkout",
+  };
+
+  const PLAN_KEYS: Record<string, string> = {
+    creator: "creator",
+    brand: "brand",
+    publisher: "publisher",
+    affiliate: "publisher",
+  };
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -890,12 +911,26 @@ function SignupSection() {
       });
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: async (_data, variables) => {
+      const role = (variables.role || selectedRole) as string;
+      if (planSelected && !variables.accessCode) {
+        try {
+          const endpoint = CHECKOUT_ENDPOINTS[role] ?? CHECKOUT_ENDPOINTS.creator;
+          const planKey = PLAN_KEYS[role] ?? "creator";
+          const res = await apiRequest("POST", endpoint, { plan: planKey });
+          const json = await res.json();
+          if (json.url) {
+            window.location.href = json.url;
+            return;
+          }
+        } catch {
+          // fall through to dashboard
+        }
+      }
       toast({
         title: "Welcome aboard!",
         description: "Your account has been created successfully.",
       });
-      const role = (variables.role || selectedRole) as string;
       const destination = ROLE_ROUTES[role] ?? "/creator";
       setLocation(destination);
     },
@@ -981,7 +1016,7 @@ function SignupSection() {
                   }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  onClick={() => handleRoleSelect(item.role)}
+                  onClick={() => openPricing(item.role)}
                   className="p-8 rounded-3xl backdrop-blur-sm text-left flex flex-col gap-5 group"
                   style={{ background: "rgba(255,255,255,0.07)", border: `1px solid rgba(255,255,255,0.15)`, minHeight: 220 }}
                   data-testid={`button-role-${item.role}`}
@@ -1217,7 +1252,7 @@ function SignupSection() {
                       style={{ fontSize: 18, padding: "16px 30px" }}
                       data-testid="button-submit-signup"
                     >
-                      {mutation.isPending ? "Creating Account..." : "Create Free Account"}
+                      {mutation.isPending ? "Creating Account..." : planSelected ? "Create Account & Subscribe" : "Create Account"}
                     </motion.button>
                   </form>
                 </Form>
@@ -1262,6 +1297,42 @@ export default function Landing() {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const lastScrollY = useRef(0);
+
+  // Pricing modal state
+  const [showPricing, setShowPricing] = useState(false);
+  const [pricingInitialTier, setPricingInitialTier] = useState<PricingTier | null>(null);
+  // Signup section state (set when coming from pricing modal)
+  const [signupKey, setSignupKey] = useState(0);
+  const [signupInitialRole, setSignupInitialRole] = useState<PricingTier | null>(null);
+  const [signupVoucher, setSignupVoucher] = useState("");
+  const [signupPlanSelected, setSignupPlanSelected] = useState(false);
+
+  const openPricing = (tier?: PricingTier | null) => {
+    setPricingInitialTier(tier ?? null);
+    setShowPricing(true);
+  };
+
+  const handlePricingSubscribe = (tier: PricingTier) => {
+    setShowPricing(false);
+    setSignupInitialRole(tier);
+    setSignupVoucher("");
+    setSignupPlanSelected(true);
+    setSignupKey(k => k + 1);
+    setTimeout(() => {
+      document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
+    }, 80);
+  };
+
+  const handlePricingVoucher = (tier: PricingTier, code: string) => {
+    setShowPricing(false);
+    setSignupInitialRole(tier);
+    setSignupVoucher(code);
+    setSignupPlanSelected(false);
+    setSignupKey(k => k + 1);
+    setTimeout(() => {
+      document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
+    }, 80);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1345,6 +1416,16 @@ export default function Landing() {
                 Sign In
               </Button>
             </Link>
+            <Button
+              onClick={() => openPricing()}
+              variant="ghost"
+              size="sm"
+              className="text-white font-semibold rounded-full text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
+              style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
+              data-testid="button-nav-pricing"
+            >
+              Pricing
+            </Button>
             <Button
               onClick={scrollToSignup}
               variant="ghost"
@@ -1442,7 +1523,7 @@ export default function Landing() {
       {/* Mobile-only submenu — below hero video */}
       <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-between gap-2">
         {[
-          { label: "Pricing", onClick: scrollToSignup, testId: "button-mobile-pricing" },
+          { label: "Pricing", onClick: () => openPricing(), testId: "button-mobile-pricing" },
           // { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" }, // hidden with "Have we met?" section, re-enable together
         ].map((item) => (
           <button
@@ -1599,7 +1680,12 @@ export default function Landing() {
             boxShadow: "0 20px 70px rgba(0,0,0,0.55), 0 6px 20px rgba(0,0,0,0.3)",
           }}
         >
-          <SignupSection />
+          <SignupSection
+            key={signupKey}
+            initialRole={signupInitialRole}
+            voucher={signupVoucher}
+            planSelected={signupPlanSelected}
+          />
         </div>
 
         {/* Event Voucher Section — "Have we met?" — temporarily hidden, re-enable at a later date */}
@@ -1895,6 +1981,15 @@ export default function Landing() {
           </p>
         </div>
       </footer>
+
+      {/* Pricing Modal */}
+      <PricingModal
+        open={showPricing}
+        initialTier={pricingInitialTier}
+        onClose={() => setShowPricing(false)}
+        onSubscribe={handlePricingSubscribe}
+        onVoucher={handlePricingVoucher}
+      />
     </div>
   );
 }
