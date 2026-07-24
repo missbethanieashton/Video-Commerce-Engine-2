@@ -136,6 +136,7 @@ export async function registerRoutes(
       const allowed = [
         "locationCity", "locationCountry", "billingAddress", "bio", "instagramHandle",
         "legalName", "preferredFirstName", "phoneNumber", "mailingAddress", "countryOrigin",
+        "profileMediaUrl", "profileMediaType",
       ];
       const data: Record<string, any> = {};
       for (const key of allowed) {
