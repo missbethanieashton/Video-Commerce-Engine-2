@@ -1030,12 +1030,14 @@ function SignupSection({ initialRole = null, voucher = "", planSelected = false 
                     </div>
                     <div className="text-white/75 text-base leading-relaxed">{item.tagline}</div>
                   </div>
-                  <div
-                    className="mt-auto text-sm font-semibold flex items-center gap-1.5 transition-colors"
+                  <motion.div
+                    className="mt-auto text-sm font-semibold flex items-center gap-1.5"
                     style={{ color: "#ffffff" }}
+                    whileHover={{ scale: 1.08 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 20 }}
                   >
                     Get started
-                  </div>
+                  </motion.div>
                 </motion.button>
               ))}
             </div>

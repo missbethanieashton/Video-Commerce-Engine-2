@@ -50,7 +50,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className="inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:scale-105 active:scale-95 transition-transform duration-150 border border-primary-border min-h-8 px-[20px] py-[20px] group bg-[#314d3b] hover:bg-[#24372b] text-white font-semibold rounded-full text-sm overflow-hidden border-t-[color:var(--button-outline)] border-r-[color:var(--button-outline)] border-b-[color:var(--button-outline)] border-l-[color:var(--button-outline)]"
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:scale-105 active:scale-95 transition-transform duration-150 border border-primary-border min-h-8 px-[20px] py-[20px] bg-[#314d3b] text-white font-semibold rounded-full text-sm border-t-[color:var(--button-outline)] border-r-[color:var(--button-outline)] border-b-[color:var(--button-outline)] border-l-[color:var(--button-outline)]"
         ref={ref}
         {...props}
       />
