@@ -9,6 +9,7 @@ import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync, getUncachableStripeClient } from "./stripeClient";
 import { dispatchStripeEvent } from "./webhookHandlers";
 import Stripe from 'stripe';
+import { migrateParisCampaign } from "./parisCampaignMigration";
 
 declare module "express-session" {
   interface SessionData {
@@ -164,7 +165,7 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      if (capturedJsonResponse && path !== "/api/paris-creator-week/claim") {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
@@ -177,6 +178,7 @@ app.use((req, res, next) => {
 
 (async () => {
   registerAuthRoutes(app);
+  await migrateParisCampaign();
   await registerRoutes(httpServer, app);
   await seedAdminAccount();
 

@@ -40,6 +40,7 @@ import UserSettings from "@/pages/user-settings";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import Affiliates from "@/pages/affiliates";
 import Landing from "@/pages/landing";
+import ParisCreatorWeek from "@/pages/paris-creator-week";
 import Rewards from "@/pages/rewards";
 import Profile from "@/pages/profile";
 import BrandAuthorize from "@/pages/brand-authorize";
@@ -351,14 +352,17 @@ function AppWithSidebar() {
 function App() {
   const [location] = useLocation();
   const isLandingRoute = location === "/";
+  const isCampaignRoute = location === "/paris-creator-week" || location === "/paris-creator-week/";
   const isAuthRoute = location === "/login" || location === "/register";
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          {(isLandingRoute || isAuthRoute) ? (
+          {(isLandingRoute || isAuthRoute || isCampaignRoute) ? (
             <Switch>
+              <Route path="/paris-creator-week" component={ParisCreatorWeek} />
+              <Route path="/paris-creator-week/" component={ParisCreatorWeek} />
               <Route path="/" component={Landing} />
               <Route path="/login" component={Login} />
               <Route path="/register" component={Register} />

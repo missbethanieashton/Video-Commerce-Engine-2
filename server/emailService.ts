@@ -1,5 +1,16 @@
 import nodemailer from "nodemailer";
 
+export async function sendParisPassEmail(opts: {
+  email: string; creatorCode: string; friendCode: string; expiresAt: Date;
+}) {
+  // Codes are generated hex strings; no user-supplied HTML is interpolated.
+  await transporter.sendMail({
+    from: FROM_ADDRESS, to: opts.email, subject: "Your two Paris Creator Week 2026 passes",
+    text: `Paris Creator Week 2026\nCreator Pass: ${opts.creatorCode}\nFriend Voucher: ${opts.friendCode}\nSave both codes. Activation window ends ${opts.expiresAt.toISOString()}.`,
+    html: baseTemplate(`<h1>Paris Creator Week 2026</h1><p>Your two free passes are saved.</p><h2>Creator Pass</h2><p>${opts.creatorCode}</p><h2>Friend Voucher</h2><p>${opts.friendCode}</p><p>Save both codes. Activation window ends ${opts.expiresAt.toISOString().slice(0, 10)}.</p>`),
+  });
+}
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {

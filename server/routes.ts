@@ -46,11 +46,13 @@ import { stripeService } from "./stripeService";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { dispatchStripeEvent } from "./webhookHandlers";
 import { hashPassword, verifyPassword } from "./auth";
+import { registerParisCampaignRoutes } from "./parisCampaign";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  registerParisCampaignRoutes(app);
   
   // ==================== AI/PDF ANALYSIS ROUTES ====================
   setupPdfAnalysisRoutes(app);

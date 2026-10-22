@@ -934,6 +934,20 @@ export const insertEventVoucherSchema = createInsertSchema(eventVouchers).omit({
 export type InsertEventVoucher = z.infer<typeof insertEventVoucherSchema>;
 export type EventVoucher = typeof eventVouchers.$inferSelect;
 
+export const parisCampaignSignups = pgTable("paris_campaign_signups", {
+  id: serial("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull().unique(),
+  platform: text("platform").notNull(),
+  creatorHandle: text("creator_handle").notNull(),
+  friendHandle: text("friend_handle").notNull(),
+  requestId: text("request_id").unique(),
+  creatorCode: text("creator_code").notNull().unique().references(() => eventVouchers.code),
+  friendCode: text("friend_code").notNull().unique().references(() => eventVouchers.code),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Country list for dropdown

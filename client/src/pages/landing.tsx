@@ -1428,6 +1428,9 @@ export default function Landing() {
             >
               Pricing
             </Button>
+            <Link href="/paris-creator-week" className="text-white text-sm font-semibold px-3 py-2">
+              Paris Creator Week
+            </Link>
             <Button
               onClick={scrollToSignup}
               variant="ghost"
@@ -1524,6 +1527,9 @@ export default function Landing() {
 
       {/* Mobile-only submenu — below hero video */}
       <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-center gap-2">
+        <Link href="/paris-creator-week" className="text-white/80 text-sm px-2 py-2">
+          Paris Creator Week
+        </Link>
         {[
           { label: "Pricing", onClick: () => openPricing(), testId: "button-mobile-pricing" },
           // { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" }, // hidden with "Have we met?" section, re-enable together

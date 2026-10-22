@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, ne } from "drizzle-orm";
 import { db } from "./db";
 import {
   type EventVoucher,
@@ -1699,7 +1699,7 @@ export class MemStorage implements IStorage {
     return v;
   }
   async getEventVoucherByCode(code: string): Promise<EventVoucher | undefined> { return this.eventVouchersList.find(v => v.code === code); }
-  async getEventVoucherByEmail(email: string): Promise<EventVoucher | undefined> { return this.eventVouchersList.find(v => v.email === email); }
+  async getEventVoucherByEmail(email: string): Promise<EventVoucher | undefined> { return this.eventVouchersList.find(v => v.email === email && v.event !== "paris-creator-week"); }
   async redeemEventVoucher(code: string, userId: string): Promise<void> {
     const v = this.eventVouchersList.find(v => v.code === code);
     if (v) { v.usedByUserId = userId; v.usedAt = new Date(); }
@@ -2547,7 +2547,8 @@ export class DatabaseStorage implements IStorage {
     return v;
   }
   async getEventVoucherByEmail(email: string): Promise<EventVoucher | undefined> {
-    const [v] = await db.select().from(eventVouchers).where(eq(eventVouchers.email, email));
+    // Paris signups must not consume a person's separate VivaTech/Cannes offer.
+    const [v] = await db.select().from(eventVouchers).where(and(eq(eventVouchers.email, email), ne(eventVouchers.event, "paris-creator-week")));
     return v;
   }
   async redeemEventVoucher(code: string, userId: string): Promise<void> {

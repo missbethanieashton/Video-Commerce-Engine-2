@@ -1,0 +1,1 @@
+- [Campaign guardrails](campaign-guardrails.md) — campaign offers and visual changes stay separate from the main homepage and older event offers.
