@@ -5,7 +5,6 @@ import {
   Pause, Play, Share2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { HomepageProductCarousel } from "@/components/HomepageProductCarousel";
-import parisCreatorWeekLogo from "@assets/Paris_Creator_Week_2026_Logo_1792673486315.jpg";
 import "./paris-creator-week.css";
 
 type Platform = "instagram" | "tiktok";
@@ -226,7 +225,7 @@ export default function ParisCreatorWeek() {
       <header className="pcw-header">
         <a className="pcw-mtrlzd" href="/" aria-label="MTRLZD home"><img src="/mtrlzd-wordmark.png" alt="MTRLZD" /></a>
         <a className="pcw-brand" href="#top" aria-label="Paris Creator Week — campaign top">
-          <img src={parisCreatorWeekLogo} alt="Paris Creator Week" width={400} height={400} />
+          <img src="/paris-creator-week-logo.png" alt="Paris Creator Week" width={339} height={156} />
         </a>
         <div className="pcw-header-right">
           <button className="pcw-share-button" type="button" onClick={shareInvite} aria-label="Share invitation">
@@ -240,9 +239,9 @@ export default function ParisCreatorWeek() {
         <div className="pcw-hero-atmosphere" aria-hidden="true" />
         <div className="pcw-hero-content">
           <h1 id="pcw-title"><span>YOUR CONTENT.</span><span className="chromatic">YOUR COMMERCE.</span><span>YOUR CUT.</span></h1>
-          <p className="pcw-hero-deck">Turn videos into shoppable experiences.<br />Keep your brand partnerships.<br />Unlock an extra 5% MTRLZD affiliate commission.</p>
+          <p className="pcw-hero-deck">Turn videos into shoppable experiences.<br />Enhance your brand partnerships.<br />Unlock an extra 5% MTRLZD affiliate commission.</p>
           <div className="pcw-hero-actions">
-            <a className="pcw-button pcw-button-primary" href="#claim">Claim my creator pass <ArrowDownRight size={16} /></a>
+            <a className="pcw-button pcw-button-primary" href="#claim">Claim A Creator Pass <ArrowDownRight size={16} /></a>
           </div>
         </div>
 
@@ -278,7 +277,7 @@ export default function ParisCreatorWeek() {
             </div>
           </div>
           <div className="pcw-demo-rail" aria-label="Video commerce benefits">
-            <div><span className="pcw-rail-icon"><Play size={17} /></span><b>IN-VIDEO SHOPPING</b></div>
+            <div><span className="pcw-rail-icon"><Play size={17} /></span><b>IN-VIDEO SHOPPING</b><small>Enable or Disable Commerce within your videos for your audience to shop instantly</small></div>
             <div><span className="pcw-rail-icon"><ArrowRight size={17} /></span><b>SHOPPABLE STORIES</b><small>Shopify Podcasts, Travel Vlogs, Short Films, Music Videos.</small></div>
             <div><span className="pcw-rail-icon"><Instagram size={17} /></span><b>CREATORS / BRANDS / PUBLISHERS</b><small>Monetize your existing videos &amp; earn more.</small></div>
           </div>
@@ -357,8 +356,8 @@ export default function ParisCreatorWeek() {
               <>
                 <div className="pcw-pass-panel-head"><div><span className="pcw-result-kicker"><Check size={14} /> CLAIM CONFIRMED</span><h3>Your passes are ready.</h3></div></div>
                 <div className="pcw-pass-stack">
-                  <PassCard label="CREATOR PASS" code={claim.creatorCode} index="01" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
-                  <PassCard label="FRIEND VOUCHER" code={claim.friendCode} index="02" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
+                  <PassCard label="YOUR PASS" code={claim.creatorCode} index="01" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
+                  <PassCard label="FRIEND'S PASS" code={claim.friendCode} index="02" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
                 </div>
                 <p className="pcw-expiry">Activate both codes within <strong>14 days</strong>, by <strong>{formatExpiry(claim.expiresAt)}</strong>.</p>
                 <div className={`pcw-email-status is-${claim.emailStatus}`} role="status">
@@ -371,8 +370,8 @@ export default function ParisCreatorWeek() {
             ) : (
               <>
                 <div className="pcw-preview-stack">
-                  <PreviewPass label="CREATOR PASS" index="01" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
-                  <PreviewPass label="FRIEND VOUCHER" index="02" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
+                  <PreviewPass label="YOUR PASS" index="01" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
+                  <PreviewPass label="FRIEND'S PASS" index="02" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
                 </div>
               </>
             )}
@@ -408,7 +407,7 @@ function PreviewPass({ label, index, onPointerMove, onPointerLeave }: {
 }) {
   return <article className={`pcw-voucher-card pcw-voucher-preview voucher-${index}`} onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
     <div className="pcw-voucher-top"><span>MTRLZD CREATOR PASS</span><span>PASS {index}</span></div>
-    <div className="pcw-voucher-mid"><div><span className="pcw-voucher-label">{label}</span><h4>{index === "01" ? "Creator Pass" : "Friend Voucher"}</h4></div><span className="pcw-voucher-mark"><span>{index}</span></span></div>
+    <div className="pcw-voucher-mid"><div><span className="pcw-voucher-label">{label}</span><h4>Creator Pass</h4></div><span className="pcw-voucher-mark"><span>{index}</span></span></div>
     <div className="pcw-voucher-code"><span>VOUCHER CODE</span><strong>Issued after signup</strong></div>
     <div className="pcw-voucher-notch pcw-notch-left" aria-hidden="true" /><div className="pcw-voucher-notch pcw-notch-right" aria-hidden="true" />
   </article>;
@@ -422,7 +421,7 @@ function PassCard({ label, code, index, onPointerMove, onPointerLeave }: {
   return (
     <article className={`pcw-voucher-card voucher-${index}`} onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
       <div className="pcw-voucher-top"><span>MTRLZD CREATOR PASS</span><span>PASS {index}</span></div>
-      <div className="pcw-voucher-mid"><div><span className="pcw-voucher-label">{label}</span><h4>{index === "01" ? "Creator Pass" : "Friend Voucher"}</h4></div><span className="pcw-voucher-mark"><span>{index}</span></span></div>
+      <div className="pcw-voucher-mid"><div><span className="pcw-voucher-label">{label}</span><h4>Creator Pass</h4></div><span className="pcw-voucher-mark"><span>{index}</span></span></div>
       <div className="pcw-voucher-code"><span>YOUR UNIQUE VOUCHER CODE</span><strong>{code}</strong></div>
       <div className="pcw-voucher-bottom"><span>MTRLZD CREATOR PASS</span><span>14-DAY WINDOW</span></div>
       <div className="pcw-voucher-notch pcw-notch-left" aria-hidden="true" /><div className="pcw-voucher-notch pcw-notch-right" aria-hidden="true" />

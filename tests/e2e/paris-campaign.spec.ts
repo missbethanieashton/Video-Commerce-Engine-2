@@ -15,7 +15,12 @@ test("direct links, QR sharing, form errors, and two-pass success work across sc
   await expect(page.locator(".pcw-competition-instructions")).toHaveText("Sign up. Publish your shoppable videos by November 19.Most engaged video receives €2000 cash prize.Announced December 19.");
   await expect(page.locator(".pcw-privacy")).toContainText("MTRLZD Creator Passes");
   await expect(page.locator(".pcw-header > a").first()).toHaveAttribute("aria-label", "MTRLZD home");
-  await expect(page.locator(".pcw-brand img")).toHaveAttribute("src", /Paris_Creator_Week_2026_Logo_1792673486315\.jpg/);
+  await expect(page.locator(".pcw-brand img")).toHaveAttribute("src", "/paris-creator-week-logo.png");
+  await expect(page.locator(".pcw-hero-deck")).toContainText("Enhance your brand partnerships.");
+  await expect(page.getByRole("link", { name: "Claim A Creator Pass", exact: true })).toHaveAttribute("href", "#claim");
+  await expect(page.locator(".pcw-demo-rail")).toContainText("Enable or Disable Commerce within your videos for your audience to shop instantly");
+  await expect(page.locator(".pcw-voucher-label")).toHaveText(["YOUR PASS", "FRIEND'S PASS"]);
+  await expect(page.locator(".pcw-voucher-mid h4")).toHaveText(["Creator Pass", "Creator Pass"]);
   await expect(page.locator(".pcw")).not.toContainText(/YOUR TWO VOUCHERS|CREATOR SUMMIT ACTIVATION|Explore the summit|The Future:|Register at Paris|Pause the demo|SUMMIT COMPETITION/);
   await expect(page.locator(".pcw-header button")).toHaveCount(1);
   await expect(page.getByAltText("QR code for the Paris Creator Week invitation")).toHaveAttribute("src", /^data:image\/png/);
@@ -62,6 +67,8 @@ test("direct links, QR sharing, form errors, and two-pass success work across sc
   await expect(page.getByText("Your passes are ready.")).toBeVisible();
   await expect(page.getByText("PCW26-C-TEST-ONLY")).toBeVisible();
   await expect(page.getByText("PCW26-F-TEST-ONLY")).toBeVisible();
+  await expect(page.locator(".pcw-voucher-label")).toHaveText(["YOUR PASS", "FRIEND'S PASS"]);
+  await expect(page.locator(".pcw-voucher-mid h4")).toHaveText(["Creator Pass", "Creator Pass"]);
   await expect(page.getByRole("status").filter({ hasText: /Email delivery.*unavailable/ })).toBeVisible();
   expect(submitted.platform).toBe("tiktok");
   expect(submitted.creatorHandle).toBe("creator");
@@ -110,10 +117,22 @@ test("cash prize animation repeats while visible and Enter Now reaches signup", 
   await expect(page.locator(".pcw-footer-home a")).toHaveAttribute("href", "/");
 });
 
-test("homepage header uses the campaign logo and omits redundant Get Started", async ({ page }) => {
+test("homepage campaign tab stays fixed on the right and reuses the unchanged product carousel", async ({ page }) => {
   await page.goto("/");
-  const campaignLink = page.getByTestId("link-nav-paris-creator-week");
+  await expect(page.getByTestId("link-nav-paris-creator-week")).toHaveCount(0);
+  const campaignLink = page.getByTestId("link-paris-creator-week-tab");
   await expect(campaignLink.getByRole("img", { name: "Paris Creator Week" })).toBeVisible();
+  await expect(campaignLink.getByRole("img")).toHaveAttribute("src", "/paris-creator-week-logo.png");
+  for (const width of [320, 390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    const initial = await campaignLink.boundingBox();
+    expect(initial!.x + initial!.width).toBeCloseTo(width, 0);
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    const after = await campaignLink.boundingBox();
+    expect(after!.y).toBeCloseTo(initial!.y, 0);
+    expect(await campaignLink.evaluate(el => getComputedStyle(el).position)).toBe("fixed");
+    await page.evaluate(() => window.scrollTo(0, 0));
+  }
   await expect(page.getByTestId("button-nav-get-started")).toHaveCount(0);
   await expect(page.getByTestId("button-nav-signin")).toBeVisible();
   await expect(page.getByTestId("button-nav-pricing")).toBeVisible();
@@ -127,4 +146,10 @@ test("homepage header uses the campaign logo and omits redundant Get Started", a
     const s = getComputedStyle(el);
     return { radius: s.borderRadius, padding: s.padding, background: s.backgroundColor };
   })).toEqual(cardStyle);
+  expect(await page.locator(".pcw-hero").evaluate(el => getComputedStyle(el).backgroundImage
+    + getComputedStyle(el, "::before").backgroundImage
+    + getComputedStyle(el, "::after").backgroundImage)).toContain("paris-haussmann-chromatic.webp");
+  expect(await page.locator(".pcw-interactive").evaluate(el => getComputedStyle(el).backgroundImage
+    + getComputedStyle(el, "::before").backgroundImage
+    + getComputedStyle(el, "::after").backgroundImage)).not.toContain("haussmann");
 });

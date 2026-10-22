@@ -25,7 +25,6 @@ import { SiInstagram, SiLinkedin } from "react-icons/si";
 import discoveryPacksVideo from "@assets/Discovery_Packs_1767870108965.mp4";
 import verticalDemoVideo from "@assets/Materialized_APP_Intro_Screen_1767873358319.mp4";
 import materializedLogo from "@assets/MTRLZD_Logo_white_transparent.png";
-import parisCreatorWeekLogo from "@assets/Paris_Creator_Week_2026_Logo_1792673486315.jpg";
 import { HomepageProductCarousel } from "@/components/HomepageProductCarousel";
 import iphoneFrameTransparent from "@assets/iphone_frame_transparent.png";
 import tabletFrameTransparent from "@assets/tablet_frame_transparent.png";
@@ -1380,6 +1379,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1a]">
+      <Link
+        href="/paris-creator-week"
+        aria-label="Paris Creator Week — Creator Passes"
+        data-testid="link-paris-creator-week-tab"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-[70px] sm:w-[116px] h-[76px] sm:h-[92px] rounded-l-2xl border border-r-0 border-white/25 bg-[#020410]/85 backdrop-blur-md shadow-xl transition-colors hover:bg-[#10152d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-violet-400"
+      >
+        <img src="/paris-creator-week-logo.png" alt="Paris Creator Week" width={339} height={156} className="w-[54px] sm:w-[94px] h-auto" />
+      </Link>
       <section className="relative min-h-screen overflow-hidden">
         {/* Full-screen hero video background */}
         <video
@@ -1408,15 +1415,6 @@ export default function Landing() {
         >
           <div className="flex items-center gap-3 sm:gap-5 min-w-0">
             <img src={materializedLogo} alt="Materialized" className="h-20 sm:h-32 w-auto" />
-            <span aria-hidden="true" className="h-8 sm:h-12 w-px bg-white/30" />
-            <Link
-              href="/paris-creator-week"
-              aria-label="Paris Creator Week — open campaign"
-              className="block shrink-0 rounded-sm transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-400"
-              data-testid="link-nav-paris-creator-week"
-            >
-              <img src={parisCreatorWeekLogo} alt="Paris Creator Week" width={400} height={400} className="w-14 h-14 sm:w-20 sm:h-20 object-contain" />
-            </Link>
           </div>
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/login">
