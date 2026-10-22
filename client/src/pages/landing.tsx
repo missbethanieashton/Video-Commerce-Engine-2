@@ -1404,7 +1404,18 @@ export default function Landing() {
             backdropFilter: "blur(0px)",
           }}
         >
-          <img src={materializedLogo} alt="Materialized" className="h-20 sm:h-32 w-auto" />
+          <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+            <img src={materializedLogo} alt="Materialized" className="h-20 sm:h-32 w-auto" />
+            <span aria-hidden="true" className="h-8 sm:h-12 w-px bg-white/30" />
+            <Link
+              href="/paris-creator-week"
+              aria-label="Paris Creator Week — open campaign"
+              className="block shrink-0 rounded-sm transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-400"
+              data-testid="link-nav-paris-creator-week"
+            >
+              <img src="/paris-creator-week-logo.png" alt="Paris Creator Week" className="w-[94px] sm:w-[130px] h-auto" />
+            </Link>
+          </div>
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/login">
               <Button
@@ -1427,19 +1438,6 @@ export default function Landing() {
               data-testid="button-nav-pricing"
             >
               Pricing
-            </Button>
-            <Link href="/paris-creator-week" className="text-white text-sm font-semibold px-3 py-2">
-              Paris Creator Week
-            </Link>
-            <Button
-              onClick={scrollToSignup}
-              variant="ghost"
-              size="sm"
-              className="text-white font-semibold rounded-full text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
-              style={{ border: "1px solid rgba(180,180,180,0.32)", background: "transparent" }}
-              data-testid="button-nav-get-started"
-            >
-              Get Started
             </Button>
           </div>
         </div>
@@ -1527,9 +1525,6 @@ export default function Landing() {
 
       {/* Mobile-only submenu — below hero video */}
       <div className="sm:hidden bg-[#020410] px-4 py-3 flex items-center justify-center gap-2">
-        <Link href="/paris-creator-week" className="text-white/80 text-sm px-2 py-2">
-          Paris Creator Week
-        </Link>
         {[
           { label: "Pricing", onClick: () => openPricing(), testId: "button-mobile-pricing" },
           // { label: "Cannes Lions", onClick: scrollToHaveWeMet, testId: "button-mobile-cannes" }, // hidden with "Have we met?" section, re-enable together

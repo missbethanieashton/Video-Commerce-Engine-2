@@ -1,1 +1,2 @@
 - [Campaign guardrails](campaign-guardrails.md) — campaign offers and visual changes stay separate from the main homepage and older event offers.
+- [Video preview codecs](video-preview-codecs.md) — preview Chromium may lack H.264; check codec support and provide WebM/MP4 sources plus a poster.
