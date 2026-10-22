@@ -9,19 +9,34 @@ test("direct links, QR sharing, form errors, and two-pass success work across sc
   });
   await page.goto("/paris-creator-week");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/YOUR CONTENT.*YOUR COMMERCE.*YOUR CUT/);
-  await expect(page.getByRole("heading", { name: "The Future: Interactive Entertainment" })).toBeVisible();
+  await expect(page.locator(".pcw > section")).toHaveCount(3);
+  await expect(page.getByText("EXCLUSIVE COMPETITION", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "ENTER NOW", exact: true })).toHaveAttribute("href", "#claim");
+  await expect(page.locator(".pcw-competition-instructions")).toHaveText("Sign up. Publish your shoppable videos by November 19.Most engaged video receives €2000 cash prize.Announced December 19.");
+  await expect(page.locator(".pcw-privacy")).toContainText("MTRLZD Creator Passes");
+  await expect(page.locator(".pcw-header > a").first()).toHaveAttribute("aria-label", "MTRLZD home");
+  await expect(page.locator(".pcw-brand img")).toHaveAttribute("src", /Paris_Creator_Week_2026_Logo_1792673486315\.jpg/);
+  await expect(page.locator(".pcw")).not.toContainText(/YOUR TWO VOUCHERS|CREATOR SUMMIT ACTIVATION|Explore the summit|The Future:|Register at Paris|Pause the demo|SUMMIT COMPETITION/);
+  await expect(page.locator(".pcw-header button")).toHaveCount(1);
   await expect(page.getByAltText("QR code for the Paris Creator Week invitation")).toHaveAttribute("src", /^data:image\/png/);
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const overflow = await page.evaluate(() => {
       const viewport = document.documentElement.clientWidth;
-      return [...document.querySelectorAll(".pcw h1, .pcw h2, .pcw form, .pcw-input, .pcw-demo-stage, .pcw-pass-panel")]
+      return [...document.querySelectorAll(".pcw h1, .pcw h2, .pcw form, .pcw-input, .pcw-demo-stage, .pcw-pass-panel, .pcw-voucher-card, .pcw-voucher-mid h4, .pcw-voucher-code strong")]
         .filter(el => {
           const bounds = el.getBoundingClientRect();
-          return bounds.left < -1 || bounds.right > viewport + 1 || el.scrollWidth > el.clientWidth + 1;
+          // Ticket notch decorations intentionally extend outside a clipped card.
+          // Check the card bounds and its actual text, not that decorative bleed.
+          return bounds.left < -1 || bounds.right > viewport + 1
+            || (!el.matches(".pcw-voucher-card") && el.scrollWidth > el.clientWidth + 1);
         }).map(el => el.className);
     });
     expect(overflow, `overflow at ${width}px`).toEqual([]);
+    expect(await page.locator(".pcw-footer-home img").evaluate(el => {
+      const bounds = el.getBoundingClientRect();
+      return Math.abs((bounds.left + bounds.right) / 2 - document.documentElement.clientWidth / 2);
+    })).toBeLessThan(1);
   }
   const shareButton = page.getByRole("button", { name: "Share invitation", exact: true }).first();
   expect(await shareButton.innerText()).toBe("");
@@ -29,7 +44,7 @@ test("direct links, QR sharing, form errors, and two-pass success work across sc
   expect(await page.evaluate(() => (window as any).__copiedInvite)).toBe(new URL("/paris-creator-week", page.url()).href);
   await page.getByRole("button", { name: "Get your voucher", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("check");
-  await expect(page.getByLabel("Creator name")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("First Name", { exact: true })).toHaveAttribute("aria-invalid", "true");
   let submitted: any;
   await page.route("**/api/paris-creator-week/claim", async route => {
     submitted = route.request().postDataJSON();
@@ -38,8 +53,8 @@ test("direct links, QR sharing, form errors, and two-pass success work across sc
       expiresAt: new Date(Date.now() + 14 * 86400_000).toISOString(), emailStatus: "unavailable",
     }) });
   });
-  await page.getByLabel("Creator name").fill("Browser Test");
-  await page.getByLabel("Email address").fill("browser-test@example.invalid");
+  await page.getByLabel("First Name", { exact: true }).fill("Browser");
+  await page.getByLabel("Email", { exact: true }).fill("browser-test@example.invalid");
   await page.getByRole("button", { name: "TikTok", exact: true }).click();
   await page.getByLabel("Your Instagram or TikTok handle", { exact: true }).fill("@creator");
   await page.getByLabel("Friend’s handle", { exact: true }).fill("@friend");
@@ -61,7 +76,7 @@ test("video playback, seeking, product hotspot and motion controls work", async 
   await page.goto("/paris-creator-week");
   const video = page.locator("video");
   await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).readyState)).toBeGreaterThan(1);
-  await page.getByRole("button", { name: "Pause animations", exact: true }).click();
+  await page.getByRole("button", { name: "Pause video", exact: true }).click();
   await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).paused)).toBe(true);
   await page.getByRole("button", { name: "Play video", exact: true }).click();
   await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).paused)).toBe(false);
@@ -80,6 +95,21 @@ test("video playback, seeking, product hotspot and motion controls work", async 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+test("cash prize animation repeats while visible and Enter Now reaches signup", async ({ page }) => {
+  await page.goto("/paris-creator-week");
+  const prize = page.locator(".pcw-prize strong");
+  await page.locator("#summit").scrollIntoViewIfNeeded();
+  await expect.poll(() => prize.textContent()).not.toBe("€2,000");
+  await expect(prize).toHaveText("€2,000");
+  await expect.poll(() => prize.textContent(), { timeout: 7000 }).not.toBe("€2,000");
+  await expect(prize).toHaveText("€2,000");
+  await page.getByRole("link", { name: "ENTER NOW", exact: true }).click();
+  await expect(page).toHaveURL(/#claim$/);
+  await expect(page.getByPlaceholder("First Name", { exact: true })).toBeInViewport();
+  await expect(page.locator(".pcw-sponsor img")).toHaveAttribute("alt", "MTRLZD");
+  await expect(page.locator(".pcw-footer-home a")).toHaveAttribute("href", "/");
+});
+
 test("homepage header uses the campaign logo and omits redundant Get Started", async ({ page }) => {
   await page.goto("/");
   const campaignLink = page.getByTestId("link-nav-paris-creator-week");
@@ -87,6 +117,14 @@ test("homepage header uses the campaign logo and omits redundant Get Started", a
   await expect(page.getByTestId("button-nav-get-started")).toHaveCount(0);
   await expect(page.getByTestId("button-nav-signin")).toBeVisible();
   await expect(page.getByTestId("button-nav-pricing")).toBeVisible();
+  const cardStyle = await page.getByTestId("card-miro-black-dress-hero").locator("div").first().evaluate(el => {
+    const s = getComputedStyle(el);
+    return { radius: s.borderRadius, padding: s.padding, background: s.backgroundColor };
+  });
   await campaignLink.click();
   await expect(page).toHaveURL(/\/paris-creator-week$/);
+  expect(await page.getByTestId("card-miro-black-dress-hero").locator("div").first().evaluate(el => {
+    const s = getComputedStyle(el);
+    return { radius: s.borderRadius, padding: s.padding, background: s.backgroundColor };
+  })).toEqual(cardStyle);
 });

@@ -4,6 +4,8 @@ import {
   ArrowDownRight, ArrowRight, Check, Copy, Instagram, LoaderCircle,
   Pause, Play, Share2, Volume2, VolumeX, X,
 } from "lucide-react";
+import { HomepageProductCarousel } from "@/components/HomepageProductCarousel";
+import parisCreatorWeekLogo from "@assets/Paris_Creator_Week_2026_Logo_1792673486315.jpg";
 import "./paris-creator-week.css";
 
 type Platform = "instagram" | "tiktok";
@@ -17,7 +19,7 @@ type ClaimFields = "fullName" | "email" | "platform" | "creatorHandle" | "friend
 type FieldErrors = Partial<Record<ClaimFields, string>>;
 
 const INVITE_TITLE = "Paris Creator Week 2026";
-const INVITE_TEXT = "Join me at Paris Creator Week 2026. Claim your creator pass here:";
+const INVITE_TEXT = "Claim your MTRLZD Creator Pass and a Friend Voucher:";
 const VIDEO_SRC = "/miro-misljen-black-dress.mp4";
 const inviteUrl = () => new URL("/paris-creator-week", window.location.origin).href;
 
@@ -27,19 +29,28 @@ function CashPrizeAmount({ paused }: { paused: boolean }) {
   useEffect(() => {
     if (paused) { setAmount(2000); return; }
     let frame = 0;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      observer.disconnect();
+    let restart: ReturnType<typeof setTimeout> | undefined;
+    let visible = false;
+    const startCycle = () => {
+      if (!visible) return;
       const start = performance.now();
       const tick = (now: number) => {
+        if (!visible) return;
         const progress = Math.min((now - start) / 1300, 1);
         setAmount(Math.round(2000 * (1 - Math.pow(1 - progress, 3))));
         if (progress < 1) frame = requestAnimationFrame(tick);
+        else restart = setTimeout(startCycle, 4200);
       };
       frame = requestAnimationFrame(tick);
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      cancelAnimationFrame(frame);
+      clearTimeout(restart);
+      if (visible) startCycle();
     }, { threshold: .5 });
     if (ref.current) observer.observe(ref.current);
-    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+    return () => { visible = false; observer.disconnect(); cancelAnimationFrame(frame); clearTimeout(restart); };
   }, [paused]);
   return <strong ref={ref} aria-label="€2,000">€{amount.toLocaleString("en-GB")}</strong>;
 }
@@ -47,6 +58,7 @@ function CashPrizeAmount({ paused }: { paused: boolean }) {
 export default function ParisCreatorWeek() {
   const claimRequestId = useRef(crypto.randomUUID());
   const videoRef = useRef<HTMLVideoElement>(null);
+  const userPausedVideo = useRef(false);
   const [values, setValues] = useState({
     fullName: "", email: "", platform: "instagram" as Platform, creatorHandle: "", friendHandle: "",
   });
@@ -61,7 +73,6 @@ export default function ParisCreatorWeek() {
   const [videoTime, setVideoTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(30);
   const [muted, setMuted] = useState(true);
-  const [motionPaused, setMotionPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [productOpen, setProductOpen] = useState(false);
 
@@ -80,11 +91,16 @@ export default function ParisCreatorWeek() {
   }, []);
 
   useEffect(() => {
-    if ((reducedMotion || motionPaused) && videoRef.current) {
-      videoRef.current.pause();
-      setPlaying(false);
-    }
-  }, [reducedMotion, motionPaused]);
+    const video = videoRef.current;
+    if (!video) return;
+    if (reducedMotion) video.pause();
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) video.pause();
+      else if (!reducedMotion && !userPausedVideo.current) void video.play().catch(() => setPlaying(false));
+    }, { threshold: .1 });
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [reducedMotion]);
 
   useEffect(() => {
     const firstInvalid = document.querySelector<HTMLInputElement>(".pcw input[aria-invalid='true']");
@@ -170,8 +186,13 @@ export default function ParisCreatorWeek() {
   const toggleVideo = () => {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    else { video.pause(); setPlaying(false); }
+    if (video.paused) {
+      userPausedVideo.current = false;
+      void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    } else {
+      userPausedVideo.current = true;
+      video.pause(); setPlaying(false);
+    }
   };
   const toggleMute = () => {
     const video = videoRef.current;
@@ -180,7 +201,7 @@ export default function ParisCreatorWeek() {
     setMuted(video.muted);
   };
   const tiltCard = (event: PointerEvent<HTMLElement>) => {
-    if (reducedMotion || motionPaused || event.pointerType === "touch") return;
+    if (reducedMotion || event.pointerType === "touch") return;
     const bounds = event.currentTarget.getBoundingClientRect();
     const rx = ((event.clientY - bounds.top) / bounds.height - .5) * -8;
     const ry = ((event.clientX - bounds.left) / bounds.width - .5) * 9;
@@ -197,20 +218,17 @@ export default function ParisCreatorWeek() {
       : new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(date);
   };
   const inputClass = (name: ClaimFields) => `pcw-input${fieldErrors[name] ? " has-error" : ""}`;
-  const ambientPaused = motionPaused || reducedMotion;
+  const ambientPaused = reducedMotion;
 
   return (
     <main className={`pcw${ambientPaused ? " motion-paused" : ""}`}>
       <div className="pcw-grain" aria-hidden="true" />
       <header className="pcw-header">
-        <a className="pcw-brand" href="#top" aria-label="Paris Creator Week — campaign top">
-          <img src="/paris-creator-week-logo.png" alt="Paris Creator Week 2026" />
-        </a>
         <a className="pcw-mtrlzd" href="/" aria-label="MTRLZD home"><img src="/mtrlzd-wordmark.png" alt="MTRLZD" /></a>
+        <a className="pcw-brand" href="#top" aria-label="Paris Creator Week — campaign top">
+          <img src={parisCreatorWeekLogo} alt="Paris Creator Week" width={400} height={400} />
+        </a>
         <div className="pcw-header-right">
-          <button className="pcw-motion-toggle" type="button" onClick={() => setMotionPaused((value) => !value)} aria-pressed={motionPaused} aria-label={motionPaused ? "Resume animations" : "Pause animations"}>
-            {motionPaused ? <Play size={15} /> : <Pause size={15} />}
-          </button>
           <button className="pcw-share-button" type="button" onClick={shareInvite} aria-label="Share invitation">
             {copied ? <Check size={17} /> : <Share2 size={17} />}
           </button>
@@ -221,14 +239,10 @@ export default function ParisCreatorWeek() {
       <section className="pcw-hero" id="top" aria-labelledby="pcw-title">
         <div className="pcw-hero-atmosphere" aria-hidden="true" />
         <div className="pcw-hero-content">
-          <p className="pcw-eyebrow"><span /> CREATOR SUMMIT ACTIVATION <b>×</b> PARIS</p>
           <h1 id="pcw-title"><span>YOUR CONTENT.</span><span className="chromatic">YOUR COMMERCE.</span><span>YOUR CUT.</span></h1>
           <p className="pcw-hero-deck">Turn videos into shoppable experiences.<br />Keep your brand partnerships.<br />Unlock an extra 5% MTRLZD affiliate commission.</p>
           <div className="pcw-hero-actions">
             <a className="pcw-button pcw-button-primary" href="#claim">Claim my creator pass <ArrowDownRight size={16} /></a>
-            <button className="pcw-button pcw-button-ghost" type="button" onClick={toggleVideo} aria-label={playing ? "Pause video demo" : "Play video demo"}>
-              {playing ? <Pause size={14} /> : <Play size={14} fill="currentColor" />} {playing ? "Pause the demo" : "Watch the video demo"}
-            </button>
           </div>
         </div>
 
@@ -250,37 +264,24 @@ export default function ParisCreatorWeek() {
               </button>
               <span className="pcw-hotspot-card"><b>MIRO MISLJEN</b><strong>Little Black Dress</strong><small>€790</small><a href="https://www.etsy.com/listing/4454443883/one-shoulder-black-dress-one-size-34-to?ref=shop_home_active_14&amp;frs=1&amp;logging_key=b2c6b649fb5b9c4ad8cea5cc9f68f260b736d7a4%3A4454443883" target="_blank" rel="noopener noreferrer">View the look <ArrowRight size={11} /></a></span>
             </div>
+            <div className="pcw-home-product">
+              <HomepageProductCarousel />
+            </div>
             <div className="pcw-demo-timeline">
               <input type="range" aria-label="Seek video demo" min={0} max={videoDuration || 30} step={.1} value={videoTime}
                 onChange={event => { if (videoRef.current) videoRef.current.currentTime = Number(event.target.value); setVideoTime(Number(event.target.value)); }} />
             </div>
             <div className="pcw-video-controls">
               <button type="button" onClick={toggleVideo} aria-label={playing ? "Pause video" : "Play video"}>{playing ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}</button>
-              <span>INTERACTIVE VIDEO</span>
+              <span>IN-VIDEO SHOPPING</span>
               <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute video" : "Mute video"}>{muted ? <VolumeX size={16} /> : <Volume2 size={16} />}</button>
             </div>
           </div>
           <div className="pcw-demo-rail" aria-label="Video commerce benefits">
-            <div><span className="pcw-rail-icon"><Play size={17} /></span><b>VIDEO</b><small>Showcase your products</small></div>
-            <div><span className="pcw-rail-icon"><ArrowRight size={17} /></span><b>SHOPPABLE STORIES</b><small>Tap into the moment</small></div>
-            <div><span className="pcw-rail-icon"><Instagram size={17} /></span><b>CREATOR / BRAND / PUBLISHER</b><small>One video. More ways to earn.</small></div>
+            <div><span className="pcw-rail-icon"><Play size={17} /></span><b>IN-VIDEO SHOPPING</b></div>
+            <div><span className="pcw-rail-icon"><ArrowRight size={17} /></span><b>SHOPPABLE STORIES</b><small>Shopify Podcasts, Travel Vlogs, Short Films, Music Videos.</small></div>
+            <div><span className="pcw-rail-icon"><Instagram size={17} /></span><b>CREATORS / BRANDS / PUBLISHERS</b><small>Monetize your existing videos &amp; earn more.</small></div>
           </div>
-        </div>
-        <div className="pcw-hero-bottom"><span>PARIS CREATOR WEEK · 2026</span><a href="#summit">Explore the summit <ArrowDownRight size={14} /></a></div>
-      </section>
-
-      <section className="pcw-future" aria-label="The future of interactive entertainment">
-        <h2>The Future: <span>Interactive Entertainment</span></h2>
-      </section>
-
-      <section className="pcw-invitation" aria-label="Creator Week invitation">
-        <div className="pcw-invitation-head">
-          <p className="pcw-required-line">Register at Paris Creator Week to get your unique voucher code.</p>
-        </div>
-        <div className="pcw-perks" aria-label="Included">
-          <div className="pcw-perk">Creator Pass</div>
-          <div className="pcw-perk">Friend Voucher</div>
-          <div className="pcw-perk">Cash Prize Competition</div>
         </div>
       </section>
 
@@ -288,32 +289,37 @@ export default function ParisCreatorWeek() {
         <div className="pcw-starfield" aria-hidden="true" />
         <div className="pcw-competition" aria-label="Most Engaged Interactive Video cash prize competition">
           <div className="pcw-competition-title">
-            <p className="pcw-eyebrow">SUMMIT COMPETITION</p>
+            <p className="pcw-eyebrow">EXCLUSIVE COMPETITION</p>
             <h2 id="interactive-title">MOST ENGAGED<br /><span>INTERACTIVE VIDEO</span></h2>
           </div>
           <div className="pcw-prize" onPointerMove={tiltCard} onPointerLeave={resetTilt}>
             <span className="pcw-prize-label">CASH PRIZE</span>
             <CashPrizeAmount paused={ambientPaused} />
           </div>
-          <a className="pcw-competition-cta" href="#claim" aria-label="Register for the competition">Register <ArrowRight size={16} /></a>
+          <div className="pcw-competition-instructions">
+            <p>Sign up. Publish your shoppable videos by <time dateTime="2026-11-19">November 19</time>.</p>
+            <p>Most engaged video receives €2000 cash prize.</p>
+            <p>Announced <time dateTime="2026-12-19">December 19</time>.</p>
+          </div>
+          <a className="pcw-competition-cta" href="#claim">ENTER NOW <ArrowRight size={16} /></a>
+          <div className="pcw-sponsor"><span>Sponsored by</span><a href="/" aria-label="MTRLZD sponsor"><img src="/mtrlzd-wordmark.png" alt="MTRLZD" width={130} height={32} loading="lazy" /></a></div>
         </div>
       </section>
 
       <section className="pcw-claim-section" id="claim" aria-labelledby="claim-title">
         <div className="pcw-claim-heading">
-          <p className="pcw-eyebrow">PARIS CREATOR WEEK 2026</p>
           <h2 id="claim-title">YOUR SUMMIT <span>DROP</span></h2>
         </div>
         <div className="pcw-claim-layout">
           <form className="pcw-form" onSubmit={claimPasses} noValidate>
             <label className="pcw-field">
-              <span className="sr-only">Creator name</span>
-              <input required name="fullName" maxLength={100} className={inputClass("fullName")} autoComplete="name" placeholder="Creator name" value={values.fullName} onChange={(event) => updateValue("fullName", event.target.value)} aria-invalid={!!fieldErrors.fullName} aria-describedby={fieldErrors.fullName ? "err-fullName" : undefined} />
+              <span className="sr-only">First Name</span>
+              <input required name="fullName" aria-label="First Name" maxLength={100} className={inputClass("fullName")} autoComplete="given-name" placeholder="First Name" value={values.fullName} onChange={(event) => updateValue("fullName", event.target.value)} aria-invalid={!!fieldErrors.fullName} aria-describedby={fieldErrors.fullName ? "err-fullName" : undefined} />
               {fieldErrors.fullName && <small id="err-fullName" className="pcw-field-error">{fieldErrors.fullName}</small>}
             </label>
             <label className="pcw-field">
-              <span className="sr-only">Email address</span>
-              <input required name="email" maxLength={254} className={inputClass("email")} type="email" autoComplete="email" placeholder="Email address" value={values.email} onChange={(event) => updateValue("email", event.target.value)} aria-invalid={!!fieldErrors.email} aria-describedby={fieldErrors.email ? "err-email" : undefined} />
+              <span className="sr-only">Email</span>
+              <input required name="email" aria-label="Email" maxLength={254} className={inputClass("email")} type="email" autoComplete="email" placeholder="Email" value={values.email} onChange={(event) => updateValue("email", event.target.value)} aria-invalid={!!fieldErrors.email} aria-describedby={fieldErrors.email ? "err-email" : undefined} />
               {fieldErrors.email && <small id="err-email" className="pcw-field-error">{fieldErrors.email}</small>}
             </label>
             <fieldset className="pcw-field pcw-platform-field">
@@ -343,7 +349,7 @@ export default function ParisCreatorWeek() {
             <button className="pcw-button pcw-submit" type="submit" disabled={busy}>
               {busy ? <><LoaderCircle className="pcw-spinner" size={17} /> Reserving your passes…</> : <>Get your voucher <ArrowRight size={17} /></>}
             </button>
-            <p className="pcw-privacy">By submitting, you agree to receive information about your Paris Creator Week passes.</p>
+            <p className="pcw-privacy">By submitting, you agree to receive information about your MTRLZD Creator Passes.</p>
           </form>
 
           <aside className={`pcw-pass-panel${claim ? " has-claim" : ""}`} id="passes" aria-live="polite">
@@ -364,7 +370,6 @@ export default function ParisCreatorWeek() {
               </>
             ) : (
               <>
-                <div className="pcw-preview-heading"><span>YOUR TWO VOUCHERS</span><span>UNIQUE CODES AFTER CLAIM</span></div>
                 <div className="pcw-preview-stack">
                   <PreviewPass label="CREATOR PASS" index="01" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
                   <PreviewPass label="FRIEND VOUCHER" index="02" onPointerMove={tiltCard} onPointerLeave={resetTilt} />
@@ -389,10 +394,8 @@ export default function ParisCreatorWeek() {
         </div>
       </section>
 
-      <footer className="pcw-footer">
-        <a className="pcw-footer-brand" href="#top" aria-label="Paris Creator Week — campaign top"><img src="/paris-creator-week-logo.png" alt="Paris Creator Week 2026" /></a>
-        <a href="/">MTRLZD <ArrowRight size={14} /></a>
-        <small>© 2026 MTRLZD</small>
+      <footer className="pcw-footer-home">
+        <a href="/" aria-label="Return to MTRLZD home"><img src="/mtrlzd-wordmark.png" alt="MTRLZD" width={160} height={40} loading="lazy" /></a>
       </footer>
     </main>
   );
@@ -404,9 +407,9 @@ function PreviewPass({ label, index, onPointerMove, onPointerLeave }: {
   onPointerLeave: (event: PointerEvent<HTMLElement>) => void;
 }) {
   return <article className={`pcw-voucher-card pcw-voucher-preview voucher-${index}`} onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
-    <div className="pcw-voucher-top"><span>MTRLZD <b>×</b> PCW 2026</span><span>PASS {index}</span></div>
+    <div className="pcw-voucher-top"><span>MTRLZD CREATOR PASS</span><span>PASS {index}</span></div>
     <div className="pcw-voucher-mid"><div><span className="pcw-voucher-label">{label}</span><h4>{index === "01" ? "Creator Pass" : "Friend Voucher"}</h4></div><span className="pcw-voucher-mark"><span>{index}</span></span></div>
-    <div className="pcw-voucher-code"><span>UNIQUE VOUCHER CODE</span><strong>•••• •••• ••••</strong></div>
+    <div className="pcw-voucher-code"><span>VOUCHER CODE</span><strong>Issued after signup</strong></div>
     <div className="pcw-voucher-notch pcw-notch-left" aria-hidden="true" /><div className="pcw-voucher-notch pcw-notch-right" aria-hidden="true" />
   </article>;
 }
@@ -418,10 +421,10 @@ function PassCard({ label, code, index, onPointerMove, onPointerLeave }: {
 }) {
   return (
     <article className={`pcw-voucher-card voucher-${index}`} onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
-      <div className="pcw-voucher-top"><span>MTRLZD <b>×</b> PCW 2026</span><span>PASS {index}</span></div>
+      <div className="pcw-voucher-top"><span>MTRLZD CREATOR PASS</span><span>PASS {index}</span></div>
       <div className="pcw-voucher-mid"><div><span className="pcw-voucher-label">{label}</span><h4>{index === "01" ? "Creator Pass" : "Friend Voucher"}</h4></div><span className="pcw-voucher-mark"><span>{index}</span></span></div>
       <div className="pcw-voucher-code"><span>YOUR UNIQUE VOUCHER CODE</span><strong>{code}</strong></div>
-      <div className="pcw-voucher-bottom"><span>PARIS CREATOR WEEK · 2026</span><span>14-DAY WINDOW</span></div>
+      <div className="pcw-voucher-bottom"><span>MTRLZD CREATOR PASS</span><span>14-DAY WINDOW</span></div>
       <div className="pcw-voucher-notch pcw-notch-left" aria-hidden="true" /><div className="pcw-voucher-notch pcw-notch-right" aria-hidden="true" />
     </article>
   );
